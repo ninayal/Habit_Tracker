@@ -2,8 +2,6 @@
 
 <img src="https://readme-typing-svg.demolab.com?font=Instrument+Serif&size=42&duration=3000&pause=1000&color=b94d8e&center=true&vCenter=true&width=600&height=80&lines=1%25+better.;Every+single+day." alt="1Percent" />
 
-<img src="https://capsule-render.vercel.app/api?type=waving&color=F9B2D7,CFECF3,DAF9DE,F6FFDC&height=120&section=header&animation=fadeIn" width="100%"/>
-
 </div>
 
 # 1Percent — Habit Tracker
@@ -122,8 +120,6 @@ If not, it seeds them from `mockData` and saves to localStorage.
 ---
 
 <div align="center">
-
-<img src="https://capsule-render.vercel.app/api?type=waving&color=F6FFDC,DAF9DE,CFECF3,F9B2D7&height=100&section=footer&animation=fadeIn" width="100%"/>
 
 *Small habits. Big life.* 🌸
 
