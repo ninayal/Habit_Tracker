@@ -118,7 +118,7 @@ function HeroSection({ navigate }) {
           {/* sub */}
         <p className="lp-hero-sub">
             Track what you do every day. Set streaks, hit goals, see patterns.
-            HabitBloom keeps it simple so you actually stick with it.
+            1Percent keeps it simple so you actually stick with it.
         </p>
 
           {/* CTA buttons */}
@@ -133,18 +133,6 @@ function HeroSection({ navigate }) {
             <button className="lp-cta-secondary" onClick={() => navigate("/signin")}>
             Already have an account? Log in →
             </button>
-        </div>
-
-          {/* social proof */}
-        <div className="lp-hero-proof">
-            <div className="lp-proof-avatars">
-            {["M","L","A","K"].map((l, i) => (
-                <div key={i} className={`lp-proof-avatar pa${i+1}`}>{l}</div>
-            ))}
-            </div>
-            <p className="lp-proof-text">
-            Built by <strong>Team 'we're 7, not chicken'</strong>
-            </p>
         </div>
 
           {/* scattered cards + central mockup */}
@@ -242,7 +230,7 @@ const TICKER_ITEMS = [
 
   /* ─── REVIEWS data ─── */
 const REVIEWS = [
-    { av: "rv1", init: "M", name: "Minh Trần", role: "Developer", q: "I've tried every habit app. HabitBloom is the first one that made me open it every single morning without being reminded." },
+    { av: "rv1", init: "M", name: "Minh Trần", role: "Developer", q: "I've tried every habit app. 1Percent is the first one that made me open it every single morning without being reminded." },
     { av: "rv2", init: "L", name: "Linh Nguyễn", role: "Designer", q: "The streak counter is brutal in the best way. 45 days and I still refuse to break it." },
     { av: "rv3", init: "A", name: "An Phạm", role: "Student", q: "Setting daily targets instead of just 'did it / didn't' changed how I think about habits completely." },
     { av: "rv4", init: "K", name: "Khánh Lê", role: "Product Manager", q: "I screenshot my weekly stats and send them to friends. The dashboard is genuinely that satisfying." },
@@ -342,7 +330,7 @@ export default function Landing() {
                 </h2>
             </div>
             <p className="lp-section-sub lp-reveal">
-                Every feature reduces friction. Even on off days, HabitBloom keeps you moving.
+                Every feature reduces friction. Even on off days, 1Percent keeps you moving.
             </p>
             </div>
 
@@ -429,7 +417,7 @@ export default function Landing() {
                 <span className="lp-cat-emoji">✨</span>
                 <div className="lp-cat-tag">Flexible</div>
                 <div className="lp-cat-title">Other — your unique habits</div>
-                <p className="lp-cat-body">Not everything fits a box. Assign priority and let HabitBloom track it anyway.</p>
+                <p className="lp-cat-body">Not everything fits a box. Assign priority and let 1Percent track it anyway.</p>
                 <div className="lp-priority-row">
                 <span className="lp-pill lp-pill-h">High priority</span>
                 <span className="lp-pill lp-pill-m">Medium priority</span>
@@ -521,7 +509,7 @@ export default function Landing() {
             One habit. One day.<br /><em>One streak.</em>
             </h2>
             <p className="lp-section-sub lp-reveal">
-            The hardest part is starting. HabitBloom handles everything after that.
+            The hardest part is starting. 1Percent handles everything after that.
             </p>
             <button
             className="lp-cta-bigbtn lp-reveal"
@@ -536,8 +524,8 @@ export default function Landing() {
         <footer className="lp-footer">
         <div className="lp-footer-grid">
             <div className="lp-footer-brand">
-            <span className="lp-footer-brand-logo">Habit<span>Bloom</span></span>
-            <p>A capstone project built by Team 'we're 7, not chicken'. Track habits, build streaks, grow one check-in at a time.</p>
+            <span className="lp-footer-brand-logo">1<span>Percent</span></span>
+            <p>1% better. Every single day.</p>
             </div>
             <div className="lp-footer-col">
             <h5>Product</h5>
@@ -561,7 +549,6 @@ export default function Landing() {
             <ul>
                 <li><a href="https://github.com/ninayal/Habit_Tracker-Capstone_Project" target="_blank" rel="noreferrer">GitHub repo</a></li>
                 <li><a href="#" >README</a></li>
-                <li><a href="#" >Wecamp Batch 11</a></li>
             </ul>
             </div>
         </div>
