@@ -170,69 +170,69 @@ function HeroSection({ navigate }) {
                 <div className="lp-mini-card-label">30-day streak target</div>
             </div>
             </div>
-            
+
             <div className="lp-mini-card lp-mc-done">
-              <span className="lp-mini-card-icon">✅</span>
-              <div>
+            <span className="lp-mini-card-icon">✅</span>
+            <div>
                 <div>3 of 4 done</div>
                 <div className="lp-mini-card-label">Today's habits</div>
-              </div>
             </div>
-  
+            </div>
+
             <div className="lp-mini-card lp-mc-rate">
-              <span className="lp-mini-card-icon">📊</span>
-              <div>
+            <span className="lp-mini-card-icon">📊</span>
+            <div>
                 <div>92% rate</div>
                 <div className="lp-mini-card-label">Last 7 days</div>
-              </div>
             </div>
-  
+            </div>
+
             {/* central app mockup */}
             <div className="lp-mockup">
-              <div className="lp-streak-badge">🔥 14-day streak!</div>
-  
-              <div className="lp-mockup-topbar">
+            <div className="lp-streak-badge">🔥 14-day streak!</div>
+
+            <div className="lp-mockup-topbar">
                 <div>
-                  <div className="lp-mockup-greeting">Thu, June 11</div>
-                  <div className="lp-mockup-title">Today's habits</div>
+                <div className="lp-mockup-greeting">Thu, June 11</div>
+                <div className="lp-mockup-title">Today's habits</div>
                 </div>
                 <div className="lp-mockup-ring">
-                  <svg width="52" height="52" viewBox="0 0 52 52">
+                <svg width="52" height="52" viewBox="0 0 52 52">
                     <circle cx="26" cy="26" r="20" fill="none" stroke="#f0f0f0" strokeWidth="5" />
                     <circle cx="26" cy="26" r="20" fill="none" stroke="#F9B2D7" strokeWidth="5"
                       strokeDasharray={`${2 * Math.PI * 20}`}
                       strokeDashoffset={`${2 * Math.PI * 20 * 0.25}`}
-                      strokeLinecap="round"
+                    strokeLinecap="round"
                     />
-                  </svg>
-                  <div className="lp-mockup-ring-label">
+                </svg>
+                <div className="lp-mockup-ring-label">
                     <span className="lp-mockup-ring-pct">75%</span>
                     <span className="lp-mockup-ring-sub">done</span>
-                  </div>
                 </div>
-              </div>
-  
-              <div className="lp-habits">
+                </div>
+            </div>
+
+            <div className="lp-habits">
                 {[
-                  { cls:"lphr-pink",   icls:"lp-hi-pink",   icon:"💧", name:"Drink Water",  meta:"6 of 8 · Health",      chk:"lp-hc-prog", lbl:"~" },
-                  { cls:"lphr-blue",   icls:"lp-hi-blue",   icon:"📚", name:"Read 30 mins", meta:"Done · Study",         chk:"lp-hc-done", lbl:"✓" },
-                  { cls:"lphr-green",  icls:"lp-hi-green",  icon:"🧘", name:"Meditate",     meta:"Not started · Mind",   chk:"lp-hc-none", lbl:"!" },
-                  { cls:"lphr-yellow", icls:"lp-hi-yellow", icon:"🏃", name:"Morning Run",  meta:"Done · Health",        chk:"lp-hc-done", lbl:"✓" },
+                { cls:"lphr-pink",   icls:"lp-hi-pink",   icon:"💧", name:"Drink Water",  meta:"6 of 8 · Health",      chk:"lp-hc-prog", lbl:"~" },
+                { cls:"lphr-blue",   icls:"lp-hi-blue",   icon:"📚", name:"Read 30 mins", meta:"Done · Study",         chk:"lp-hc-done", lbl:"✓" },
+                { cls:"lphr-green",  icls:"lp-hi-green",  icon:"🧘", name:"Meditate",     meta:"Not started · Mind",   chk:"lp-hc-none", lbl:"!" },
+                { cls:"lphr-yellow", icls:"lp-hi-yellow", icon:"🏃", name:"Morning Run",  meta:"Done · Health",        chk:"lp-hc-done", lbl:"✓" },
                 ].map((h, i) => (
-                  <div key={i} className={`lp-habit-row ${h.cls}`}>
+                <div key={i} className={`lp-habit-row ${h.cls}`}>
                     <div className={`lp-habit-icon ${h.icls}`}>{h.icon}</div>
                     <div className="lp-habit-info">
-                      <div className="lp-habit-name">{h.name}</div>
-                      <div className="lp-habit-meta">{h.meta}</div>
+                    <div className="lp-habit-name">{h.name}</div>
+                    <div className="lp-habit-meta">{h.meta}</div>
                     </div>
                     <div className={`lp-habit-check ${h.chk}`}>{h.lbl}</div>
-                  </div>
+                </div>
                 ))}
-              </div>
             </div>
-  
-          </div>
+            </div>
+
         </div>
-      </section>
+        </div>
+    </section>
     );
-  }
+}
