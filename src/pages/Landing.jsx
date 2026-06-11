@@ -299,7 +299,7 @@ export default function Landing() {
         {/* ── NAVIGATION BAR */}
         <nav className={`lp-nav${scrollY > 20 ? " scrolled" : ""}`}>
         <a href="#" className="lp-nav-logo">
-            Habit<span>Bloom</span>
+            <span>1Percent</span>
             <span className="lp-nav-logo-dot" />
         </a>
 
