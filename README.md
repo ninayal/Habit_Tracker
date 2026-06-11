@@ -1,122 +1,123 @@
 <div align="center">
 
-<img src="https://readme-typing-svg.demolab.com?font=Instrument+Serif&size=42&duration=3000&pause=1000&color=b94d8e&center=true&vCenter=true&width=600&height=80&lines=1%25+better.;Every+single+day.;Build+habits+that+stick." alt="1Percent" />
-
-<br/>
-
-**The habit tracker that actually keeps you coming back.**
-
-Track what matters. Build streaks. Grow quietly.
-
-<br/>
-
-[![Live Demo](https://img.shields.io/badge/Live%20Demo-Try%20it%20now-F9B2D7?style=for-the-badge&logoColor=white)](https://1percent.app)
-[![React](https://img.shields.io/badge/React-18-CFECF3?style=for-the-badge&logo=react&logoColor=61DAFB)](https://react.dev)
-[![Vite](https://img.shields.io/badge/Vite-8-DAF9DE?style=for-the-badge&logo=vite&logoColor=646CFF)](https://vite.dev)
-
-<br/>
+<img src="https://readme-typing-svg.demolab.com?font=Instrument+Serif&size=42&duration=3000&pause=1000&color=b94d8e&center=true&vCenter=true&width=600&height=80&lines=1%25+better.;Every+single+day." alt="1Percent" />
 
 <img src="https://capsule-render.vercel.app/api?type=waving&color=F9B2D7,CFECF3,DAF9DE,F6FFDC&height=120&section=header&animation=fadeIn" width="100%"/>
 
 </div>
 
----
+# 1Percent — Habit Tracker
 
-## 🌱 What is 1Percent?
+> *1% better. Every single day.*
 
-Most habit apps make you feel guilty. **1Percent doesn't.**
-
-It's a clean, distraction-free space where you show up, log your progress, and watch small actions compound into real change — one day at a time.
-
-No subscriptions. No notifications nagging you. No data sent anywhere.
-Just you and your habits.
+A habit tracking app built with **React** and **Vite**. Uses mock data to seed initial state and stores everything in `localStorage`.
 
 ---
 
-## ✨ Features
+## 🚀 Getting started
 
-<table>
-<tr>
-<td width="50%">
-
-**📋 Habit Management**
-Create habits with categories, frequency, daily targets, and priority. Pause when life happens. Archive when you're done.
-
-</td>
-<td width="50%">
-
-**✅ Daily Check-ins**
-Log your progress each day. Track partial completions — 5 of 8 glasses still counts.
-
-</td>
-</tr>
-<tr>
-<td width="50%">
-
-**🎯 Goals**
-Set a streak target or a total-completions goal. Get a nudge at 80%, a celebration at 100%.
-
-</td>
-<td width="50%">
-
-**🔥 Streaks & Stats**
-See your current streak, longest streak, completion rate over 7 days, and habits at risk — all in one dashboard.
-
-</td>
-</tr>
-</table>
-
----
-
-## 🚀 Get started in 30 seconds
-
+1. Install dependencies:
 ```bash
-# Clone and run
-git clone https://github.com/ninayal/Habit_Tracker-Capstone_Project.git
-cd Habit_Tracker-Capstone_Project
-npm install && npm run dev
+npm install
 ```
 
-Open **http://localhost:5173** — sample habits are already waiting for you.
+2. Run in development mode:
+```bash
+npm run dev
+```
 
 ---
 
-## 🗂 How your data is stored
+## 📁 Project structure
 
-Everything saves to your **browser's localStorage** — nothing leaves your device.
+- `index.html` — root HTML file for Vite
+- `package.json` — package config, scripts and dependencies
+- `vite.config.js` — Vite configuration
+- `src/` — main application source code
 
-| What | Where |
+### Inside `src/`
+
+- `main.jsx` — app entry point
+- `App.jsx` — route config and shared layout
+- `index.css` — global styles
+- `mockData.js` — sample data for users, habits, check-ins and goals
+- `assets/` — images and static resources
+- `components/` — reusable components
+- `context/` — state management / context
+- `hooks/` — custom hooks
+- `lib/` — shared helpers
+- `pages/` — main screens
+  - `Dashboard.jsx` — overview dashboard
+  - `HabitsList.jsx` — habits list
+  - `Landing.jsx` — landing page
+  - `SignIn.jsx` — login
+  - `SignUp.jsx` — register
+- `services/` — simulated internal services / API
+  - `auth.js` — sign in / sign up logic
+  - `habits.js` — habit read/write logic
+- `utils/` — data and storage helpers
+  - `initializeData.js` — seeds data from mock on first run
+  - `storage.js` — read/write to `localStorage`
+
+---
+
+## 🧠 How mock data and storage works
+
+### `src/mockData.js`
+
+Contains the initial sample data including:
+- `users` — demo user accounts
+- `habits` — sample habits per user
+- `checkins` — check-in records
+- `goals` — habit goals
+
+### `src/utils/storage.js`
+
+Wraps all `localStorage` interactions:
+- `get(key, defaultValue)` — read and parse JSON
+- `set(key, value)` — stringify and save
+- `remove(key)` — delete a key
+- `clear()` — wipe all localStorage
+
+### `src/utils/initializeData.js`
+
+On startup, `initializeData()` checks if localStorage already has:
+- `users`
+- `habits`
+- `checkins`
+- `goals`
+
+If not, it seeds them from `mockData` and saves to localStorage.
+
+> This means the first time you open the app, sample data is ready to go. After that, any changes you make are saved and won't be lost on refresh.
+
+### localStorage keys
+
+| Key | What's stored |
 |---|---|
-| Your habits | `localStorage → habits` |
-| Daily check-ins | `localStorage → checkins` |
-| Goals & targets | `localStorage → goals` |
-| Your session | `localStorage → current_user` |
-
-Close the tab, restart your computer, come back next week — your streaks are still there.
-
-> **Want a fresh start?** Go to your browser DevTools → Application → Local Storage → and clear it.
+| `users` | all user accounts |
+| `habits` | all habits |
+| `checkins` | daily check-in records |
+| `goals` | habit goals and targets |
+| `current_user` | the currently logged-in user |
 
 ---
 
-## 🎨 Built with
+## 🔧 App flow
 
-<div align="center">
-
-![React](https://img.shields.io/badge/React-20232A?style=flat-square&logo=react&logoColor=61DAFB)
-![Vite](https://img.shields.io/badge/Vite-646CFF?style=flat-square&logo=vite&logoColor=white)
-![React Router](https://img.shields.io/badge/React_Router-CA4245?style=flat-square&logo=react-router&logoColor=white)
-![CSS3](https://img.shields.io/badge/CSS3-1572B6?style=flat-square&logo=css3&logoColor=white)
-
-</div>
+1. User opens the app
+2. `initializeData()` seeds sample data if localStorage is empty
+3. User signs in or signs up via `SignIn` / `SignUp`
+4. Habit data loads from localStorage and renders
+5. When the user creates, edits or deletes a habit, it saves back to localStorage
 
 ---
 
-## 💬 The idea behind it
+## 📝 Notes
 
-> *"You do not rise to the level of your goals. You fall to the level of your systems."*
-> — James Clear, Atomic Habits
-
-1Percent is that system. Small, consistent, and yours.
+- To reset data, clear localStorage in your browser DevTools or call `storage.clear()` in code
+- The app currently uses mock data — no real backend connected
+- Easy to extend to a REST API later if needed
 
 ---
 
