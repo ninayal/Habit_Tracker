@@ -95,10 +95,6 @@ function HeroSection({ navigate }) {
         <div className="lp-orb lp-orb-3" />
         <div className="lp-hero-inner">
           {/* kicker pill */}
-        <div className="lp-hero-kicker">
-            <span className="lp-hero-kicker-dot">🌱</span>
-            Wecamp Batch 11 · Capstone Project
-        </div>
 
           {/* headline with typewriter */}
         <h1 className="lp-hero-h1">
@@ -147,7 +143,7 @@ function HeroSection({ navigate }) {
             ))}
             </div>
             <p className="lp-proof-text">
-            Built by <strong>Team 4</strong> · Wecamp Batch 11
+            Built by <strong>Team 'we're 7, not chicken'</strong>
             </p>
         </div>
 
@@ -541,7 +537,7 @@ export default function Landing() {
         <div className="lp-footer-grid">
             <div className="lp-footer-brand">
             <span className="lp-footer-brand-logo">Habit<span>Bloom</span></span>
-            <p>A capstone project built by Team 4, Wecamp Batch 11. Track habits, build streaks, grow — one check-in at a time.</p>
+            <p>A capstone project built by Team 'we're 7, not chicken'. Track habits, build streaks, grow one check-in at a time.</p>
             </div>
             <div className="lp-footer-col">
             <h5>Product</h5>
@@ -570,7 +566,7 @@ export default function Landing() {
             </div>
         </div>
         <div className="lp-footer-bottom">
-            <p>© 2026 HabitBloom · Wecamp Batch 11 Capstone</p>
+            <p>© 2026 1Percent</p>
             <a
             href="https://github.com/ninayal/Habit_Tracker-Capstone_Project"
             target="_blank" rel="noreferrer"
