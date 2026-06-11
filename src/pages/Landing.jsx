@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "./styles/Landing.css";
 
-/* ─── tiny hook: scroll position ─── */
+/* scroll position */
 function useScrollY() {
     const [y, setY] = useState(0);
     useEffect(() => {
@@ -13,7 +13,7 @@ function useScrollY() {
 return y;
 }
 
-/* ─── tiny hook: intersection reveal ─── */
+/* intersection reveal*/
 function useReveal() {
     useEffect(() => {
     const els = document.querySelectorAll(".lp-reveal");
@@ -38,4 +38,20 @@ function useReveal() {
     els.forEach((el) => obs.observe(el));
     return () => obs.disconnect();
 }, []);
+}
+
+/* FAQ item */
+function FaqItem({ q, a }) {
+    const [open, setOpen] = useState(false);
+    return (
+    <div className={`lp-faq-item${open ? " open" : ""}`}>
+        <div className="lp-faq-q" onClick={() => setOpen(!open)}>
+        <span>{q}</span>
+        <button className="lp-faq-toggle" aria-label="toggle">
+            {open ? "−" : "+"}
+        </button>
+        </div>
+        <div className="lp-faq-a">{a}</div>
+    </div>
+    );
 }
