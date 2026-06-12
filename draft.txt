@@ -1,0 +1,69 @@
+let a = {
+    "habits": [
+        {
+            "id": 1,
+            userId,
+            icon,
+            "name": "Drink water",
+            "category": "Health",
+            order,
+            startDate: String,
+            "frequency": {
+                repeatType: "daily" | "specific_days",
+                daysOfWeek: [Number], // 0-6 (CN-T7)
+            },
+            "targetPerDay": 8,
+            "priority": "High",
+            "status": "Active", //Archived || Paused || Active
+            autoOpenNote,
+            createdAt,
+            updatedAt
+        }
+    ],
+    "checkins": [
+        {
+            "id": 1,
+            "habitId": 1,
+            userId,
+            "date": "2026-06-01",
+            "completedCount": 8,
+            targetPerDay: 10,
+            "completionStatus": "in_progress", //“completed” || “skipped” || “failed” || “in_progress”
+            note,
+            createdAt,
+            updatedAt
+        },
+        {
+            "id": 1,
+            "habitId": 1,
+            userId,
+            "date": "2026-06-02",
+            "completedCount": 8,
+            "completionStatus": "in_progress", //“completed” || “skipped” || “failed” || “in_progress”
+            note,
+            createdAt,
+            updatedAt
+        }
+    ],
+    "goals": [
+        {
+            "id": 1,
+            "habitId": 1,
+            userId,
+            "targetType": "streak", // "streak" || "completions_target"
+            "targetValue": 30,
+            isDone,
+            doneAt
+        }
+    ],
+    user: [{
+        id,
+        fullName,
+        email,
+        password,
+        image,
+        createdAt,
+        updatedAt,
+
+    }]
+}
