@@ -335,22 +335,90 @@ export default function Landing() {
             </div>
 
             <div className="lp-features-grid">
-            {[
-                { cls:"lp-fc-1", emoji:"📋", title:"Habit Management", desc:"Create, edit, pause, and archive habits. Set categories, frequency, daily targets, and priority." },
-                { cls:"lp-fc-2", emoji:"✅", title:"Daily Check-ins", desc:"Log progress each day. Mark habits done, adjust counts, and view history grouped by date." },
-                { cls:"lp-fc-3", emoji:"🎯", title:"Goals & Milestones", desc:"Set streak or total-completion targets. Get nudged at 80% and celebrated at 100%." },
-                { cls:"lp-fc-4", emoji:"📊", title:"Stats Dashboard", desc:"Current streak, longest streak, total completions, and 7-day rate — all in one view." },
-                { cls:"lp-fc-5", emoji:"🔍", title:"Smart Filtering", desc:"Filter by category, frequency, priority, or status. Find exactly what you need instantly." },
-                { cls:"lp-fc-6", emoji:"↩️", title:"Undo & Reset", desc:"Undo your last check-in or reset to initial state. Your progress is always recoverable." },
-            ].map((f, i) => (
-                <div key={i} className={`lp-feat-card ${f.cls} lp-reveal`}>
-                <span className="lp-feat-emoji">{f.emoji}</span>
-                <div className="lp-feat-title">{f.title}</div>
-                <p className="lp-feat-desc">{f.desc}</p>
+                {/* HERO: Habit Management */}
+                <div className="lp-feat-card lp-fc-hero lp-reveal">
+                    <div>
+                        <div className="lp-feat-hero-num">01</div>
+                        <div className="lp-feat-hero-title">Habit<br />Management</div>
+                        <div className="lp-feat-hero-body">
+                            Create, edit, pause, and archive habits. Set categories,
+                            frequency, daily targets, and priority levels that fit your real life.
+                            </div>
+                            <div className="lp-feat-hero-tags">
+                                <span className="lp-feat-hero-tag">Add / Edit</span>
+                                <span className="lp-feat-hero-tag">Pause & Resume</span>
+                                <span className="lp-feat-hero-tag">Archive</span>
+                                <span className="lp-feat-hero-tag">Priority</span>
+                                <span className="lp-feat-hero-tag">Frequency</span>
+                                </div>
+                                </div>
+                                </div>
+                                {/* Daily Check-ins */}
+                                <div className="lp-feat-card lp-fc-checkin lp-reveal">
+                                    <div className="lp-feat-num">02</div>
+                                    <div className="lp-feat-title">Daily Check-ins</div>
+                                    <p className="lp-feat-desc">
+                                        Log progress each day. Mark habits done, adjust counts,
+                                        and view history grouped by date.
+                                        </p>
+                                        </div>
+                                        
+                                {/* Goals */}
+                                <div className="lp-feat-card lp-fc-goals lp-reveal">
+                                    <div className="lp-feat-num">03</div>
+                                    <div className="lp-feat-title">Goals & Milestones</div>
+                                    <p className="lp-feat-desc">Set streak or total-completion targets.</p>
+                                    <div className="lp-feat-goal-bar">
+                                        <div className="lp-feat-goal-bar-label">
+                                            <span>30-day streak</span><span>80%</span>
+                                            </div>
+                                            <div className="lp-feat-goal-track">
+                                                <div className="lp-feat-goal-fill" />
+                                                </div>
+                                                <span className="lp-feat-goal-nudge">🎉 Almost there, keep going!</span>
+                                                </div>
+                                                </div>
+                                {/* Stats */}
+                                <div className="lp-feat-card lp-fc-stats lp-reveal">
+                                    <div className="lp-feat-num">04</div>
+                                    <div className="lp-feat-title">Stats Dashboard</div>
+                                    <p className="lp-feat-desc">Streaks, completion rate, totals — all in one view.</p>
+                                    <div className="lp-feat-stat-pills">
+                                        <div className="lp-feat-stat-pill">
+                                            <span>🔥 Current streak</span>
+                                            <span className="lp-feat-stat-val">14 days</span>
+                                            </div>
+                                            <div className="lp-feat-stat-pill">
+                                                <span>📊 7-day rate</span>
+                                                <span className="lp-feat-stat-val">92%</span>
+                                                </div>
+                                                </div>
+                                                </div>
+                                {/* Filter */}
+                                <div className="lp-feat-card lp-fc-filter lp-reveal">
+                                    <div className="lp-feat-num">05</div>
+                                    <div className="lp-feat-title">Smart Filtering</div>
+                                    <p className="lp-feat-desc">
+                                        Filter by category, frequency, priority, or status.
+                                        Find exactly what you need instantly.
+                                        </p>
+                                        </div>
+                                {/* Undo full width */}
+                                <div className="lp-feat-card lp-fc-undo lp-reveal">
+                                    <div className="lp-fc-undo-left">
+                                        <div className="lp-fc-undo-icon">↩️</div>
+                                        <div>
+                                            <div className="lp-fc-undo-title">Undo & Reset</div>
+                                            <div className="lp-fc-undo-body">
+                                                Made a mistake? Undo your last check-in or reset to initial state.
+                                                Your progress is always recoverable.
+                                                </div>
+                                                </div>
+                                                </div>
+                                        <div className="lp-fc-undo-badge">Safety net included</div>
+                                </div>
+                        </div>
                 </div>
-            ))}
-            </div>
-        </div>
         </section>
 
         {/* ── HOW IT WORKS ── */}
