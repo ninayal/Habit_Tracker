@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useStepTypewriter } from "../hooks/useStepTypewriter";
 import "./styles/Landing.css";
 
 /* scroll position */
@@ -266,9 +267,110 @@ const FAQS = [
     },
 ];
 
+
+
+/* ─── HOW STEPS ─── */
+function HowSteps() {
+    const { text, activeIdx } = useStepTypewriter();
+    return (
+    <div className="lp-how-grid">
+
+        {/* Step 1 */}
+        <div className="lp-step lp-step-s1 lp-reveal">
+        <div className="lp-step-pill lp-step-pill-1">🌱 New habit!</div>
+        <div className="lp-step-inner">
+            <span className="lp-step-tag">Step 01</span>
+            <span className="lp-step-num-bg">1</span>
+            <div className="lp-step-title">Add a Habit</div>
+            <div className="lp-step-desc">Name it, pick a category, set frequency and daily target.</div>
+            <div className="lp-sv1-box">
+            <span>{text}<span className="lp-sv1-cursor"/></span>
+            </div>
+            <div className="lp-sv1-cats">
+            {['Health','Study','Work','Mind'].map((c,i) => (
+                <span key={i} className={`lp-sv1-cat${i===activeIdx?' lit':''}`}>{c}</span>
+            ))}
+            </div>
+        </div>
+    </div>
+        {/* Step 2 */}
+        <div className="lp-step lp-step-s2 lp-reveal">
+        <div className="lp-step-inner">
+            <span className="lp-step-tag">Step 02</span>
+            <span className="lp-step-num-bg">2</span>
+            <div className="lp-step-title">Set a Goal</div>
+            <div className="lp-step-desc">Streak or total completions. Tracked automatically.</div>
+            <div className="lp-sv2-wrap">
+            <div className="lp-sv2-ring">
+                <svg width="64" height="64" viewBox="0 0 64 64">
+                <circle cx="32" cy="32" r="24" fill="none" stroke="rgba(0,0,0,0.1)" strokeWidth="5"/>
+                <circle cx="32" cy="32" r="24" fill="none" stroke="#b94d8e" strokeWidth="5"
+                    className="lp-sv2-fill" strokeLinecap="round"/>
+                </svg>
+                <div className="lp-sv2-label">
+                <span className="lp-sv2-pct">80%</span>
+                <span className="lp-sv2-sub">done</span>
+                </div>
+            </div>
+            <div className="lp-sv2-text"><strong>6 days</strong> left to hit your 30-day streak!</div>
+            </div>
+        </div>
+    </div>
+        {/* Step 3 */}
+        <div className="lp-step lp-step-s3 lp-reveal">
+        <div className="lp-step-pill lp-step-pill-2">3 done today</div>
+        <div className="lp-step-inner">
+            <span className="lp-step-tag">Step 03</span>
+            <span className="lp-step-num-bg">3</span>
+            <div className="lp-step-title">Check In Daily</div>
+            <div className="lp-step-desc">Log progress, adjust counts — under 30 seconds.</div>
+            <div>
+            {[
+                { cls:'lp-vd-done', lbl:'✓', name:'Morning run', w:'100%', bg:'#4ab86b' },
+                { cls:'lp-vd-prog', lbl:'~', name:'Drink water', w:'62%',  bg:'#f59e0b' },
+                { cls:'lp-vd-none', lbl:'!', name:'Meditate',    w:'0%',   bg:'#d1d5db' },
+            ].map((r,i) => (
+                <div key={i} className="lp-sv3-row">
+                <span className={`lp-sv3-dot ${r.cls}`}>{r.lbl}</span>
+                <span style={{flex:1}}>{r.name}</span>
+                <div className="lp-sv3-bar">
+                    <div className="lp-sv3-fill" style={{width:r.w, background:r.bg}}/>
+                </div>
+                </div>
+            ))}
+            </div>
+        </div>
+    </div>
+        {/* Step 4 */}
+        <div className="lp-step lp-step-s4 lp-reveal">
+        <div className="lp-step-inner">
+            <span className="lp-step-tag">Step 04</span>
+            <span className="lp-step-num-bg">4</span>
+            <div className="lp-step-title">Watch It Grow</div>
+            <div className="lp-step-desc">Streaks, rates, and goal progress update live.</div>
+            <div>
+            {[
+                { label:'🔥 Streak',     val:'14 days' },
+                { label:'📊 7-day rate', val:'92%' },
+                { label:'✅ Total done', val:'198' },
+            ].map((s,i) => (
+                <div key={i} className="lp-sv4-row">
+                <span>{s.label}</span>
+                <span className="lp-sv4-val">{s.val}</span>
+                </div>
+            ))}
+            </div>
+        </div>
+    </div>
+</div>
+    );
+}
+
+
 /* ══════════════════════════════════════════════════════════
     MAIN COMPONENT
   ══════════════════════════════════════════════════════════ */
+
 export default function Landing() {
     const navigate = useNavigate();
     const scrollY = useScrollY();
@@ -425,24 +527,12 @@ export default function Landing() {
         <section className="lp-section lp-how" id="how">
         <div className="lp-section-inner">
             <span className="lp-section-label lp-reveal">Simple by design</span>
+        
             <h2 className="lp-section-h2 lp-reveal">
-            From zero to habit hero<br /><em>in 4 steps</em>
-            </h2>
+                From zero to habit hero<br /><em>in 4 steps</em>
+                </h2>
+                <HowSteps /> 
 
-            <div className="lp-how-grid">
-            {[
-                { n:"1", title:"Add a Habit", desc:"Name it, pick Health / Study / Work / Mindfulness / Other, set frequency and daily target." },
-                { n:"2", title:"Set a Goal", desc:"Choose a streak target or total-completions goal. Progress is tracked automatically." },
-                { n:"3", title:"Check In Daily", desc:"Log your progress, adjust counts, mark habits done — takes under 30 seconds." },
-                { n:"4", title:"Watch It Grow", desc:"Streaks, completion rates, and goal progress all update live. Your effort made visible." },
-            ].map((s, i) => (
-                <div key={i} className="lp-step lp-reveal">
-                <div className="lp-step-num">{s.n}</div>
-                <div className="lp-step-title">{s.title}</div>
-                <p className="lp-step-desc">{s.desc}</p>
-                </div>
-            ))}
-            </div>
         </div>
         </section>
 
