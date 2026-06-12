@@ -32,7 +32,7 @@ function App() {
 
           <Route element={<AuthRoute requireAuth={false} />}>
             <Route path="/signin" element={<SignIn />} />
-            <Route path="/sign-up" element={<SignUp />} />
+            <Route path="/signup" element={<SignUp />} />
           </Route>
 
           <Route element={<AuthRoute />}>

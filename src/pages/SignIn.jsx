@@ -61,7 +61,7 @@ const SignIn = () => {
 
         <p className="signup-link">
           Don't have an account?{" "}
-          <span onClick={() => navigate("/sign-up")}>Sign up now</span>
+          <span onClick={() => navigate("/signup")}>Sign up now</span>
         </p>
       </div>
     </div>
