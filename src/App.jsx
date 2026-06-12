@@ -1,6 +1,7 @@
 import AuthRoute from "@/components/AuthRoute";
 import Layout from "@/components/Layout";
 import ScrollToTop from "@/components/ScrollToTop";
+import { CheckinProvider } from "@/context/CheckinContext";
 import Dashboard from "@/pages/Dashboard";
 import HabitsList from "@/pages/HabitsList";
 import Landing from "@/pages/Landing";
@@ -27,23 +28,26 @@ function App() {
     <>
       <BrowserRouter>
         <ScrollToTop />
-        <Routes>
-          <Route path="/" element={<Landing />} />
+        <CheckinProvider>
+          <Routes>
+            <Route path="/" element={<Landing />} />
 
-          <Route element={<AuthRoute requireAuth={false} />}>
-            <Route path="/signin" element={<SignIn />} />
-            <Route path="/signup" element={<SignUp />} />
-          </Route>
-
-          <Route element={<AuthRoute />}>
-            <Route element={<Layout />}>
-              <Route path="/dashboard" element={<Dashboard />} />
-              <Route path="/all-habits" element={<HabitsList />} />
-
-              {/* <Route path="/statistics" element={}/> */}
+            <Route element={<AuthRoute requireAuth={false} />}>
+              <Route path="/signin" element={<SignIn />} />
+              <Route path="/signup" element={<SignUp />} />
             </Route>
-          </Route>
-        </Routes>
+
+            <Route element={<AuthRoute />}>
+              <Route element={<Layout />}>
+                <Route path="/dashboard" element={<Dashboard />} />
+                <Route path="/all-habits" element={<HabitsList />} />
+
+                {/* <Route path="/statistics" element={}/> */}
+              </Route>
+            </Route>
+          </Routes>
+        </CheckinProvider>
+
       </BrowserRouter>
     </>
   );
