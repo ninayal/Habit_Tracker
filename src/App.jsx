@@ -31,7 +31,7 @@ function App() {
           <Route path="/" element={<Landing />} />
 
           <Route element={<AuthRoute requireAuth={false} />}>
-            <Route path="/sign-in" element={<SignIn />} />
+            <Route path="/signin" element={<SignIn />} />
             <Route path="/sign-up" element={<SignUp />} />
           </Route>
 

@@ -154,7 +154,7 @@ function HeroSection({ navigate }) {
           </button>
           <button
             className="lp-cta-secondary"
-            onClick={() => navigate("/sign-in")}
+            onClick={() => navigate("/signin")}
           >
             Already have an account? Log in →
           </button>
@@ -412,7 +412,7 @@ export default function Landing() {
         </ul>
 
         <div className="lp-nav-auth">
-          <button className="lp-btn-ghost" onClick={() => navigate("/sign-in")}>
+          <button className="lp-btn-ghost" onClick={() => navigate("/signin")}>
             Log in
           </button>
           <button className="lp-btn-solid" onClick={() => navigate("/signup")}>
@@ -764,7 +764,7 @@ export default function Landing() {
                   href="#"
                   onClick={(e) => {
                     e.preventDefault();
-                    navigate("/sign-in");
+                    navigate("/signin");
                   }}
                 >
                   Log in
