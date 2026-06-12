@@ -386,52 +386,75 @@ export default function Landing() {
             Every part of your day,<br /><em>covered</em>
             </h2>
 
+
             <div className="lp-cats-grid">
-            <div className="lp-cat-card lp-cat-c1 lp-reveal">
-                <span className="lp-cat-emoji">💪</span>
-                <div className="lp-cat-tag">Category</div>
-                <div className="lp-cat-title">Health</div>
-                <p className="lp-cat-body">Hydration, exercise, sleep — the foundations that fuel everything else.</p>
-            </div>
-            <div className="lp-cat-card lp-cat-c2 lp-reveal">
-                <span className="lp-cat-emoji">📖</span>
-                <div className="lp-cat-tag">Category</div>
-                <div className="lp-cat-title">Study</div>
-                <p className="lp-cat-body">Daily reading, language learning, courses. Build the compounding habit.</p>
-            </div>
-            <div className="lp-cat-card lp-cat-c3 lp-reveal">
-                <span className="lp-cat-emoji">💼</span>
-                <div className="lp-cat-tag">Category</div>
-                <div className="lp-cat-title">Work</div>
-                <p className="lp-cat-body">Deep work sessions and routines that make you genuinely more effective.</p>
-            </div>
-            <div className="lp-cat-card lp-cat-c4 lp-reveal">
-                <span className="lp-cat-emoji">🧘</span>
-                <div className="lp-cat-tag">Category</div>
-                <div className="lp-cat-title">Mindfulness</div>
-                <p className="lp-cat-body">Meditation, journaling, gratitude — small moments of calm that add up.</p>
-            </div>
 
-              {/* wide card */}
-            <div className="lp-cat-card lp-cat-wide lp-cat-c5 lp-reveal">
-                <span className="lp-cat-emoji">✨</span>
-                <div className="lp-cat-tag">Flexible</div>
-                <div className="lp-cat-title">Other — your unique habits</div>
-                <p className="lp-cat-body">Not everything fits a box. Assign priority and let 1Percent track it anyway.</p>
-                <div className="lp-priority-row">
-                <span className="lp-pill lp-pill-h">High priority</span>
-                <span className="lp-pill lp-pill-m">Medium priority</span>
-                <span className="lp-pill lp-pill-l">Low priority</span>
-                </div>
-            </div>
+  {/* HERO: Health */}
+<div className="lp-cat-hero lp-reveal">
+    <div>
+    <div className="lp-cat-hero-tag">Category · Health</div>
+    <div className="lp-cat-hero-title">Your body,<br />your foundation</div>
+    <div className="lp-cat-hero-body">
+        Hydration, exercise, sleep — the habits that fuel everything else you do.
+    </div>
+    <div className="lp-cat-hero-examples">
+        <span className="lp-cat-hero-ex">Drink water</span>
+        <span className="lp-cat-hero-ex">Morning run</span>
+        <span className="lp-cat-hero-ex">Sleep 8hrs</span>
+        <span className="lp-cat-hero-ex">Vitamins</span>
+    </div>
+    </div>
+    </div>
 
-            <div className="lp-cat-card lp-cat-wide lp-cat-c6 lp-reveal">
-                <span className="lp-cat-emoji">🔥</span>
-                <div className="lp-cat-tag">Streak protection</div>
-                <div className="lp-cat-title">Missed habits are highlighted</div>
-                <p className="lp-cat-body">Any active habit without a check-in today is flagged visually. No streak dies silently.</p>
-            </div>
-            </div>
+  {/* Study */}
+<div className="lp-cat-card lp-cc-study lp-reveal">
+    <div className="lp-cat-tag">Category · Study</div>
+    <div className="lp-cat-title">Study</div>
+    <div className="lp-cat-body">Daily reading, language learning, courses. Build the habit that compounds.</div>
+</div>
+
+  {/* Work */}
+<div className="lp-cat-card lp-cc-work lp-reveal">
+    <div className="lp-cat-tag">Category · Work</div>
+    <div className="lp-cat-title">Work</div>
+    <div className="lp-cat-body">Deep work and routines that make you genuinely more effective every day.</div>
+</div>
+
+  {/* Mindfulness */}
+<div className="lp-cat-card lp-cc-mind lp-reveal">
+    <div className="lp-cat-tag">Category · Mindfulness</div>
+    <div className="lp-cat-title">Mindfulness</div>
+    <div className="lp-cat-body">Meditation, journaling, gratitude — small moments of calm that add up.</div>
+</div>
+
+  {/* Other */}
+<div className="lp-cat-card lp-cc-other lp-reveal">
+    <div className="lp-cat-tag">Flexible · Other</div>
+    <div className="lp-cat-title">Your unique habits</div>
+    <div className="lp-cat-body">Not everything fits a box. Set priority and track it anyway.</div>
+    <div className="lp-priority-row">
+    <span className="lp-pill lp-pill-h">High</span>
+    <span className="lp-pill lp-pill-m">Medium</span>
+    <span className="lp-pill lp-pill-l">Low</span>
+    </div>
+</div>
+
+  {/* Streak banner */}
+<div className="lp-cat-streak lp-reveal">
+    <div className="lp-cat-streak-left">
+    <span className="lp-cat-streak-icon">🔥</span>
+    <div>
+        <div className="lp-cat-streak-title">Missed habits are highlighted</div>
+        <div className="lp-cat-streak-body">
+        Any active habit without a check-in today is flagged. No streak dies silently.
+        </div>
+    </div>
+    </div>
+    <div className="lp-cat-streak-badge">Streak protection</div>
+</div>
+
+</div>
+
         </div>
         </section>
 
