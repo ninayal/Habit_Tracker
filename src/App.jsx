@@ -54,6 +54,23 @@ function App() {
             </Routes>
           </CheckinProvider>
         </HabitProvider>
+        <Routes>
+          <Route path="/" element={<Landing />} />
+
+          <Route element={<AuthRoute requireAuth={false} />}>
+            <Route path="/signin" element={<SignIn />} />
+            <Route path="/signup" element={<SignUp />} />
+          </Route>
+
+          {/* <Route element={<AuthRoute />}> */}
+            <Route element={<Layout />}>
+              <Route path="/dashboard" element={<Dashboard />} />
+              <Route path="/all-habits" element={<HabitsList />} />
+
+              {/* <Route path="/statistics" element={}/> */}
+            </Route>
+          {/* </Route> */}
+        </Routes>
       </BrowserRouter>
     </>
   );
