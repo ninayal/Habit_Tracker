@@ -5,6 +5,7 @@ export const mockUsers = [
     email: "quyen@gmail.com",
     password: "dev_9f4x_k2m_2026",
     image: "https://randomuser.me/api/portraits/men/1.jpg",
+    reminderTime: "07:00",
     createdAt: "2025-01-10T08:00:00Z",
     updatedAt: "2026-06-01T12:00:00Z"
   },
@@ -14,6 +15,7 @@ export const mockUsers = [
     email: "abc@gmail.com",
     password: "dev_9f4x_k2m_2026",
     image: "https://randomuser.me/api/portraits/women/2.jpg",
+    reminderTime: "08:30",
     createdAt: "2025-03-15T10:30:00Z",
     updatedAt: "2026-06-02T09:15:00Z"
   }

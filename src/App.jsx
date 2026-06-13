@@ -4,6 +4,7 @@ import ScrollToTop from "@/components/ScrollToTop"
 import Dashboard from "@/pages/Dashboard"
 import HabitsList from "@/pages/HabitsList"
 import Landing from "@/pages/Landing"
+import Profile from "@/pages/Profile"
 import SignIn from "@/pages/SignIn"
 import SignUp from "@/pages/SignUp"
 import { initializeData } from "@/utils/initializeData"
@@ -37,12 +38,16 @@ function App() {
             <Route path="/sign-up" element={<SignUp />} />
           </Route>
 
+          <Route element={<Layout />}>
+            <Route path="/profile" element={<Profile />} />
+          </Route>
+
           <Route element={<AuthRoute />}>
             <Route element={<Layout />}>
-              <Route path="/dashboard" element={<Dashboard />} />
-              <Route path="/all-habits" element={<HabitsList />}/>
+            <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/all-habits" element={<HabitsList />}/>
 
-              {/* <Route path="/statistics" element={}/> */}
+            {/* <Route path="/statistics" element={}/> */}
 
             </Route>
           </Route>

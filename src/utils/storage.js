@@ -4,6 +4,8 @@ export const STORAGE_KEYS = {
     CHECKINS: "checkins",
     GOALS: "goals",
     CURRENT_USER: "current_user",
+    PROFILE: "profile",
+    THEME: "theme",
 };
 
 export const storage = {
