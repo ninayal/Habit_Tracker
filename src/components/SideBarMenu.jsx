@@ -2,6 +2,15 @@ import { Link, useLocation } from "react-router-dom";
 import { GalleryVerticalEnd, ListChecks, LogOut, MoonStar, SunMedium, UserRound } from "lucide-react";
 import { useTheme } from "@/hooks/useTheme";
 import { THEME } from "@/services/theme";
+import { Link, useLocation, useNavigate } from "react-router-dom";
+import {
+    LogOut,
+    Moon,
+    GalleryVerticalEnd,
+    ListChecks
+} from "lucide-react";
+import { authService } from "@/services/auth";
+
 
 const menuItems = [
     {
@@ -30,10 +39,11 @@ export default function SideBarMenu() {
     const themeButtonClassName = isDark
         ? "border border-[#475569] bg-[#1F2937] text-[#F9FAFB] hover:border-brand-pink hover:bg-[#273449]"
         : "border border-[#E8E2E8] bg-white text-[#1F2937] hover:border-brand-pink hover:bg-[#FFF0F7]";
+    const navigate = useNavigate();
 
     const handleLogout = () => {
-        localStorage.removeItem("current_user");
-        window.location.href = "/sign-in";
+        authService.logout();
+        navigate("/signin", { replace: true });
     };
 
     return (
