@@ -1,14 +1,7 @@
-import { Link, useLocation } from "react-router-dom";
 import { GalleryVerticalEnd, ListChecks, LogOut, MoonStar, SunMedium, UserRound } from "lucide-react";
 import { useTheme } from "@/hooks/useTheme";
 import { THEME } from "@/services/theme";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import {
-    LogOut,
-    Moon,
-    GalleryVerticalEnd,
-    ListChecks
-} from "lucide-react";
 import { authService } from "@/services/auth";
 
 

@@ -6,6 +6,7 @@ import { HabitProvider } from "@/context/HabitContext";
 import Dashboard from "@/pages/Dashboard";
 import HabitsList from "@/pages/HabitsList";
 import Landing from "@/pages/Landing";
+import Profile from "@/pages/Profile";
 import SignIn from "@/pages/SignIn";
 import SignUp from "@/pages/SignUp";
 import { initializeData } from "@/utils/initializeData";
