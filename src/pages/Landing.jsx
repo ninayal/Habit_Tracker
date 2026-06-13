@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useStepTypewriter } from "../hooks/useStepTypewriter";
 import "./styles/Landing.css";
 
 /* scroll position */
@@ -376,9 +377,110 @@ const FAQS = [
   },
 ];
 
+
+
+/* ─── HOW STEPS ─── */
+function HowSteps() {
+    const { text, activeIdx } = useStepTypewriter();
+    return (
+    <div className="lp-how-grid">
+
+        {/* Step 1 */}
+        <div className="lp-step lp-step-s1 lp-reveal">
+        <div className="lp-step-pill lp-step-pill-1">🌱 New habit!</div>
+        <div className="lp-step-inner">
+            <span className="lp-step-tag">Step 01</span>
+            <span className="lp-step-num-bg">1</span>
+            <div className="lp-step-title">Add a Habit</div>
+            <div className="lp-step-desc">Name it, pick a category, set frequency and daily target.</div>
+            <div className="lp-sv1-box">
+            <span>{text}<span className="lp-sv1-cursor"/></span>
+            </div>
+            <div className="lp-sv1-cats">
+            {['Health','Study','Work','Mind'].map((c,i) => (
+                <span key={i} className={`lp-sv1-cat${i===activeIdx?' lit':''}`}>{c}</span>
+            ))}
+            </div>
+        </div>
+    </div>
+        {/* Step 2 */}
+        <div className="lp-step lp-step-s2 lp-reveal">
+        <div className="lp-step-inner">
+            <span className="lp-step-tag">Step 02</span>
+            <span className="lp-step-num-bg">2</span>
+            <div className="lp-step-title">Set a Goal</div>
+            <div className="lp-step-desc">Streak or total completions. Tracked automatically.</div>
+            <div className="lp-sv2-wrap">
+            <div className="lp-sv2-ring">
+                <svg width="64" height="64" viewBox="0 0 64 64">
+                <circle cx="32" cy="32" r="24" fill="none" stroke="rgba(0,0,0,0.1)" strokeWidth="5"/>
+                <circle cx="32" cy="32" r="24" fill="none" stroke="#b94d8e" strokeWidth="5"
+                    className="lp-sv2-fill" strokeLinecap="round"/>
+                </svg>
+                <div className="lp-sv2-label">
+                <span className="lp-sv2-pct">80%</span>
+                <span className="lp-sv2-sub">done</span>
+                </div>
+            </div>
+            <div className="lp-sv2-text"><strong>6 days</strong> left to hit your 30-day streak!</div>
+            </div>
+        </div>
+    </div>
+        {/* Step 3 */}
+        <div className="lp-step lp-step-s3 lp-reveal">
+        <div className="lp-step-pill lp-step-pill-2">3 done today</div>
+        <div className="lp-step-inner">
+            <span className="lp-step-tag">Step 03</span>
+            <span className="lp-step-num-bg">3</span>
+            <div className="lp-step-title">Check In Daily</div>
+            <div className="lp-step-desc">Log progress, adjust counts — under 30 seconds.</div>
+            <div>
+            {[
+                { cls:'lp-vd-done', lbl:'✓', name:'Morning run', w:'100%', bg:'#4ab86b' },
+                { cls:'lp-vd-prog', lbl:'~', name:'Drink water', w:'62%',  bg:'#f59e0b' },
+                { cls:'lp-vd-none', lbl:'!', name:'Meditate',    w:'0%',   bg:'#d1d5db' },
+            ].map((r,i) => (
+                <div key={i} className="lp-sv3-row">
+                <span className={`lp-sv3-dot ${r.cls}`}>{r.lbl}</span>
+                <span style={{flex:1}}>{r.name}</span>
+                <div className="lp-sv3-bar">
+                    <div className="lp-sv3-fill" style={{width:r.w, background:r.bg}}/>
+                </div>
+                </div>
+            ))}
+            </div>
+        </div>
+    </div>
+        {/* Step 4 */}
+        <div className="lp-step lp-step-s4 lp-reveal">
+        <div className="lp-step-inner">
+            <span className="lp-step-tag">Step 04</span>
+            <span className="lp-step-num-bg">4</span>
+            <div className="lp-step-title">Watch It Grow</div>
+            <div className="lp-step-desc">Streaks, rates, and goal progress update live.</div>
+            <div>
+            {[
+                { label:'🔥 Streak',     val:'14 days' },
+                { label:'📊 7-day rate', val:'92%' },
+                { label:'✅ Total done', val:'198' },
+            ].map((s,i) => (
+                <div key={i} className="lp-sv4-row">
+                <span>{s.label}</span>
+                <span className="lp-sv4-val">{s.val}</span>
+                </div>
+            ))}
+            </div>
+        </div>
+    </div>
+</div>
+    );
+}
+
+
 /* ══════════════════════════════════════════════════════════
     MAIN COMPONENT
   ══════════════════════════════════════════════════════════ */
+
 export default function Landing() {
   const navigate = useNavigate();
   const scrollY = useScrollY();
@@ -456,172 +558,183 @@ export default function Landing() {
             </p>
           </div>
 
-          <div className="lp-features-grid">
-            {[
-              {
-                cls: "lp-fc-1",
-                emoji: "📋",
-                title: "Habit Management",
-                desc: "Create, edit, pause, and archive habits. Set categories, frequency, daily targets, and priority.",
-              },
-              {
-                cls: "lp-fc-2",
-                emoji: "✅",
-                title: "Daily Check-ins",
-                desc: "Log progress each day. Mark habits done, adjust counts, and view history grouped by date.",
-              },
-              {
-                cls: "lp-fc-3",
-                emoji: "🎯",
-                title: "Goals & Milestones",
-                desc: "Set streak or total-completion targets. Get nudged at 80% and celebrated at 100%.",
-              },
-              {
-                cls: "lp-fc-4",
-                emoji: "📊",
-                title: "Stats Dashboard",
-                desc: "Current streak, longest streak, total completions, and 7-day rate — all in one view.",
-              },
-              {
-                cls: "lp-fc-5",
-                emoji: "🔍",
-                title: "Smart Filtering",
-                desc: "Filter by category, frequency, priority, or status. Find exactly what you need instantly.",
-              },
-              {
-                cls: "lp-fc-6",
-                emoji: "↩️",
-                title: "Undo & Reset",
-                desc: "Undo your last check-in or reset to initial state. Your progress is always recoverable.",
-              },
-            ].map((f, i) => (
-              <div key={i} className={`lp-feat-card ${f.cls} lp-reveal`}>
-                <span className="lp-feat-emoji">{f.emoji}</span>
-                <div className="lp-feat-title">{f.title}</div>
-                <p className="lp-feat-desc">{f.desc}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
+            <div className="lp-features-grid">
+                {/* HERO: Habit Management */}
+                <div className="lp-feat-card lp-fc-hero lp-reveal">
+                    <div>
+                        <div className="lp-feat-hero-num">01</div>
+                        <div className="lp-feat-hero-title">Habit<br />Management</div>
+                        <div className="lp-feat-hero-body">
+                            Create, edit, pause, and archive habits. Set categories,
+                            frequency, daily targets, and priority levels that fit your real life.
+                            </div>
+                            <div className="lp-feat-hero-tags">
+                                <span className="lp-feat-hero-tag">Add / Edit</span>
+                                <span className="lp-feat-hero-tag">Pause & Resume</span>
+                                <span className="lp-feat-hero-tag">Archive</span>
+                                <span className="lp-feat-hero-tag">Priority</span>
+                                <span className="lp-feat-hero-tag">Frequency</span>
+                                </div>
+                                </div>
+                                </div>
+                                {/* Daily Check-ins */}
+                                <div className="lp-feat-card lp-fc-checkin lp-reveal">
+                                    <div className="lp-feat-num">02</div>
+                                    <div className="lp-feat-title">Daily Check-ins</div>
+                                    <p className="lp-feat-desc">
+                                        Log progress each day. Mark habits done, adjust counts,
+                                        and view history grouped by date.
+                                        </p>
+                                        </div>
+                                        
+                                {/* Goals */}
+                                <div className="lp-feat-card lp-fc-goals lp-reveal">
+                                    <div className="lp-feat-num">03</div>
+                                    <div className="lp-feat-title">Goals & Milestones</div>
+                                    <p className="lp-feat-desc">Set streak or total-completion targets.</p>
+                                    <div className="lp-feat-goal-bar">
+                                        <div className="lp-feat-goal-bar-label">
+                                            <span>30-day streak</span><span>80%</span>
+                                            </div>
+                                            <div className="lp-feat-goal-track">
+                                                <div className="lp-feat-goal-fill" />
+                                                </div>
+                                                <span className="lp-feat-goal-nudge">🎉 Almost there, keep going!</span>
+                                                </div>
+                                                </div>
+                                {/* Stats */}
+                                <div className="lp-feat-card lp-fc-stats lp-reveal">
+                                    <div className="lp-feat-num">04</div>
+                                    <div className="lp-feat-title">Stats Dashboard</div>
+                                    <p className="lp-feat-desc">Streaks, completion rate, totals — all in one view.</p>
+                                    <div className="lp-feat-stat-pills">
+                                        <div className="lp-feat-stat-pill">
+                                            <span>🔥 Current streak</span>
+                                            <span className="lp-feat-stat-val">14 days</span>
+                                            </div>
+                                            <div className="lp-feat-stat-pill">
+                                                <span>📊 7-day rate</span>
+                                                <span className="lp-feat-stat-val">92%</span>
+                                                </div>
+                                                </div>
+                                                </div>
+                                {/* Filter */}
+                                <div className="lp-feat-card lp-fc-filter lp-reveal">
+                                    <div className="lp-feat-num">05</div>
+                                    <div className="lp-feat-title">Smart Filtering</div>
+                                    <p className="lp-feat-desc">
+                                        Filter by category, frequency, priority, or status.
+                                        Find exactly what you need instantly.
+                                        </p>
+                                        </div>
+                                {/* Undo full width */}
+                                <div className="lp-feat-card lp-fc-undo lp-reveal">
+                                    <div className="lp-fc-undo-left">
+                                        <div className="lp-fc-undo-icon">↩️</div>
+                                        <div>
+                                            <div className="lp-fc-undo-title">Undo & Reset</div>
+                                            <div className="lp-fc-undo-body">
+                                                Made a mistake? Undo your last check-in or reset to initial state.
+                                                Your progress is always recoverable.
+                                                </div>
+                                                </div>
+                                                </div>
+                                        <div className="lp-fc-undo-badge">Safety net included</div>
+                                </div>
+                        </div>
+                </div>
+        </section>
 
       {/* ── HOW IT WORKS ── */}
       <section className="lp-section lp-how" id="how">
         <div className="lp-section-inner">
-          <span className="lp-section-label lp-reveal">Simple by design</span>
-          <h2 className="lp-section-h2 lp-reveal">
-            From zero to habit hero
-            <br />
-            <em>in 4 steps</em>
-          </h2>
+            <span className="lp-section-label lp-reveal">Simple by design</span>
+        
+            <h2 className="lp-section-h2 lp-reveal">
+                From zero to habit hero<br /><em>in 4 steps</em>
+                </h2>
+                <HowSteps /> 
 
-          <div className="lp-how-grid">
-            {[
-              {
-                n: "1",
-                title: "Add a Habit",
-                desc: "Name it, pick Health / Study / Work / Mindfulness / Other, set frequency and daily target.",
-              },
-              {
-                n: "2",
-                title: "Set a Goal",
-                desc: "Choose a streak target or total-completions goal. Progress is tracked automatically.",
-              },
-              {
-                n: "3",
-                title: "Check In Daily",
-                desc: "Log your progress, adjust counts, mark habits done — takes under 30 seconds.",
-              },
-              {
-                n: "4",
-                title: "Watch It Grow",
-                desc: "Streaks, completion rates, and goal progress all update live. Your effort made visible.",
-              },
-            ].map((s, i) => (
-              <div key={i} className="lp-step lp-reveal">
-                <div className="lp-step-num">{s.n}</div>
-                <div className="lp-step-title">{s.title}</div>
-                <p className="lp-step-desc">{s.desc}</p>
-              </div>
-            ))}
-          </div>
         </div>
       </section>
 
       {/* ── CATEGORIES ── */}
       <section className="lp-section lp-cats" id="categories">
         <div className="lp-section-inner">
-          <span className="lp-section-label lp-reveal">Five life areas</span>
-          <h2 className="lp-section-h2 lp-reveal">
-            Every part of your day,
-            <br />
-            <em>covered</em>
-          </h2>
+            <span className="lp-section-label lp-reveal">Five life areas</span>
+            <h2 className="lp-section-h2 lp-reveal">
+            Every part of your day,<br /><em>covered</em>
+            </h2>
 
-          <div className="lp-cats-grid">
-            <div className="lp-cat-card lp-cat-c1 lp-reveal">
-              <span className="lp-cat-emoji">💪</span>
-              <div className="lp-cat-tag">Category</div>
-              <div className="lp-cat-title">Health</div>
-              <p className="lp-cat-body">
-                Hydration, exercise, sleep — the foundations that fuel
-                everything else.
-              </p>
-            </div>
-            <div className="lp-cat-card lp-cat-c2 lp-reveal">
-              <span className="lp-cat-emoji">📖</span>
-              <div className="lp-cat-tag">Category</div>
-              <div className="lp-cat-title">Study</div>
-              <p className="lp-cat-body">
-                Daily reading, language learning, courses. Build the compounding
-                habit.
-              </p>
-            </div>
-            <div className="lp-cat-card lp-cat-c3 lp-reveal">
-              <span className="lp-cat-emoji">💼</span>
-              <div className="lp-cat-tag">Category</div>
-              <div className="lp-cat-title">Work</div>
-              <p className="lp-cat-body">
-                Deep work sessions and routines that make you genuinely more
-                effective.
-              </p>
-            </div>
-            <div className="lp-cat-card lp-cat-c4 lp-reveal">
-              <span className="lp-cat-emoji">🧘</span>
-              <div className="lp-cat-tag">Category</div>
-              <div className="lp-cat-title">Mindfulness</div>
-              <p className="lp-cat-body">
-                Meditation, journaling, gratitude — small moments of calm that
-                add up.
-              </p>
-            </div>
 
-            {/* wide card */}
-            <div className="lp-cat-card lp-cat-wide lp-cat-c5 lp-reveal">
-              <span className="lp-cat-emoji">✨</span>
-              <div className="lp-cat-tag">Flexible</div>
-              <div className="lp-cat-title">Other — your unique habits</div>
-              <p className="lp-cat-body">
-                Not everything fits a box. Assign priority and let 1Percent
-                track it anyway.
-              </p>
-              <div className="lp-priority-row">
-                <span className="lp-pill lp-pill-h">High priority</span>
-                <span className="lp-pill lp-pill-m">Medium priority</span>
-                <span className="lp-pill lp-pill-l">Low priority</span>
-              </div>
-            </div>
+            <div className="lp-cats-grid">
 
-            <div className="lp-cat-card lp-cat-wide lp-cat-c6 lp-reveal">
-              <span className="lp-cat-emoji">🔥</span>
-              <div className="lp-cat-tag">Streak protection</div>
-              <div className="lp-cat-title">Missed habits are highlighted</div>
-              <p className="lp-cat-body">
-                Any active habit without a check-in today is flagged visually.
-                No streak dies silently.
-              </p>
-            </div>
-          </div>
+  {/* HERO: Health */}
+<div className="lp-cat-hero lp-reveal">
+    <div>
+    <div className="lp-cat-hero-tag">Category · Health</div>
+    <div className="lp-cat-hero-title">Your body,<br />your foundation</div>
+    <div className="lp-cat-hero-body">
+        Hydration, exercise, sleep — the habits that fuel everything else you do.
+    </div>
+    <div className="lp-cat-hero-examples">
+        <span className="lp-cat-hero-ex">Drink water</span>
+        <span className="lp-cat-hero-ex">Morning run</span>
+        <span className="lp-cat-hero-ex">Sleep 8hrs</span>
+        <span className="lp-cat-hero-ex">Vitamins</span>
+    </div>
+    </div>
+    </div>
+
+  {/* Study */}
+<div className="lp-cat-card lp-cc-study lp-reveal">
+    <div className="lp-cat-tag">Category · Study</div>
+    <div className="lp-cat-title">Study</div>
+    <div className="lp-cat-body">Daily reading, language learning, courses. Build the habit that compounds.</div>
+</div>
+
+  {/* Work */}
+<div className="lp-cat-card lp-cc-work lp-reveal">
+    <div className="lp-cat-tag">Category · Work</div>
+    <div className="lp-cat-title">Work</div>
+    <div className="lp-cat-body">Deep work and routines that make you genuinely more effective every day.</div>
+</div>
+
+  {/* Mindfulness */}
+<div className="lp-cat-card lp-cc-mind lp-reveal">
+    <div className="lp-cat-tag">Category · Mindfulness</div>
+    <div className="lp-cat-title">Mindfulness</div>
+    <div className="lp-cat-body">Meditation, journaling, gratitude — small moments of calm that add up.</div>
+</div>
+
+  {/* Other */}
+<div className="lp-cat-card lp-cc-other lp-reveal">
+    <div className="lp-cat-tag">Flexible · Other</div>
+    <div className="lp-cat-title">Your unique habits</div>
+    <div className="lp-cat-body">Not everything fits a box. Set priority and track it anyway.</div>
+    <div className="lp-priority-row">
+    <span className="lp-pill lp-pill-h">High</span>
+    <span className="lp-pill lp-pill-m">Medium</span>
+    <span className="lp-pill lp-pill-l">Low</span>
+    </div>
+</div>
+
+  {/* Streak banner */}
+<div className="lp-cat-streak lp-reveal">
+    <div className="lp-cat-streak-left">
+    <span className="lp-cat-streak-icon">🔥</span>
+    <div>
+        <div className="lp-cat-streak-title">Missed habits are highlighted</div>
+        <div className="lp-cat-streak-body">
+        Any active habit without a check-in today is flagged. No streak dies silently.
+        </div>
+    </div>
+    </div>
+    <div className="lp-cat-streak-badge">Streak protection</div>
+</div>
+
+</div>
+
         </div>
       </section>
 
