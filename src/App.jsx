@@ -37,7 +37,7 @@ function App() {
             <Route path="/sign-up" element={<SignUp />} />
           </Route>
 
-          <Route element={<AuthRoute />}>
+          {/* <Route element={<AuthRoute />}> */}
             <Route element={<Layout />}>
               <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/all-habits" element={<HabitsList />}/>
@@ -45,7 +45,7 @@ function App() {
               {/* <Route path="/statistics" element={}/> */}
 
             </Route>
-          </Route>
+          {/* </Route> */}
         </Routes>
       </BrowserRouter>
     </>
