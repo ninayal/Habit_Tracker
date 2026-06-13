@@ -64,12 +64,12 @@ export function HabitCellDropdown({
                                     setValue(Math.max(0, num));
                                 }}
                                 className="
-                                    focus-visible:border-pink-400 focus-visible:ring-0 focus-visible:ring-transparent outline-none
+                                    focus-visible:border-blue focus-visible:ring-0 focus-visible:ring-transparent outline-none
                                 "
                             />
 
                             <Button
-                                className="w-full bg-pink-500 hover:bg-pink-600"
+                                className="w-full bg-blue hover:bg-blue/80 text-slate-600"
                                 onClick={() => {
                                     onAction("update_progress", dateString, Number(value));
                                     setOpen(false); 

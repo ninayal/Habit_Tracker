@@ -6,7 +6,7 @@ import React, { useEffect, useMemo, useState } from 'react'
 import { format } from "date-fns";
 import { habitService } from '@/services/habits';
 import { Spinner } from '@/components/ui/spinner';
-import { AlertCircle, CalendarIcon, ChevronDown, FolderOpen, LayoutGrid, MoreHorizontal } from 'lucide-react';
+import { AlertCircle, CalendarIcon, ChevronDown, FolderOpen, LayoutGrid, MoreHorizontal, Plus } from 'lucide-react';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import HabitCard from '@/components/HabitList/HabitCard';
 import HabitDetail from '@/components/HabitList/HabitDetail';
@@ -162,11 +162,11 @@ export default function HabitsList() {
     const today = new Date();
 
     return (
-        <div className='bg-yellow/40 min-h-screen p-4 md:p-8'>
+        <div className='bg-primary min-h-screen p-4 md:p-8'>
             <div className='mx-auto'>
                 <div className='flex items-center'>
                     <div className="flex items-center flex-1 gap-4">
-                        <p className="font-semibold text-[20px] md:text-[24px]">
+                        <p className="font-jakarta font-semibold text-3xl" >
                             All Habits
                         </p>
 
@@ -176,13 +176,13 @@ export default function HabitsList() {
                                     variant="ghost"
                                     className="
                                         justify-start text-left font-normal
-                                        bg-green/70
-                                        hover:bg-green
-                                        active:bg-green
-                                        data-[state=open]:bg-green
-                                        data-[state=open]:hover:bg-green
-                                        focus:bg-green
-                                        focus-visible:bg-green
+                                        bg-white
+                                        hover:bg-gray-50
+                                        active:bg-white
+                                        data-[state=open]:bg-white
+                                        data-[state=open]:hover:bg-white
+                                        focus:bg-white
+                                        focus-visible:bg-white
                                         focus-visible:ring-0
                                         focus-visible:ring-offset-0
                                         shadow-none
@@ -212,12 +212,13 @@ export default function HabitsList() {
                         </Popover>
                     </div>
                     <button
-                        className='py-2 px-4 rounded-lg bg-pink-400 hover:bg-pink-500 text-white font-semibold text-[14px] flex items-center'
+                        className='py-2 px-4 rounded-lg bg-pink-400 hover:bg-pink-500 text-white font-semibold text-[14px] flex items-center gap-3'
                         onClick={() => {
                             setEditingHabit(null);
                             setOpenForm(true);
                         }}
                     >
+                        <Plus size={20}/>
                         Create Habit
                     </button>
 
@@ -230,7 +231,7 @@ export default function HabitsList() {
 
                 </div>
 
-                <div className='bg-white rounded-lg shadow-md mt-4 p-4 md:p-6 min-h-10/12'>
+                <div className='bg-secondary rounded-lg shadow-md mt-4 p-4 md:p-6 min-h-10/12'>
                     <HabitsFilter query={query} setQuery={setQuery} />
 
                     <div className="mt-4 max-w-267.5">
@@ -326,7 +327,7 @@ const List = ({
                         <Collapsible
                             key={key}
                             defaultOpen
-                            className="rounded-lg bg-white "
+                            className="rounded-lg"
                         >
                             <CollapsibleTrigger className="group flex w-full gap-4 items-center px-4 py-2 font-semibold">
                                 <ChevronDown className="h-4 w-4 transition-transform duration-300 group-data-[state=open]:rotate-180" />

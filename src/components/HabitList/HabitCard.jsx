@@ -71,7 +71,7 @@ const checkinStyles = {
     },
 
     missed_today: {
-        card: "bg-yellow-50 border-yellow-300 border-l-4 border-l-yellow-500",
+        card: "bg-yellow/40 border-yellow border-l-4 border-l-yellow-500",
         title: "text-yellow-900 font-semibold",
         badge: (
             <Badge className="bg-yellow-100 text-yellow-800 border-yellow-200">
@@ -90,7 +90,7 @@ export default function HabitCard({
     const completionStatus = checkin?.completionStatus || "not_checked";
 
     let style = checkinStyles[completionStatus] || checkinStyles.in_progress;
-    const isMissedToday = habit.isScheduledDay &&
+    const isMissedToday = habit.isScheduledDay && habit.status === "Active" &&
         (completionStatus === "in_progress" || completionStatus === "not_checked");
 
     if (isMissedToday) {
@@ -121,11 +121,9 @@ export default function HabitCard({
                                     {habit.name}
                                 </h3>
 
-                                <Badge
-                                    className={statusColor[habit.status]}
-                                >
-                                    {habit.status}
-                                </Badge>
+                                <span className="text-xs text-slate-600">
+                                    | {habit.status}
+                                </span>
 
                                 {style.badge}
                             </div>
@@ -133,7 +131,8 @@ export default function HabitCard({
                             <div className="flex flex-wrap gap-2">
                                 {groupBy === "category" && (
                                     <Badge
-                                        className={priorityColor[habit.priority] || "bg-gray-600"}
+                                        variant="outline"
+                                        className={``}
                                     >
                                         {habit.priority}
                                     </Badge>
@@ -141,7 +140,8 @@ export default function HabitCard({
 
                                 {groupBy === "priority" && (
                                     <Badge
-                                        className={`${categoryColors[habit.category] || "bg-gray-100"} text-black text-xs`}
+                                        variant="outline"
+                                        className={` text-black text-xs`}
                                     >
                                         {habit.category}
                                     </Badge>
@@ -275,7 +275,7 @@ function HabitStatusCell({ checkin, target, habit, dateString }) {
             case "completed":
                 return (
                     <button
-                        className="w-8 h-8 rounded-full bg-blue-500 text-white flex items-center justify-center cursor-pointer"
+                        className="w-8 h-8 rounded-full bg-green-500 text-white flex items-center justify-center cursor-pointer"
                     >
                         <Check size={18} />
                     </button>
@@ -283,7 +283,7 @@ function HabitStatusCell({ checkin, target, habit, dateString }) {
 
             case "failed":
                 return (
-                    <button className="w-8 h-8 rounded-full bg-red-100 text-red-600 flex items-center justify-center">
+                    <button className="w-8 h-8 rounded-full text-white bg-red-600 flex items-center justify-center">
                         <X size={18} />
                     </button>
                 );

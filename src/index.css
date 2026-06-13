@@ -144,3 +144,15 @@
     @apply font-sans;
     }
 }
+
+.bg-primary {
+  background:
+    radial-gradient(circle at 20% 10%, rgba(249, 178, 215, 0.42), transparent 28%),
+    radial-gradient(circle at 90% 20%, rgba(207, 236, 243, 0.65), transparent 30%),
+    linear-gradient(135deg, #fffdf2 0%, #f6ffdc 42%, #fdf7fb 100%);
+}
+
+.bg-secondary {
+  background: rgba(255,255,255,0.76);
+}
+
