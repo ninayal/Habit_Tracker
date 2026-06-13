@@ -1,6 +1,5 @@
 import { useState } from "react";
 
-import AccountInfoCard from "@/components/profile/AccountInfoCard";
 import ProfileEditForm from "@/components/profile/ProfileEditForm";
 import ProfileHeader from "@/components/profile/ProfileHeader";
 import PreferencesCard from "@/components/profile/PreferencesCard";
@@ -124,9 +123,7 @@ export default function Profile() {
                     />
                 ) : null}
 
-                <div className="grid gap-6 lg:grid-cols-2">
-                    <AccountInfoCard profile={profile} />
-
+                <div className="grid gap-6">
                     <PreferencesCard
                         reminderTime={profile.reminderTime}
                         defaultHabitCategory={profile.defaultHabitCategory}

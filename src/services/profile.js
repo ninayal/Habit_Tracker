@@ -9,12 +9,6 @@ const DEFAULT_EDITABLE_FIELDS = {
     weekStartsOn: "monday",
 };
 
-function getHandleFromEmail(email = "") {
-    const value = email.trim().split("@")[0];
-
-    return value ? `@${value}` : "";
-}
-
 function normalizeUser(user) {
     if (!user) {
         return null;
@@ -26,9 +20,7 @@ function normalizeUser(user) {
         Object.entries(user).filter(
             ([key]) =>
                 key !== "avatarStyle" &&
-                key !== "notificationPreference" &&
-                key !== "username" &&
-                key !== "handle",
+                key !== "notificationPreference",
         ),
     );
 
@@ -36,12 +28,12 @@ function normalizeUser(user) {
         ...restUser,
         fullName,
         email,
-        handle: getHandleFromEmail(email),
+        image: user.image?.trim() || "",
         bio: user.bio?.trim() || DEFAULT_EDITABLE_FIELDS.bio,
         habitGoal: user.habitGoal?.trim() || DEFAULT_EDITABLE_FIELDS.habitGoal,
         reminderTime: user.reminderTime || DEFAULT_EDITABLE_FIELDS.reminderTime,
         defaultHabitCategory: user.defaultHabitCategory || DEFAULT_EDITABLE_FIELDS.defaultHabitCategory,
-        weekStartsOn: user.weekStartsOn || user.weekStartDay || DEFAULT_EDITABLE_FIELDS.weekStartsOn,
+        weekStartsOn: user.weekStartsOn || DEFAULT_EDITABLE_FIELDS.weekStartsOn,
     };
 }
 
