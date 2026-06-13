@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import ProfileEditForm from "@/components/profile/ProfileEditForm";
 import ProfileHeader from "@/components/profile/ProfileHeader";
@@ -30,8 +30,13 @@ export default function Profile() {
     const [draftValues, setDraftValues] = useState(() => getProfileFormValues(profile));
     const [errors, setErrors] = useState({});
     const [isEditing, setIsEditing] = useState(false);
-    const [statusMessage, setStatusMessage] = useState("");
     const [isSaving, setIsSaving] = useState(false);
+    const [profileSaveStatus, setProfileSaveStatus] = useState({ status: "idle", message: "" });
+    const [preferencesSaveStatus, setPreferencesSaveStatus] = useState({ status: "idle", message: "" });
+    const profileStatusTimerRef = useRef(null);
+    const preferencesStatusTimerRef = useRef(null);
+    const profileUpdateTimerRef = useRef(null);
+    const preferencesUpdateTimerRef = useRef(null);
 
     if (!profile) {
         return (
@@ -46,16 +51,46 @@ export default function Profile() {
     const openEditMode = () => {
         setDraftValues(getProfileFormValues(profile));
         setErrors({});
-        setStatusMessage("");
         setIsEditing(true);
     };
 
     const cancelEditMode = () => {
         setDraftValues(getProfileFormValues(profile));
         setErrors({});
-        setStatusMessage("");
         setIsEditing(false);
     };
+
+    const scheduleStatusReset = (setter, timerRef, delay = 2500) => {
+        if (timerRef.current) {
+            window.clearTimeout(timerRef.current);
+        }
+
+        timerRef.current = window.setTimeout(() => {
+            setter({ status: "idle", message: "" });
+            timerRef.current = null;
+        }, delay);
+    };
+
+    useEffect(
+        () => () => {
+            if (profileStatusTimerRef.current) {
+                window.clearTimeout(profileStatusTimerRef.current);
+            }
+
+            if (preferencesStatusTimerRef.current) {
+                window.clearTimeout(preferencesStatusTimerRef.current);
+            }
+
+            if (profileUpdateTimerRef.current) {
+                window.clearTimeout(profileUpdateTimerRef.current);
+            }
+
+            if (preferencesUpdateTimerRef.current) {
+                window.clearTimeout(preferencesUpdateTimerRef.current);
+            }
+        },
+        [],
+    );
 
     const handleChange = (event) => {
         const { name, value } = event.target;
@@ -79,28 +114,66 @@ export default function Profile() {
         const nextErrors = validateProfileForm(draftValues);
         if (Object.keys(nextErrors).length > 0) {
             setErrors(nextErrors);
+            setProfileSaveStatus({ status: "error", message: "Save failed" });
             return;
         }
 
         setIsSaving(true);
+        setProfileSaveStatus({ status: "saving", message: "Saving..." });
 
-        const updatedProfile = updateCurrentUserProfile({
-            fullName: draftValues.fullName.trim(),
-            email: draftValues.email.trim(),
-        });
+        if (profileUpdateTimerRef.current) {
+            window.clearTimeout(profileUpdateTimerRef.current);
+        }
 
-        setProfile(updatedProfile);
-        setDraftValues(getProfileFormValues(updatedProfile));
-        setErrors({});
-        setStatusMessage("Profile updated.");
-        setIsEditing(false);
-        setIsSaving(false);
+        profileUpdateTimerRef.current = window.setTimeout(() => {
+            try {
+                const updatedProfile = updateCurrentUserProfile({
+                    fullName: draftValues.fullName.trim(),
+                    email: draftValues.email.trim(),
+                });
+
+                if (!updatedProfile) {
+                    setProfileSaveStatus({ status: "error", message: "Save failed" });
+                    return;
+                }
+
+                setProfile(updatedProfile);
+                setDraftValues(getProfileFormValues(updatedProfile));
+                setErrors({});
+                setIsEditing(false);
+                setProfileSaveStatus({ status: "success", message: "Saved ✓" });
+                scheduleStatusReset(setProfileSaveStatus, profileStatusTimerRef);
+            } catch {
+                setProfileSaveStatus({ status: "error", message: "Save failed" });
+            } finally {
+                setIsSaving(false);
+            }
+        }, 120);
     };
 
     const handlePreferenceUpdate = (updates) => {
-        const nextProfile = updateCurrentUserProfile(updates);
-        setProfile(nextProfile);
-        setStatusMessage("Preferences updated.");
+        setPreferencesSaveStatus({ status: "saving", message: "Saving..." });
+
+        if (preferencesUpdateTimerRef.current) {
+            window.clearTimeout(preferencesUpdateTimerRef.current);
+        }
+
+        preferencesUpdateTimerRef.current = window.setTimeout(() => {
+            try {
+                const nextProfile = updateCurrentUserProfile(updates);
+
+                if (!nextProfile) {
+                    setPreferencesSaveStatus({ status: "error", message: "Save failed" });
+                    return;
+                }
+
+                setProfile(nextProfile);
+                setPreferencesSaveStatus({ status: "success", message: "Saved ✓" });
+                scheduleStatusReset(setPreferencesSaveStatus, preferencesStatusTimerRef);
+            } catch {
+                setPreferencesSaveStatus({ status: "error", message: "Save failed" });
+            }
+        }, 120);
     };
 
     return (
@@ -110,6 +183,7 @@ export default function Profile() {
                     profile={profile}
                     isEditing={isEditing}
                     onEdit={openEditMode}
+                    saveStatus={profileSaveStatus}
                 />
 
                 {isEditing ? (
@@ -128,17 +202,12 @@ export default function Profile() {
                         reminderTime={profile.reminderTime}
                         defaultHabitCategory={profile.defaultHabitCategory}
                         weekStartsOn={profile.weekStartsOn}
+                        saveStatus={preferencesSaveStatus}
                         onReminderTimeChange={(value) => handlePreferenceUpdate({ reminderTime: value })}
                         onDefaultHabitCategoryChange={(value) => handlePreferenceUpdate({ defaultHabitCategory: value })}
                         onWeekStartsOnChange={(value) => handlePreferenceUpdate({ weekStartsOn: value })}
                     />
                 </div>
-
-                {statusMessage ? (
-                    <div className="inline-flex rounded-full bg-brand-yellow px-4 py-2 text-sm text-[color:var(--brand-text)] shadow-sm">
-                        {statusMessage}
-                    </div>
-                ) : null}
             </div>
         </div>
     );

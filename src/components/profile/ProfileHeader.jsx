@@ -1,8 +1,9 @@
 import { Button } from "@/components/ui/button";
 import { formatJoinedDate } from "@/services/profile";
 import ProfileAvatar from "@/components/profile/ProfileAvatar";
+import ProfileSaveStatus from "@/components/profile/ProfileSaveStatus";
 
-export default function ProfileHeader({ profile, isEditing, onEdit }) {
+export default function ProfileHeader({ profile, isEditing, onEdit, saveStatus }) {
     const quickInfo = [
         { label: "Category", value: profile.defaultHabitCategory || "Health", tone: "bg-brand-pink/10" },
         { label: "Joined", value: formatJoinedDate(profile.createdAt), tone: "bg-brand-blue/30" },
@@ -28,9 +29,12 @@ export default function ProfileHeader({ profile, isEditing, onEdit }) {
                                 <p className="text-sm text-[color:var(--brand-label-text)] dark:text-[#E5E7EB]">{profile.email}</p>
                             </div>
                         </div>
+                        <div className="pt-3">
+                            <ProfileSaveStatus status={saveStatus?.status} message={saveStatus?.message} />
+                        </div>
                     </div>
 
-                    <div className="flex flex-wrap items-start gap-2 lg:justify-end lg:pt-1">
+                    <div className="flex flex-col items-end justify-start lg:pt-1">
                         <Button
                             type="button"
                             variant="outline"
