@@ -65,4 +65,3 @@ export default function AuthCard({ title, subtitle, children, className }) {
     </div>
   );
 }
-

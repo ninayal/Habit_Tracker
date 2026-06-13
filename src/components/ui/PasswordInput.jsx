@@ -1,7 +1,10 @@
 import { useState } from "react";
 import { Eye, EyeOff } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { getPasswordStrength, PASSWORD_STRENGTH_META } from "@/utils/authValidation";
+import {
+  getPasswordStrength,
+  PASSWORD_STRENGTH_META,
+} from "@/utils/authValidation";
 
 /**
  * PasswordInput — input[type=password] với:
@@ -24,9 +27,9 @@ export default function PasswordInput({
 }) {
   const [visible, setVisible] = useState(false);
 
-  const strength  = showStrengthBar ? getPasswordStrength(value) : 0;
-  const meta      = PASSWORD_STRENGTH_META[strength];
-  const showBar   = showStrengthBar && value.length > 0;
+  const strength = showStrengthBar ? getPasswordStrength(value) : 0;
+  const meta = PASSWORD_STRENGTH_META[strength];
+  const showBar = showStrengthBar && value.length > 0;
 
   return (
     <div className="flex flex-col gap-1.5">
@@ -68,17 +71,22 @@ export default function PasswordInput({
             "focus:outline-none focus-visible:ring-2 focus-visible:ring-[#f9b2d7]/50",
           )}
         >
-          {visible
-            ? <EyeOff size={17} strokeWidth={1.8} />
-            : <Eye    size={17} strokeWidth={1.8} />
-          }
+          {visible ? (
+            <EyeOff size={17} strokeWidth={1.8} />
+          ) : (
+            <Eye size={17} strokeWidth={1.8} />
+          )}
         </button>
       </div>
 
       {/* ── Strength bar ── */}
       {showBar && (
         <div className="flex flex-col gap-1">
-          <div className="flex gap-1" role="progressbar" aria-label="Password strength">
+          <div
+            className="flex gap-1"
+            role="progressbar"
+            aria-label="Password strength"
+          >
             {[1, 2, 3, 4].map((seg) => (
               <div
                 key={seg}
