@@ -69,7 +69,7 @@ export default function SideBarMenu() {
                             isActive
                             ? "bg-[var(--brand-active-bg)] font-medium text-[var(--brand-active-text)]"
                                     : "text-[color:var(--brand-sidebar-muted)] hover:bg-[var(--brand-hover-bg)] hover:text-[color:var(--brand-sidebar-text)]"
-                            }`}
+                                }`}
                         >
                             <Icon className="h-4 w-4" />
                             <span>{item.title}</span>
