@@ -4,10 +4,10 @@ const WEEK_START_OPTIONS = ["Monday", "Sunday", "Saturday"];
 export default function PreferencesCard({
     reminderTime,
     defaultHabitCategory,
-    weekStartDay,
+    weekStartsOn,
     onReminderTimeChange,
     onDefaultHabitCategoryChange,
-    onWeekStartDayChange,
+    onWeekStartsOnChange,
 }) {
     return (
         <section className="brand-card rounded-[2rem] p-5 shadow-sm sm:p-6">
@@ -42,8 +42,8 @@ export default function PreferencesCard({
                 <label className="block rounded-2xl bg-[#FAFAFA] p-4 shadow-sm dark:bg-[#172033]">
                     <span className="text-sm font-medium text-[color:var(--brand-text)] dark:text-[#F9FAFB]">Week starts on</span>
                     <select
-                        value={weekStartDay}
-                        onChange={(event) => onWeekStartDayChange(event.target.value)}
+                    value={weekStartsOn}
+                    onChange={(event) => onWeekStartsOnChange(event.target.value)}
                         className="mt-2 w-full rounded-2xl border border-brand-border bg-[#FAFAFA] px-4 py-3 text-sm text-[color:var(--brand-text)] outline-none transition focus:border-brand-pink focus:ring-2 focus:ring-brand-pink/20 dark:bg-[#172033] dark:text-[#F9FAFB]"
                     >
                         {WEEK_START_OPTIONS.map((day) => (

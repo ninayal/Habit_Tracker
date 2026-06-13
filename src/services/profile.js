@@ -6,7 +6,7 @@ const DEFAULT_EDITABLE_FIELDS = {
     habitGoal: "",
     reminderTime: "07:00",
     defaultHabitCategory: "Health",
-    weekStartDay: "Monday",
+    weekStartsOn: "monday",
 };
 
 function getHandleFromEmail(email = "") {
@@ -41,7 +41,7 @@ function normalizeUser(user) {
         habitGoal: user.habitGoal?.trim() || DEFAULT_EDITABLE_FIELDS.habitGoal,
         reminderTime: user.reminderTime || DEFAULT_EDITABLE_FIELDS.reminderTime,
         defaultHabitCategory: user.defaultHabitCategory || DEFAULT_EDITABLE_FIELDS.defaultHabitCategory,
-        weekStartDay: user.weekStartDay || DEFAULT_EDITABLE_FIELDS.weekStartDay,
+        weekStartsOn: user.weekStartsOn || user.weekStartDay || DEFAULT_EDITABLE_FIELDS.weekStartsOn,
     };
 }
 
@@ -81,7 +81,7 @@ export function getDefaultProfileFormValues(profile) {
         habitGoal: DEFAULT_EDITABLE_FIELDS.habitGoal,
         reminderTime: DEFAULT_EDITABLE_FIELDS.reminderTime,
         defaultHabitCategory: DEFAULT_EDITABLE_FIELDS.defaultHabitCategory,
-        weekStartDay: DEFAULT_EDITABLE_FIELDS.weekStartDay,
+        weekStartsOn: DEFAULT_EDITABLE_FIELDS.weekStartsOn,
     };
 }
 

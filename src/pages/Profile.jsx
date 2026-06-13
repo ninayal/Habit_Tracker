@@ -130,10 +130,10 @@ export default function Profile() {
                     <PreferencesCard
                         reminderTime={profile.reminderTime}
                         defaultHabitCategory={profile.defaultHabitCategory}
-                        weekStartDay={profile.weekStartDay}
+                        weekStartsOn={profile.weekStartsOn}
                         onReminderTimeChange={(value) => handlePreferenceUpdate({ reminderTime: value })}
                         onDefaultHabitCategoryChange={(value) => handlePreferenceUpdate({ defaultHabitCategory: value })}
-                        onWeekStartDayChange={(value) => handlePreferenceUpdate({ weekStartDay: value })}
+                        onWeekStartsOnChange={(value) => handlePreferenceUpdate({ weekStartsOn: value })}
                     />
                 </div>
 
