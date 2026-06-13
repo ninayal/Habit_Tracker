@@ -23,6 +23,7 @@ import {
 
 import EmojiPicker from "emoji-picker-react"
 import { useHabitForm } from "@/hooks/useHabitForm"
+import { toast } from "react-toastify"
 
 const categories = ["Health", "Study", "Work", "Mindfulness", "Other"]
 const priorities = ["High", "Medium", "Low"]
@@ -30,38 +31,31 @@ const priorities = ["High", "Medium", "Low"]
 const days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
 
 
-export default function HabitForm({ children, open, setOpen, habit, reload }) {
+export default function HabitForm({ children, open, setOpen, habit }) {
     const [showEmoji, setShowEmoji] = useState(false)
 
-    const { form, errors, loading, updateField,
+    const { form, errors, setErrors, loading, updateField,
         setForm, submit, isEdit
     } = useHabitForm({
         habit,
         onSuccess: () => {
             setOpen(false);
-            reload?.();
+            toast.success(isEdit? "Update habit successfully!" : "Create habit successfully!")
         }
-
     });
 
-
     const toggleDay = (index) => {
-        setForm((prev) => {
-            const exists = prev.frequency.daysOfWeek.includes(index)
-
-            return {
-                ...prev,
-                frequency: {
-                    ...prev.frequency,
-                    daysOfWeek: exists
-                        ? prev.frequency.daysOfWeek.filter((d) => d !== index)
-                        : [...prev.frequency.daysOfWeek, index],
-                },
-            }
-        })
-    }
-
-
+        const exists = form.frequency.daysOfWeek.includes(index);
+        updateField("frequency.daysOfWeek",
+            exists ? form.frequency.daysOfWeek.filter(
+                d => d !== index
+            ) : [ ...form.frequency.daysOfWeek, index ]
+        );
+        setErrors(prev => ({
+            ...prev,
+            daysOfWeek: undefined,
+        }));
+    };
 
     return (
         <Dialog open={open} onOpenChange={setOpen} >
@@ -194,13 +188,10 @@ export default function HabitForm({ children, open, setOpen, habit, reload }) {
                         <Select
                             value={form.frequency.repeatType}
                             onValueChange={(value) =>
-                                setForm((prev) => ({
-                                    ...prev,
-                                    frequency: {
-                                        ...prev.frequency,
-                                        repeatType: value,
-                                    },
-                                }))
+                                updateField(
+                                    "frequency.repeatType",
+                                    value
+                                )
                             }
                         >
                             <SelectTrigger>
@@ -223,10 +214,7 @@ export default function HabitForm({ children, open, setOpen, habit, reload }) {
                                         onClick={() => toggleDay(idx)}
                                         className={`text-sm p-2 rounded-md border ${form.frequency.daysOfWeek.includes(
                                             idx
-                                        )
-                                            ? "bg-pink-200 border-0"
-                                            : ""
-                                            }`}
+                                        ) ? "bg-pink-200 border-0" : ""}`}
                                     >
                                         {d}
                                     </button>

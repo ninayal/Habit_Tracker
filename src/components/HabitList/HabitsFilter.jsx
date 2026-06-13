@@ -6,6 +6,11 @@ import { Search, ArrowDownUp, SlidersHorizontal, Siren, Check } from 'lucide-rea
 const statusList = ["Active", "Paused", "Archived"];
 const PRIORITIES = ["All", "High", "Medium", "Low"];
 const CATEGORIES = ["All", "Health", "Study", "Work", "Mindfulness", "Other"];
+const FREQUENCY = [
+    { label: "All", value: "all" },
+    { label: "Daily", value: "daily" },
+    { label: "Specific days", value: "specific_days" },
+];
 
 export default function HabitsFilter({ query, setQuery }) {
     const toggleStatus = (status, setQuery) => {
@@ -137,6 +142,32 @@ const FilterDropdown = ({ children, query, setQuery }) => {
                                 >
                                     {item}
                                     {query.category === item && (
+                                        <Check className="w-4 h-4" />
+                                    )}
+                                </DropdownMenuItem>
+                            ))}
+                        </DropdownMenuSubContent>
+                    </DropdownMenuPortal>
+                </DropdownMenuSub>
+
+                {/* Frequency */}
+                <DropdownMenuSub>
+                    <DropdownMenuSubTrigger>Frequency</DropdownMenuSubTrigger>
+                    <DropdownMenuPortal>
+                        <DropdownMenuSubContent>
+                            {FREQUENCY.map((item) => (
+                                <DropdownMenuItem
+                                    key={item.value}
+                                    onSelect={() =>
+                                        setQuery(prev => ({
+                                            ...prev,
+                                            frequency: item.value
+                                        }))
+                                    }
+                                    className="flex items-center gap-2"
+                                >
+                                    {item.label}
+                                    {query.frequency === item.value && (
                                         <Check className="w-4 h-4" />
                                     )}
                                 </DropdownMenuItem>

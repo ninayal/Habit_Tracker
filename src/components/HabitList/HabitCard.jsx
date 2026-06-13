@@ -13,6 +13,7 @@ import React, { useState } from "react";
 import { useCheckinContext } from "@/hooks/useCheckins";
 import { HabitCellDropdown } from "@/components/HabitList/HabitCellDropdown";
 import { HabitCardDropdown } from "@/components/HabitList/HabitCardDropdown";
+import { formatDate } from "@/utils/helper";
 
 const priorityColor = {
     High: "bg-red-100 text-red-800",
@@ -68,13 +69,33 @@ const checkinStyles = {
             </Badge>
         ),
     },
+
+    missed_today: {
+        card: "bg-yellow-50 border-yellow-300 border-l-4 border-l-yellow-500",
+        title: "text-yellow-900 font-semibold",
+        badge: (
+            <Badge className="bg-yellow-100 text-yellow-800 border-yellow-200">
+                Not yet checked <AlertTriangle className="h-4 w-4 text-yellow-600" />
+            </Badge>
+        ),
+    },
 };
 
-export default function HabitCard({ habit, checkin, groupBy, onClick }) {
+export default function HabitCard({
+    habit, checkin, groupBy, onClick, date,
+    onEdit, onChangeStatus, onDelete
+}) {
     const [openDropdown, setOpenDropdown] = useState(false);
 
     const completionStatus = checkin?.completionStatus || "not_checked";
-    const style = checkinStyles[completionStatus] || checkinStyles.in_progress;
+
+    let style = checkinStyles[completionStatus] || checkinStyles.in_progress;
+    const isMissedToday = habit.isScheduledDay &&
+        (completionStatus === "in_progress" || completionStatus === "not_checked");
+
+    if (isMissedToday) {
+        style = checkinStyles.missed_today;
+    }
 
     return (
         <Card
@@ -148,7 +169,7 @@ export default function HabitCard({ habit, checkin, groupBy, onClick }) {
                             </Badge>
                         )}
 
-                        <div 
+                        <div
                             className="text-right"
                             onClick={(e) => e.stopPropagation()}
                         >
@@ -156,12 +177,20 @@ export default function HabitCard({ habit, checkin, groupBy, onClick }) {
                                 checkin={checkin}
                                 habit={habit}
                                 target={habit.targetPerDay}
+                                dateString={formatDate(date)}
                             />
                         </div>
 
                         <HabitCardDropdown
                             open={openDropdown}
                             setOpen={setOpenDropdown}
+                            status={habit?.status}
+
+                            onEdit={() => onEdit?.(habit)}
+                            onChangeStatus={(status) =>
+                                onChangeStatus?.(habit, status)
+                            }
+                            onDelete={() => onDelete?.(habit)}
                         >
                             <button
                                 className=" p-1 rounded-md hover:bg-blue/40 transition-colors focus:outline-none focus:ring-0 focus-visible:ring-0"
@@ -185,6 +214,9 @@ export default function HabitCard({ habit, checkin, groupBy, onClick }) {
 
 
 function HabitStatusCell({ checkin, target, habit, dateString }) {
+    const [openNoteModal, setOpenNoteModal] = useState(false);
+    const [pendingCheckin, setPendingCheckin] = useState(null);
+
     const current = checkin ?? {
         completionStatus: "not_checked",
         completedCount: 0,
@@ -194,10 +226,10 @@ function HabitStatusCell({ checkin, target, habit, dateString }) {
 
     const { updateCheckin, resetCheckin } = useCheckinContext();
 
-    const handleAction = async (action, dateString, value) => {
+    const handleAction = (action, dateString, value) => {
         switch (action) {
             case "update_progress": {
-                await updateCheckin(habit.id, dateString, {
+                updateCheckin(habit.id, dateString, {
                     completedCount: value,
                 });
                 // console.log("update_progress" ,habit.id, dateString, value)
@@ -205,21 +237,21 @@ function HabitStatusCell({ checkin, target, habit, dateString }) {
             }
 
             case "skipped":
-                await updateCheckin(habit.id, dateString, {
+                updateCheckin(habit.id, dateString, {
                     completionStatus: "skipped",
                 });
                 // console.log("skipped" ,habit.id, dateString)
                 return;
 
             case "failed":
-                await updateCheckin(habit.id, selectedDate, {
+                updateCheckin(habit.id, selectedDate, {
                     completionStatus: "failed",
                 });
                 // console.log("failed" ,habit.id, dateString)
                 return;
 
             case "reset":
-                await resetCheckin(habit.id, dateString);
+                resetCheckin(habit.id, dateString);
                 // console.log("reset" ,habit.id, dateString)
                 return;
         }
@@ -288,7 +320,7 @@ function HabitStatusCell({ checkin, target, habit, dateString }) {
             default:
                 return (
                     <button
-                        className="w-8 h-8 flex bg-gray-200 hover:bg-gray-300 items-center justify-center rounded-full border border-slate-200 cursor-pointer"
+                        className="w-8 h-8 flex border border-slate-200 bg-slate-100 hover:bg-slate-200 items-center justify-center rounded-full cursor-pointer"
                     >
                         <PlusIcon size={18} />
                     </button>

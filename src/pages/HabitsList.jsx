@@ -1,6 +1,6 @@
 import { useCheckinContext } from '@/hooks/useCheckins';
 import { useDebounce } from '@/hooks/useDebounce';
-import { useHabits } from '@/hooks/useHabits';
+import { useHabitsQuery } from '@/hooks/useHabitsQuery';
 import { useQueryParams } from '@/hooks/useQueryParams';
 import React, { useEffect, useMemo, useState } from 'react'
 import { format } from "date-fns";
@@ -15,6 +15,9 @@ import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
 import HabitsFilter from '@/components/HabitList/HabitsFilter';
 import HabitForm from '@/components/HabitList/HabitForm';
+import { useHabitContext } from '@/hooks/useHabits';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
+import { toast } from 'react-toastify';
 
 export default function HabitsList() {
     const [query, setQuery] = useQueryParams({
@@ -23,6 +26,7 @@ export default function HabitsList() {
         status: "",
         category: "All",
         priority: "All",
+        frequency: "all",
         groupBy: "priority",
         sortBy: "order",
     });
@@ -32,14 +36,17 @@ export default function HabitsList() {
 
     const [openForm, setOpenForm] = useState(false);
     const [editingHabit, setEditingHabit] = useState(null);
+    const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
+    const [deletingHabit, setDeletingHabit] = useState(null);
 
     const debouncedSearch = useDebounce(query.search, 300);
     const finalQuery = {
         ...query,
         search: debouncedSearch
     };
-    const { habits: allHabits, loading, error, reload } = useHabits(finalQuery);
+    const { habits: allHabits, loading, error } = useHabitsQuery(finalQuery);
     const { checkins, loadCheckins } = useCheckinContext();
+    const { updateHabit, deleteHabit } = useHabitContext();
 
     useEffect(() => {
         loadCheckins();
@@ -74,7 +81,7 @@ export default function HabitsList() {
             ...habit,
             isScheduledDay: habitService.isScheduledDay(habit, selectedDate)
         }));
-    }, [allHabits, query, selectedDate]);
+    }, [allHabits, query.status, selectedDate]);
 
     const groupedHabits = useMemo(() => {
         if (!query.groupBy) return null;
@@ -111,6 +118,33 @@ export default function HabitsList() {
 
         return entries;
     }, [habits, query.groupBy, query.sortBy]);
+
+    const handleEditHabit = (habit) => {
+        setEditingHabit(habit);
+        setOpenForm(true);
+    };
+
+    const handleChangeStatus = (habit, status) => {
+        updateHabit(habit.id, {
+            status,
+        });
+    };
+
+    const handleDeleteHabit = (habit) => {
+        setDeletingHabit(habit);
+        setOpenDeleteDialog(true);
+    };
+
+    const confirmDeleteHabit = () => {
+        if (!deletingHabit) return;
+
+        deleteHabit(deletingHabit?.id);
+
+        setOpenDeleteDialog(false);
+        toast.success("Delete habit successfully!")
+
+        setDeletingHabit(null);
+    };
 
     const handleOpenHabitDetail = (habit) => {
         setSelectedHabit(habit);
@@ -192,7 +226,6 @@ export default function HabitsList() {
                         open={openForm}
                         setOpen={setOpenForm}
                         habit={editingHabit}
-                        reload={reload}
                     />
 
                 </div>
@@ -208,6 +241,11 @@ export default function HabitsList() {
                                 statusMap={statusMap}
                                 groupBy={query.groupBy}
                                 onHabitClick={handleOpenHabitDetail}
+
+                                onEditHabit={handleEditHabit}
+                                onChangeStatus={handleChangeStatus}
+                                onDeleteHabit={handleDeleteHabit}
+                                date={selectedDate}
                             />
                         ) : (
                             <div className="overflow-x-auto w-full">
@@ -217,6 +255,11 @@ export default function HabitsList() {
                                     habits={habits}
                                     statusMap={statusMap}
                                     onHabitClick={handleOpenHabitDetail}
+
+                                    onEditHabit={handleEditHabit}
+                                    onChangeStatus={handleChangeStatus}
+                                    onDeleteHabit={handleDeleteHabit}
+                                    date={selectedDate}
                                 />
                             </div>
                         )}
@@ -224,18 +267,57 @@ export default function HabitsList() {
                             open={openDrawer}
                             onOpenChange={setOpenDrawer}
                             habit={selectedHabit}
+
+                            onEdit={handleEditHabit}
+                            onChangeStatus={handleChangeStatus}
+                            onDelete={handleDeleteHabit}
                         />
                     </div>
-
-
                 </div>
+
+                <AlertDialog
+                    open={openDeleteDialog}
+                    onOpenChange={setOpenDeleteDialog}
+                >
+                    <AlertDialogContent>
+                        <AlertDialogHeader>
+                            <AlertDialogTitle className={`text-xl py-2`}>
+                                Delete Habit
+                            </AlertDialogTitle>
+
+                            <AlertDialogDescription>
+                                Confirm to delete "{deletingHabit?.name}" habit?
+                                This action cannot be undone. This will permanently delete your habit and remove your checkins data.
+                            </AlertDialogDescription>
+                        </AlertDialogHeader>
+
+                        <AlertDialogFooter className={`bg-white`}>
+                            <AlertDialogCancel
+                                variant="secondary"
+                            >
+                                Cancel
+                            </AlertDialogCancel>
+
+                            <AlertDialogAction
+                                onClick={confirmDeleteHabit}
+                                variant='destructive'
+                            >
+                                Delete
+                            </AlertDialogAction>
+                        </AlertDialogFooter>
+                    </AlertDialogContent>
+                </AlertDialog>
+
             </div>
         </div>
     )
 }
 
 
-const List = ({ groupedHabits, habits, statusMap, groupBy, onHabitClick }) => {
+const List = ({
+    groupedHabits, habits, statusMap, groupBy, onHabitClick, date,
+    onEditHabit, onChangeStatus, onDeleteHabit
+}) => {
     return (
         <div className="w-full pb-4 mt-6">
             <div className="flex flex-col gap-2">
@@ -262,6 +344,11 @@ const List = ({ groupedHabits, habits, statusMap, groupBy, onHabitClick }) => {
                                             checkin={statusMap[habit.id].checkin}
                                             groupBy={groupBy}
                                             onClick={() => onHabitClick(habit)}
+
+                                            onEdit={onEditHabit}
+                                            onChangeStatus={onChangeStatus}
+                                            onDelete={onDeleteHabit}
+                                            date={date}
                                         />
                                     ))}
                                 </div>
@@ -276,6 +363,11 @@ const List = ({ groupedHabits, habits, statusMap, groupBy, onHabitClick }) => {
                             checkin={statusMap[habit.id].checkin}
                             groupBy={groupBy}
                             onClick={() => onHabitClick(habit)}
+
+                            onEdit={onEditHabit}
+                            onChangeStatus={onChangeStatus}
+                            onDelete={onDeleteHabit}
+                            date={date}
                         />
                     ))
                 )}
@@ -285,7 +377,10 @@ const List = ({ groupedHabits, habits, statusMap, groupBy, onHabitClick }) => {
 }
 
 
-const Kanban = ({ groupedHabits, groupBy, statusMap, onHabitClick }) => {
+const Kanban = ({
+    groupedHabits, groupBy, statusMap, onHabitClick, date,
+    onEditHabit, onChangeStatus, onDeleteHabit
+}) => {
 
     const getColumnStyle = (key, index) => {
         if (groupBy === 'priority') {
@@ -331,6 +426,11 @@ const Kanban = ({ groupedHabits, groupBy, statusMap, onHabitClick }) => {
                                         checkin={statusMap[habit.id].checkin}
                                         groupBy={groupBy}
                                         onClick={() => onHabitClick(habit)}
+
+                                        onEdit={onEditHabit}
+                                        onChangeStatus={onChangeStatus}
+                                        onDelete={onDeleteHabit}
+                                        date={date}
                                     />)
                             )}
                         </div>

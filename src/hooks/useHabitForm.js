@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { habitService } from "@/services/habits";
+import { useHabitContext } from "@/hooks/useHabits";
 
 export function useHabitForm({ habit, onSuccess }) {
     const isEdit = !!habit;
@@ -18,7 +19,9 @@ export function useHabitForm({ habit, onSuccess }) {
         autoOpenNote: habit?.autoOpenNote || false,
     });
 
-    const [form, setForm] = useState(getInitialValues);
+    const { createHabit, updateHabit } = useHabitContext();
+
+    const [form, setForm] = useState(() => getInitialValues());
     const [loading, setLoading] = useState(false);
     const [errors, setErrors] = useState({});
 
@@ -27,16 +30,25 @@ export function useHabitForm({ habit, onSuccess }) {
         setErrors({});
     }, [habit]);
 
-    const updateField = (key, value) => {
-        setForm((prev) => ({
+    const updateField = (path, value) => {
+        const keys = path.split(".");
+        setForm(prev => {
+            const newForm = { ...prev };
+            let current = newForm;
+            for (let i = 0; i < keys.length - 1; i++) {
+                current[keys[i]] = { ...current[keys[i]] };
+                current = current[keys[i]];
+            }
+
+            current[keys[keys.length - 1]] = value;
+            return newForm;
+        });
+
+        setErrors(prev => ({
             ...prev,
-            [key]: value,
-        }))
-        setErrors((prev) => ({
-            ...prev,
-            [key]: undefined,
-        }))
-    }
+            [path]: undefined,
+        }));
+    };
 
     const validate = () => {
         const newErrors = {}
@@ -59,7 +71,7 @@ export function useHabitForm({ habit, onSuccess }) {
         return Object.keys(newErrors).length === 0
     }
 
-    const submit = async () => {
+    const submit = () => {
         if (!validate()) {
             return false;
         }
@@ -68,9 +80,9 @@ export function useHabitForm({ habit, onSuccess }) {
             setLoading(true);
             let result;
             if (isEdit) {
-                result = habitService.updateHabit(habit.id, form);
+                result = updateHabit(habit.id, form);
             } else {
-                result = habitService.createHabit(form);
+                result = createHabit(form);
             }
 
             onSuccess?.(result);
@@ -80,10 +92,13 @@ export function useHabitForm({ habit, onSuccess }) {
         }
     };
 
+
+
     return {
         form,
         loading,
         errors,
+        setErrors,
         updateField,
         setForm,
         submit,

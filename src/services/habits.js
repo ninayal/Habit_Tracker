@@ -9,7 +9,8 @@ export const habitService = {
     getById,
     createHabit,
     updateHabit,
-    isScheduledDay
+    isScheduledDay,
+    deleteHabit
 };
 
 function getAll() {
@@ -42,6 +43,7 @@ function queryHabits(userId, query = {}) {
         status,
         category,
         priority,
+        frequency
     } = query;
 
     if (search) {
@@ -70,6 +72,13 @@ function queryHabits(userId, query = {}) {
         data = data.filter(
             h => h.priority === priority
         );
+    }
+
+    if (frequency && frequency !== "all") {
+        data = data.filter(h => {
+            if (!h.frequency) return false;
+            return h.frequency.repeatType === frequency;
+        });
     }
 
     // if (sortBy) {
@@ -108,7 +117,7 @@ function createHabit(data) {
     const user = authService.getCurrentUser();
 
     const nextId = habits.length > 0
-            ? Math.max(...habits.map(h => h.id)) + 1 : 1;
+        ? Math.max(...habits.map(h => h.id)) + 1 : 1;
 
     const now = new Date().toISOString();
     const newHabit = {
@@ -139,7 +148,7 @@ function createHabit(data) {
 
     habits.push(newHabit);
 
-    storage.set( STORAGE_KEYS.HABITS, habits);
+    storage.set(STORAGE_KEYS.HABITS, habits);
     return newHabit;
 }
 
@@ -169,7 +178,7 @@ function updateHabit(id, updates) {
 
     habits[index] = updatedHabit;
 
-    storage.set( STORAGE_KEYS.HABITS, habits);
+    storage.set(STORAGE_KEYS.HABITS, habits);
     return updatedHabit;
 }
 
@@ -182,4 +191,32 @@ function isScheduledDay(habit, date) {
         return habit.frequency.daysOfWeek.includes(dayOfWeek);
     }
     return true;
+}
+
+function deleteHabit(id) {
+    const habits = storage.get(STORAGE_KEYS.HABITS, []);
+    const checkins = storage.get(STORAGE_KEYS.CHECKINS, []);
+    const goals = storage.get(STORAGE_KEYS.GOALS, []);
+
+    const habit = habits.find(h => h.id === id);
+    if (!habit) {
+        throw new Error("Habit not found");
+    }
+
+    const newHabits = habits.filter(
+        h => h.id !== id
+    );
+
+    const newCheckins = checkins.filter(
+        c => c.habitId !== id
+    );
+
+    const newGoals = goals.filter(
+        g => g.habitId !== id
+    );
+
+    storage.set(STORAGE_KEYS.HABITS, newHabits);
+    storage.set(STORAGE_KEYS.CHECKINS, newCheckins);
+    storage.set(STORAGE_KEYS.GOALS, newGoals);
+    return habit;
 }
