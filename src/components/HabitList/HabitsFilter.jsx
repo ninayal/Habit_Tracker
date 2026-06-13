@@ -22,38 +22,43 @@ export default function HabitsFilter({ query, setQuery }) {
 
     return (
         <div className={`flex flex-col sm:flex-row sm:items-center gap-3`}>
-            <span className='text-base font-medium text-gray-500'>Tìm kiếm</span>
-            <div className='flex items-center border border-gray-300 rounded-md px-2 focus-within:border-gray-600'>
-                <input
-                    type='text'
-                    placeholder='Enter name...'
-                    className='text-[14px] outline-none flex-1'
-                    value={query.search}
-
-                    onChange={(e) =>
-                        setQuery(prev => ({
-                            ...prev,
-                            search: e.target.value
-                        }))
-
-                    }
-
-                />
-                <button className='p-1 hover:bg-gray-100 rounded-full'>
-                    <Search className='text-gray-500 text-[20px]' />
-                </button>
+            <div className='flex items-center gap-3 flex-1 min-w-0'>
+                <span className='text-base font-medium text-[var(--brand-muted-text)] shrink-0'>Tìm kiếm</span>
+                <div className='
+                    flex flex-1 min-w-0 items-center
+                    border border-[var(--brand-border)]
+                    bg-[var(--brand-card-bg)]
+                    rounded-md px-2
+                    focus-within:border-[var(--brand-active-bg)]
+                '>
+                    <input
+                        type='text'
+                        placeholder='Enter name...'
+                        className='flex-1 min-w-0 text-[14px] outline-none bg-transparent text-[var(--brand-text)]'
+                        value={query.search}
+                        onChange={(e) =>
+                            setQuery(prev => ({
+                                ...prev,
+                                search: e.target.value
+                            }))
+                        }
+                    />
+                    <button className='p-1 hover:bg-gray-100 rounded-full'>
+                        <Search className='text-gray-500 text-[20px]' />
+                    </button>
+                </div>
             </div>
 
-            <div className='flex items-center gap-2 ml-auto flex-wrap'>
+            <div className='flex items-center gap-2 flex-wrap shrink-0'>
                 <div
-                    className="py-2 px-3 flex items-center bg-white gap-1 hover:bg-slate-100 rounded-lg cursor-pointer"
+                    className="py-2 px-3 flex items-center gap-1 rounded-lg cursor-pointer"
                 >
                     <SortDropdown query={query} setQuery={setQuery}>
                         <ArrowDownUp size={20}></ArrowDownUp>
                     </SortDropdown>
                 </div>
                 <div
-                    className="py-2 px-3 flex items-center bg-white gap-1 hover:bg-slate-100 rounded-lg cursor-pointer"
+                    className="py-2 px-3 flex items-center gap-1 rounded-lg cursor-pointer"
                 >
                     <FilterDropdown query={query} setQuery={setQuery}>
                         <SlidersHorizontal size={20}></SlidersHorizontal>
@@ -61,15 +66,17 @@ export default function HabitsFilter({ query, setQuery }) {
 
                 </div>
 
-                <div className="flex items-center gap-1 rounded-2xl border border-gray-300 p-1 text-sm">
+                <div className="flex items-center gap-1 rounded-2xl border border-[var(--brand-border)] bg-[var(--brand-card-bg)] p-1 text-sm">
                     {statusList.map((status, idx) => (
                         <div key={status}>
                             <button
                                 onClick={() => toggleStatus(status, setQuery)}
-                                className={`rounded-xl px-3 py-1 transition-colors ${query.status === status
-                                    ? "bg-blue"
-                                    : "hover:bg-gray-100"
-                                    }`}
+                                className={` rounded-xl px-3 py-1 transition-colors
+                                    ${query.status === status
+                                        ? "bg-[var(--brand-active-bg)]/60 text-[var(--brand-active-text)]"
+                                        : "hover:bg-[var(--brand-hover-bg)] text-[var(--brand-text)]"
+                                    }
+                                `}
                             >
                                 {status}
                             </button>

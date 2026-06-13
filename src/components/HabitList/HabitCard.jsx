@@ -55,7 +55,7 @@ const checkinStyles = {
     },
 
     in_progress: {
-        card: "border-l-4 border-l-blue",
+        card: "border-l-4 border-l-blue bg-white",
         title: "",
         badge: null,
     },
@@ -64,7 +64,7 @@ const checkinStyles = {
         card: "opacity-80 border-l-4 border-l-gray-400",
         title: "text-muted-foreground",
         badge: (
-            <Badge variant="secondary">
+            <Badge variant="outline">
                 Skipped <SkipForward className="h-4 w-4 text-gray-500" />
             </Badge>
         ),
@@ -121,7 +121,7 @@ export default function HabitCard({
                                     {habit.name}
                                 </h3>
 
-                                <span className="text-xs text-slate-600">
+                                <span className="text-xs text-[var(--brand-muted-text)]">
                                     | {habit.status}
                                 </span>
 
@@ -132,7 +132,7 @@ export default function HabitCard({
                                 {groupBy === "category" && (
                                     <Badge
                                         variant="outline"
-                                        className={``}
+                                        className={`text-[var(--brand-muted-text)]`}
                                     >
                                         {habit.priority}
                                     </Badge>
@@ -141,7 +141,7 @@ export default function HabitCard({
                                 {groupBy === "priority" && (
                                     <Badge
                                         variant="outline"
-                                        className={` text-black text-xs`}
+                                        className={` text-[var(--brand-muted-text)] text-xs`}
                                     >
                                         {habit.category}
                                     </Badge>
@@ -162,8 +162,8 @@ export default function HabitCard({
                     <div className="flex items-center gap-3 shrink-0">
                         {!habit.isScheduledDay && (
                             <Badge
-                                variant="secondary"
-                                className="text-xs"
+                                variant="outline"
+                                className="text-xs text-[var(--brand-muted-text)]"
                             >
                                 Not required
                             </Badge>
@@ -290,7 +290,7 @@ function HabitStatusCell({ checkin, target, habit, dateString }) {
 
             case "skipped":
                 return (
-                    <button className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center">
+                    <button className="w-8 h-8 rounded-full bg-muted/30 flex items-center justify-center">
                         <ArrowRight size={18} />
                     </button>
                 );
@@ -320,7 +320,7 @@ function HabitStatusCell({ checkin, target, habit, dateString }) {
             default:
                 return (
                     <button
-                        className="w-8 h-8 flex border border-slate-200 bg-slate-100 hover:bg-slate-200 items-center justify-center rounded-full cursor-pointer"
+                        className="w-8 h-8 flex bg-muted/30 items-center justify-center rounded-full cursor-pointer"
                     >
                         <PlusIcon size={18} />
                     </button>

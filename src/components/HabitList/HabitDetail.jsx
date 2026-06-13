@@ -54,7 +54,7 @@ export default function HabitDetail({
                                 </div>
 
                                 <h3
-                                    className={` font-semibold text-lg`}
+                                    className={` font-semibold text-lg text-black`}
                                 >
                                     {habit?.name}
                                 </h3>
@@ -71,7 +71,7 @@ export default function HabitDetail({
                                     onDelete={() => onDelete?.(habit)}
                                 >
                                     <button
-                                        className=" p-1 rounded-md hover:bg-blue/40 transition-colors focus:outline-none focus:ring-0 focus-visible:ring-0"
+                                        className=" p-1 text-black rounded-md hover:bg-blue/40 transition-colors focus:outline-none focus:ring-0 focus-visible:ring-0"
                                         onClick={(e) => {
                                             e.stopPropagation();
                                             setOpenDropdown(true);

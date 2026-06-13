@@ -218,3 +218,55 @@
   background: rgba(255,255,255,0.76);
 }
 
+.brand-card {
+    background-color: var(--brand-card-bg);
+    color: var(--brand-text);
+    border: 1px solid var(--brand-border);
+}
+
+
+@layer utilities {
+  div[data-slot="card"][class*="bg-green-50"] {
+    /* keep light defaults (Tailwind classes already applied) */
+  }
+
+  .dark div[data-slot="card"][class*="bg-green-50"] {
+    @apply bg-green-900/20 border-green-700;
+  }
+
+  .dark div[data-slot="card"][class*="bg-red-50"] {
+    @apply bg-red-900/20 border-red-700;
+  }
+
+  .dark div[data-slot="card"][class*="border-l-blue"][class*="bg-white"] {
+    @apply bg-card border-l-blue-500;
+  }
+
+  .dark div[data-slot="card"][class*="border-l-gray-400"] {
+    @apply opacity-90 border-l-gray-500;
+    background-color: rgba(255,255,255,0.02);
+  }
+
+  .dark div[data-slot="card"][class*="border-l-yellow-500"] {
+    @apply bg-yellow-900/20 border-yellow-600;
+  }
+
+  .dark div[data-slot="card"][class*="bg-green-50"] .text-muted-foreground,
+  .dark div[data-slot="card"][class*="bg-green-50"] h3 {
+    @apply text-green-100;
+  }
+
+  .dark div[data-slot="card"][class*="bg-red-50"] .text-red-900,
+  .dark div[data-slot="card"][class*="bg-red-50"] h3 {
+    @apply text-red-200;
+  }
+
+  .dark div[data-slot="card"][class*="border-l-yellow-500"] h3 {
+    @apply text-yellow-300 font-semibold;
+  }
+
+  .dark div[data-slot="card"] .badge,
+  .dark div[data-slot="card"] .badge * {
+    color: inherit;
+  }
+}

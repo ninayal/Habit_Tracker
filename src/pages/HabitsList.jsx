@@ -162,7 +162,7 @@ export default function HabitsList() {
     const today = new Date();
 
     return (
-        <div className='bg-primary min-h-screen p-4 md:p-8'>
+        <div className='brand-page min-h-screen p-4 md:p-8'>
             <div className='mx-auto'>
                 <div className='flex items-center'>
                     <div className="flex items-center flex-1 gap-4">
@@ -175,14 +175,13 @@ export default function HabitsList() {
                                 <Button
                                     variant="ghost"
                                     className="
-                                        justify-start text-left font-normal
-                                        bg-white
-                                        hover:bg-gray-50
-                                        active:bg-white
-                                        data-[state=open]:bg-white
-                                        data-[state=open]:hover:bg-white
-                                        focus:bg-white
-                                        focus-visible:bg-white
+                                        justify-start
+                                        text-left
+                                        font-normal
+                                        brand-card
+                                        hover:bg-[var(--brand-hover-bg)]
+                                        data-[state=open]:bg-[var(--brand-card-bg)]
+                                        data-[state=open]:hover:bg-[var(--brand-card-bg)]
                                         focus-visible:ring-0
                                         focus-visible:ring-offset-0
                                         shadow-none
@@ -218,7 +217,7 @@ export default function HabitsList() {
                             setOpenForm(true);
                         }}
                     >
-                        <Plus size={20}/>
+                        <Plus size={20} />
                         Create Habit
                     </button>
 
@@ -231,7 +230,7 @@ export default function HabitsList() {
 
                 </div>
 
-                <div className='bg-secondary rounded-lg shadow-md mt-4 p-4 md:p-6 min-h-10/12'>
+                <div className='brand-card rounded-lg shadow-md mt-4 p-4 md:p-6 min-h-10/12'>
                     <HabitsFilter query={query} setQuery={setQuery} />
 
                     <div className="mt-4 max-w-267.5">
