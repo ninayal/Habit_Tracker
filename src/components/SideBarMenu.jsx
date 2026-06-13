@@ -1,10 +1,11 @@
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import {
     LogOut,
     Moon,
     GalleryVerticalEnd,
     ListChecks
 } from "lucide-react";
+import { authService } from "@/services/auth";
 
 
 const menuItems = [
@@ -23,10 +24,11 @@ const menuItems = [
 
 export default function SideBarMenu() {
     const location = useLocation();
+    const navigate = useNavigate();
 
     const handleLogout = () => {
-        localStorage.removeItem("current_user");
-        window.location.href = "/sign-in";
+        authService.logout();
+        navigate("/signin", { replace: true });
     };
 
     const toggleTheme = () => {

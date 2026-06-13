@@ -32,6 +32,46 @@ export const authService = {
   },
 
   /**
+   * Hàm xử lý Đăng ký (Sign Up)
+   * @returns {{ success: boolean, error?: string }}
+   */
+  register: (fullName, email, password) => {
+    // Kiểm tra email đã tồn tại chưa (cả mock lẫn đã đăng ký trong localStorage)
+    const registeredUsers = storage.get("users", []);
+    const allUsers = [...registeredUsers, ...mockUsers];
+
+    const emailExists = allUsers.some(
+      (user) => user.email.toLowerCase() === email.toLowerCase(),
+    );
+
+    if (emailExists) {
+      return { success: false, error: "This email is already registered. Please sign in instead." };
+    }
+
+    // Tạo ID mới tăng dần
+    const maxId = allUsers.reduce((max, u) => Math.max(max, u.id ?? 0), 0);
+
+    const newUser = {
+      id: maxId + 1,
+      fullName: fullName.trim(),
+      email: email.trim().toLowerCase(),
+      password,
+      image: `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(fullName.trim())}`,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+
+    // Lưu user mới vào localStorage (key "users")
+    storage.set("users", [...registeredUsers, newUser]);
+
+    // Tự động đăng nhập sau khi đăng ký
+    const { password: _, ...safeUserInfo } = newUser;
+    storage.set("current_user", safeUserInfo);
+
+    return { success: true };
+  },
+
+  /**
    * Hàm xử lý Đăng xuất (Sign Out)
    */
   logout: () => {
