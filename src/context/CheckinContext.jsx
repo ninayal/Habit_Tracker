@@ -3,7 +3,6 @@ import { checkinService } from "@/services/checkin";
 import { formatDate } from "@/utils/helper";
 import { createContext, useContext, useState, useCallback } from "react";
 
-
 const CheckinContext = createContext(null);
 
 export function CheckinProvider({ children }) {

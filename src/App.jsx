@@ -4,6 +4,7 @@ import ScrollToTop from "@/components/ScrollToTop";
 import { CheckinProvider } from "@/context/CheckinContext";
 import { HabitProvider } from "@/context/HabitContext";
 import Dashboard from "@/pages/Dashboard";
+import DashboardDemo from "@/pages/DashboardDemo";
 import HabitsList from "@/pages/HabitsList";
 import Landing from "@/pages/Landing";
 import Profile from "@/pages/Profile";
@@ -47,6 +48,7 @@ function App() {
               <Route element={<AuthRoute />}>
                 <Route element={<Layout />}>
                   <Route path="/dashboard" element={<Dashboard />} />
+                  <Route path="/dashboard-demo" element={<DashboardDemo />} />
                   <Route path="/all-habits" element={<HabitsList />} />
                   <Route path="/profile" element={<Profile />} />
 
