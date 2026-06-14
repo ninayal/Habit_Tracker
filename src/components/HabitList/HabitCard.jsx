@@ -14,24 +14,10 @@ import { useCheckinContext } from "@/hooks/useCheckins";
 import { HabitCellDropdown } from "@/components/HabitList/HabitCellDropdown";
 import { HabitCardDropdown } from "@/components/HabitList/HabitCardDropdown";
 import { formatDate } from "@/utils/helper";
+import { celebrate } from "@/components/HabitList/Confetti";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { HabitNoteDialog } from "@/components/HabitList/HabitNoteDialog";
 
-const priorityColor = {
-    High: "bg-red-100 text-red-800",
-    Medium: "bg-yellow-100 text-yellow-800",
-    Low: "bg-green-100 text-green-800",
-};
-const statusColor = {
-    Active: "bg-green-100 text-green-800",
-    Paused: "bg-gray-100 text-gray-800",
-    Completed: "bg-blue-100 text-blue-800",
-};
-const colors = ["bg-cyan-100", "bg-purple-100", "bg-indigo-100", "bg-pink-200", "bg-orange-100"];
-const categories = ["Health", "Study", "Work", "Mindfulness", "Other"];
-
-const categoryColors = categories.reduce((acc, category, index) => {
-    acc[category] = colors[index % colors.length];
-    return acc;
-}, {});
 
 const checkinStyles = {
     completed: {
@@ -82,11 +68,10 @@ const checkinStyles = {
 };
 
 export default function HabitCard({
-    habit, checkin, groupBy, onClick, date,
+    habit, checkin, groupBy="", onClick, date = new Date(),
     onEdit, onChangeStatus, onDelete
 }) {
     const [openDropdown, setOpenDropdown] = useState(false);
-
     const completionStatus = checkin?.completionStatus || "not_checked";
 
     let style = checkinStyles[completionStatus] || checkinStyles.in_progress;
@@ -138,7 +123,7 @@ export default function HabitCard({
                                     </Badge>
                                 )}
 
-                                {groupBy === "priority" && (
+                                {groupBy === "priority" && groupBy !== ""   && (
                                     <Badge
                                         variant="outline"
                                         className={` text-[var(--brand-muted-text)] text-xs`}
@@ -146,6 +131,15 @@ export default function HabitCard({
                                         {habit.category}
                                     </Badge>
                                 )}
+
+                                {habit.frequency?.repeatType &&
+                                    <Badge
+                                        variant="outline"
+                                        className={` text-[var(--brand-muted-text)] text-xs`}
+                                    >
+                                        {habit.frequency?.repeatType === "daily" ? "Daily" : "Specific days"}
+                                    </Badge>
+                                }
 
                                 <Badge
                                     variant="outline"
@@ -214,16 +208,15 @@ export default function HabitCard({
 
 
 function HabitStatusCell({ checkin, target, habit, dateString }) {
-    const [openNoteModal, setOpenNoteModal] = useState(false);
-    const [pendingCheckin, setPendingCheckin] = useState(null);
+    const [isNoteDialogOpen, setIsNoteDialogOpen] = useState(false);
 
     const current = checkin ?? {
         completionStatus: "not_checked",
         completedCount: 0,
+        note: ""
     };
 
     const selectedDate = checkin?.date || dateString;
-
     const { updateCheckin, resetCheckin } = useCheckinContext();
 
     const handleAction = (action, dateString, value) => {
@@ -244,7 +237,7 @@ function HabitStatusCell({ checkin, target, habit, dateString }) {
                 return;
 
             case "failed":
-                updateCheckin(habit.id, selectedDate, {
+                updateCheckin(habit.id, dateString, {
                     completionStatus: "failed",
                 });
                 // console.log("failed" ,habit.id, dateString)
@@ -254,27 +247,52 @@ function HabitStatusCell({ checkin, target, habit, dateString }) {
                 resetCheckin(habit.id, dateString);
                 // console.log("reset" ,habit.id, dateString)
                 return;
+
+            case "decrease_progress": {
+                const currentCount = current.completedCount ?? 0;
+                if (currentCount <= 1) {
+                    resetCheckin(habit.id, dateString);
+                } else {
+                    updateCheckin(habit.id, dateString, {
+                        completedCount: currentCount - 1,
+                    });
+                }
+                return;
+            }
         }
     };
 
-    const handleClick = async () => {
-        if (current.completionStatus === "completed") {
-            await resetCheckin(habit.id, selectedDate);
+    const handleClick = (e) => {
+        e.stopPropagation();
+        if (current.completionStatus === "completed" || current.completionStatus === "failed" || current.completionStatus === "skipped") {
+            resetCheckin(habit.id, selectedDate);
             return;
         }
 
         const nextCount = (current.completedCount ?? 0) + 1;
-
-        await updateCheckin(habit.id, selectedDate, {
+        if (nextCount === habit?.targetPerDay) {
+            celebrate();
+            if (habit.autoOpenNote) {
+                setTimeout(() => setIsNoteDialogOpen(true), 400);
+            }
+        }
+        updateCheckin(habit.id, selectedDate, {
             completedCount: nextCount,
         });
     };
 
-    const renderButton = () => {
+    const handleSaveNote = (noteContent) => {
+        updateCheckin(habit.id, selectedDate, {
+            note: noteContent
+        });
+    };
+
+    const buttonElement = (() => {
         switch (current.completionStatus) {
             case "completed":
                 return (
                     <button
+                        onClick={handleClick}
                         className="w-8 h-8 rounded-full bg-green-500 text-white flex items-center justify-center cursor-pointer"
                     >
                         <Check size={18} />
@@ -283,14 +301,20 @@ function HabitStatusCell({ checkin, target, habit, dateString }) {
 
             case "failed":
                 return (
-                    <button className="w-8 h-8 rounded-full text-white bg-red-600 flex items-center justify-center">
+                    <button
+                        className="w-8 h-8 rounded-full text-white bg-red-600 flex items-center justify-center cursor-pointer"
+                        onClick={handleClick}
+                    >
                         <X size={18} />
                     </button>
                 );
 
             case "skipped":
                 return (
-                    <button className="w-8 h-8 rounded-full bg-muted/30 flex items-center justify-center">
+                    <button
+                        className="w-8 h-8 rounded-full bg-accent flex items-center justify-center cursor-pointer"
+                        onClick={handleClick}
+                    >
                         <ArrowRight size={18} />
                     </button>
                 );
@@ -302,13 +326,14 @@ function HabitStatusCell({ checkin, target, habit, dateString }) {
 
                 return (
                     <button
-                        className="relative w-8 h-8 rounded-full flex items-center justify-center cursor-pointer"
+                        className="relative w-8 h-8 rounded-full flex items-center justify-center cursor-pointer hover:opacity-90 transition-opacity"
                         style={{
                             background: `conic-gradient(
                                 #3b82f6 ${percentage}%,
                                 #e2e8f0 ${percentage}%
                             )`,
                         }}
+                        onClick={handleClick}
                     >
                         <div className="absolute w-6 h-6 bg-white rounded-full flex items-center justify-center text-[10px] font-bold text-blue-600">
                             {current.completedCount}
@@ -320,22 +345,53 @@ function HabitStatusCell({ checkin, target, habit, dateString }) {
             default:
                 return (
                     <button
-                        className="w-8 h-8 flex bg-muted/30 items-center justify-center rounded-full cursor-pointer"
+                        className="w-8 h-8 flex bg-accent items-center justify-center rounded-full cursor-pointer hover:bg-blue-100 transition-colors"
+                        onClick={handleClick}
                     >
                         <PlusIcon size={18} />
                     </button>
                 );
         }
-    };
+    })();
+
+    let tooltipText = "+1 time";
+    if (current.completionStatus === "completed") {
+        tooltipText = "Click to reset";
+    } else if (current.completionStatus === "skipped" || current.completionStatus === "failed") {
+        tooltipText = "Click to reset";
+    }
 
     return (
-        <HabitCellDropdown
-            dateString={selectedDate}
-            status={current.completionStatus}
-            progress={current.completedCount}
-            onAction={handleAction}
-        >
-            {renderButton()}
-        </HabitCellDropdown>
+        <>
+            <HabitCellDropdown
+                dateString={selectedDate}
+                status={current.completionStatus}
+                progress={current.completedCount}
+                onAction={handleAction}
+                mode="quick"
+            >
+                <TooltipProvider delayDuration={100}>
+                    <Tooltip>
+                        <TooltipTrigger asChild>
+                            {buttonElement}
+                        </TooltipTrigger>
+                        <TooltipContent
+                            side="top"
+                            className="text-xs text-[var(--brand-muted-text)] bg-accent border-none shadow-sm z-60"
+                        >
+                            <p>{tooltipText}</p>
+                        </TooltipContent>
+                    </Tooltip>
+                </TooltipProvider>
+            </HabitCellDropdown>
+
+            <HabitNoteDialog
+                open={isNoteDialogOpen}
+                onOpenChange={setIsNoteDialogOpen}
+                habitName={habit.name}
+                initialNote={current.note}
+                onSave={handleSaveNote}
+            />
+        </>
     );
 }

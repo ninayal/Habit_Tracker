@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
-import { ChevronLast, RotateCcw, X } from "lucide-react";
+import { ChevronLast, RotateCcw, X, Minus } from "lucide-react";
 import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuTrigger, } from "@/components/ui/context-menu";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"; 
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 
@@ -11,6 +11,7 @@ export function HabitCellDropdown({
     onAction,
     status,
     progress = 0,
+    mode = "popover"
 }) {
     const [value, setValue] = useState(progress);
     const [open, setOpen] = useState(false);
@@ -24,15 +25,23 @@ export function HabitCellDropdown({
             <Popover open={open} onOpenChange={setOpen} modal={true}>
                 <ContextMenu>
                     <ContextMenuTrigger asChild>
-                        <PopoverTrigger asChild>
+                        {mode === "popover" ? (
+                            <PopoverTrigger asChild>
+                                <div
+                                    className="cursor-pointer outline-none w-full h-full flex items-center justify-center"
+                                    onClick={(e) => e.stopPropagation()}
+                                    onPointerDown={(e) => e.stopPropagation()}
+                                >
+                                    {children}
+                                </div>
+                            </PopoverTrigger>
+                        ) : (
                             <div
                                 className="cursor-pointer outline-none w-full h-full flex items-center justify-center"
-                                onClick={(e) => e.stopPropagation()}
-                                onPointerDown={(e) => e.stopPropagation()}
                             >
                                 {children}
                             </div>
-                        </PopoverTrigger>
+                        )}
                     </ContextMenuTrigger>
 
                     <PopoverContent
@@ -72,7 +81,7 @@ export function HabitCellDropdown({
                                 className="w-full bg-blue hover:bg-blue/80 text-slate-600"
                                 onClick={() => {
                                     onAction("update_progress", dateString, Number(value));
-                                    setOpen(false); 
+                                    setOpen(false);
                                 }}
                             >
                                 Save
@@ -81,6 +90,12 @@ export function HabitCellDropdown({
                     </PopoverContent>
 
                     <ContextMenuContent className="w-52 z-50">
+                        {progress > 0 && status === "in_progress" && mode !== "popover" && (
+                            <ContextMenuItem onSelect={() => onAction("decrease_progress", dateString)}>
+                                <Minus size={16} className="mr-2" />
+                                Undo progress
+                            </ContextMenuItem>
+                        )}
                         {status !== "skipped" && (
                             <ContextMenuItem onSelect={() => onAction("skipped", dateString)}>
                                 <ChevronLast size={16} className="mr-2" />

@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useMemo, useState } from 'react'
 import {
     Drawer,
     DrawerContent,
@@ -8,14 +8,16 @@ import {
 } from "@/components/ui/drawer"
 import { Ellipsis } from 'lucide-react';
 import { HabitCardDropdown } from '@/components/HabitList/HabitCardDropdown';
-import { Flame, Trophy, CheckCircle2, TrendingUp } from "lucide-react";
+import { Flame, Trophy, CheckCircle2, Activity, TrendingUp, TrendingDown, Minus } from "lucide-react";
+import HabitStatCard from '@/components/HabitList/HabitStatCard';
+import useHabitStats from '@/hooks/useHabitStats';
+import { Badge } from '@/components/ui/badge';
+import HabitNoteTimeline from '@/components/HabitList/HabitNoteTimeline';
+import { getLocalTimeZone, today } from '@internationalized/date';
+import { I18nProvider } from 'react-aria-components';
+import { CalendarCustom } from '@/components/HabitList/CalendarCustom';
+import { useCheckinContext } from '@/hooks/useCheckins';
 
-const stats = {
-    currentStreak: 1,
-    longestStreak: 24,
-    totalCompletions: 148,
-    completionRate: 86,
-};
 
 const pluralize = (count, singular, plural = `${singular}s`) =>
     `${count} ${count > 1 ? plural : singular}`;
@@ -26,7 +28,24 @@ export default function HabitDetail({
     onEdit, onChangeStatus, onDelete
 }) {
     const [openDropdown, setOpenDropdown] = useState(false);
+    const { stats, habitCheckins } = useHabitStats(habit);
 
+    let TrendIcon;
+    let trendColorStyle;
+    let trendText;
+    if (stats.rateTrend > 0) {
+        TrendIcon = TrendingUp;
+        trendColorStyle = "text-green-700 border-green-200 bg-green-50";
+        trendText = `+${stats.rateTrend}%`;
+    } else if (stats.rateTrend < 0) {
+        TrendIcon = TrendingDown;
+        trendColorStyle = "text-red-700 border-red-200 bg-red-50";
+        trendText = `${stats.rateTrend}%`;
+    } else {
+        TrendIcon = Minus;
+        trendColorStyle = "text-gray-500 border-gray-200 bg-gray-50";
+        trendText = "0%";
+    }
 
     return (
         <Drawer
@@ -86,39 +105,52 @@ export default function HabitDetail({
                     </DrawerTitle>
 
                 </DrawerHeader>
-                <div className="no-scrollbar overflow-y-auto px-4 pb-6">
-
+                <div className="no-scrollbar overflow-y-auto px-4 pb-6 flex flex-col gap-4">
                     <div className="grid grid-cols-2 gap-3">
-
-                        <StatCard
+                        <HabitStatCard
                             title="Current Streak"
                             value={`${pluralize(stats.currentStreak, "day")}`}
                             icon={<Flame size={18} className='text-red-600' />}
-                            className="bg-pink/40"
+                            desc='consecutive successful days'
                         />
-
-                        <StatCard
+                        <HabitStatCard
                             title="Longest Streak"
                             value={`${pluralize(stats.longestStreak, "day")}`}
                             icon={<Trophy size={18} className='text-yellow-600' />}
-                            className="bg-yellow/70"
+                            desc='best streak ever'
                         />
-
-                        <StatCard
+                        <HabitStatCard
                             title="Total Completions"
-                            value={`${pluralize(stats.totalCompletions, "time")}`}
+                            value={`${pluralize(stats.completionsLast7Days, "day")}`}
                             icon={<CheckCircle2 size={18} className='text-purple-600' />}
-                            className="bg-green/70"
+                            desc='in last 7 days'
                         />
-
-                        <StatCard
+                        <HabitStatCard
                             title="Last 7 Days Rate"
                             value={`${stats.completionRate}%`}
-                            icon={<TrendingUp size={18} className='text-blue-600' />}
-                            className="bg-blue/70"
+                            icon={<Activity size={18} className='text-blue-600' />}
+                            children={
+                                <Badge
+                                    variant="outline"
+                                    className={`flex items-center gap-1 px-1.5 py-0 font-medium ${trendColorStyle}`}
+                                >
+                                    <TrendIcon size={12} strokeWidth={2.5} />
+                                    {trendText}
+                                </Badge>
+                            }
+                            desc='vs last week'
                         />
-
                     </div>
+
+                    <Calendar
+                        habit={habit}
+                        habitCheckins={habitCheckins}
+                    />
+
+                    <HabitNoteTimeline
+                        habit={habit}
+                        checkins={habitCheckins}
+                    />
                 </div>
             </DrawerContent>
         </Drawer>
@@ -126,25 +158,80 @@ export default function HabitDetail({
 }
 
 
-function StatCard({ title, value, icon, className }) {
-    return (
-        <div
-            className={`rounded-xl p-4 shadow-sm
-                ${className}
-            `}
-        >
-            <div className="flex items-center justify-between">
-                <p className="text-sm text-gray-600">
-                    {title}
-                </p>
-                <div className="text-gray-700">
-                    {icon}
-                </div>
-            </div>
+function Calendar({ habit, habitCheckins }) {
+    const currentDate = today(getLocalTimeZone());
+    const { updateCheckin, resetCheckin } = useCheckinContext();
 
-            <p className="mt-3 text-2xl font-bold text-slate-600">
-                {value}
-            </p>
+    const habitLogDataMap = useMemo(() => {
+        if (!habit || !habit?.id) return {};
+
+        return habitCheckins
+            .reduce((acc, checkin) => {
+                let currentStatus = checkin?.completionStatus;
+                if (!currentStatus) {
+                    if (checkin.completedCount >= habit.targetPerDay) {
+                        currentStatus = 'completed';
+                    } else if (checkin.completedCount > 0) {
+                        currentStatus = 'in_progress';
+                    } else {
+                        currentStatus = 'not_checked';
+                    }
+                }
+
+                acc[checkin.date] = {
+                    ...checkin, // userId, habitId, date, completedCount, completionStatus
+                    target: habit.targetPerDay,
+                    status: currentStatus
+                };
+
+                return acc;
+            }, {});
+    }, [habit, habitCheckins]);
+
+    const handleCellAction = (action, dateString, value = null) => {
+        switch (action) {
+            case "update_progress": {
+                updateCheckin(habit.id, dateString, {
+                    completedCount: value,
+                });
+                // console.log("update_progress" ,habit.id, dateString, value)
+                return;
+            }
+
+            case "skipped":
+                updateCheckin(habit.id, dateString, {
+                    completionStatus: "skipped",
+                });
+                // console.log("skipped" ,habit.id, dateString)
+                return;
+
+            case "failed":
+                updateCheckin(habit.id, dateString, {
+                    completionStatus: "failed",
+                });
+                // console.log("failed" ,habit.id, dateString)
+                return;
+
+            case "reset":
+                resetCheckin(habit.id, dateString);
+                // console.log("reset" ,habit.id, dateString)
+                return;
+        }
+    };
+
+    return (
+        <div className='bg-white px-4 pt-3 rounded-2xl'>
+            <I18nProvider locale="en-US">
+                <CalendarCustom
+                    aria-label="Checking Calendar"
+                    visibleDuration={{ months: 1 }}
+                    maxValue={currentDate}
+                    habitDataMap={habitLogDataMap}
+                    isReadOnly
+                    onCellAction={handleCellAction}
+                    className={`w-[calc(12*var(--spacing)*9)]`}
+                />
+            </I18nProvider>
         </div>
-    );
+    )
 }

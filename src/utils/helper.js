@@ -1,3 +1,6 @@
+import { composeRenderProps } from "react-aria-components";
+import { tv } from "tailwind-variants";
+
 export const getFrequencyText = (freq) => {
     if (freq.repeatType === "daily") return "Daily";
     if (freq.repeatType === "specific_days") {
@@ -28,4 +31,22 @@ export function checkToday(input) {
     }
 
     return false;
+}
+
+// Cấu hình viền focus chung cho các component tương tác
+export const focusRing = tv({
+    base: 'outline-none',
+    variants: {
+        isFocusVisible: {
+            false: 'outline-none',
+            true: 'ring-2 ring-blue-600 ring-offset-2 dark:ring-blue-500'
+        }
+    }
+});
+
+// Hàm hỗ trợ gộp class của Tailwind CSS
+export function composeTailwindRenderProps(className, tw) {
+    return composeRenderProps(className, (renderPropsClassName) => {
+        return renderPropsClassName ? `${tw} ${renderPropsClassName}` : tw;
+    });
 }
