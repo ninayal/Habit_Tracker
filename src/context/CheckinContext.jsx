@@ -3,7 +3,7 @@ import { useHabitContext } from "@/hooks/useHabits";
 import { authService } from "@/services/auth";
 import { checkinService } from "@/services/checkin";
 import { formatDate } from "@/utils/helper";
-import { createContext, useContext, useState, useCallback } from "react";
+import { createContext, useContext, useState, useCallback, useEffect } from "react";
 
 const CheckinContext = createContext(null);
 
@@ -85,6 +85,10 @@ export function CheckinProvider({ children }) {
             status,
         });
     };
+
+    useEffect(() => {
+        loadCheckins();
+    }, [loadCheckins]);
 
     return (
         <CheckinContext.Provider
