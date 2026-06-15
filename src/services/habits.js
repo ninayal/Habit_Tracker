@@ -195,6 +195,8 @@ function createHabit(data) {
         habits.push(newHabit);
         storage.set(STORAGE_KEYS.HABITS, habits);
 
+        const resultHabit = { ...newHabit, goal: null };
+
         if (data.goal) {
             if (!["streak", "completions_target"].includes(data.goal.targetType)) {
                 throw new ServiceError(400, "Invalid goal targetType. Must be 'streak' or 'completions_target'.");
@@ -219,10 +221,10 @@ function createHabit(data) {
             goals.push(newGoal);
             storage.set(STORAGE_KEYS.GOALS, goals);
 
-            newHabit.goal = newGoal;
+            resultHabit.goal = newGoal;
         }
 
-        return newHabit;
+        return resultHabit;
 
     } catch (error) {
         if (!error.status) error.status = 500;
@@ -279,14 +281,16 @@ function updateHabit(id, updates) {
             status: updates.status ?? current.status,
             updatedAt: new Date().toISOString(),
         };
+        delete updatedHabit.goal;
 
         habits[index] = updatedHabit;
         storage.set(STORAGE_KEYS.HABITS, habits);
 
-        if (updates.goal) {
-            const goals = storage.get(STORAGE_KEYS.GOALS, []);
-            const goalIndex = goals.findIndex(g => g.habitId === id);
+        const resultHabit = { ...updatedHabit, goal: null };
+        const goals = storage.get(STORAGE_KEYS.GOALS, []);
+        const goalIndex = goals.findIndex(g => g.habitId === id);
 
+        if (updates.goal) {
             if (goalIndex !== -1) {
                 goals[goalIndex] = {
                     ...goals[goalIndex],
@@ -300,10 +304,13 @@ function updateHabit(id, updates) {
             } else {
                 throw new ServiceError(404, `Goal for Habit ID ${id} not found to update.`);
             }
+        } else {
+            if (goalIndex !== -1) {
+                resultHabit.goal = goals[goalIndex];
+            }
         }
 
-        return updatedHabit;
-
+        return resultHabit;
     } catch (error) {
         if (!error.status) error.status = 500;
         throw error;

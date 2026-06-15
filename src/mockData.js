@@ -321,10 +321,10 @@ export const mockCheckins = [
 export const mockGoals = [
   { id: 1, habitId: 1, userId: 1, targetType: "streak", targetValue: 30, isDone: false, doneAt: null },
   { id: 2, habitId: 2, userId: 1, targetType: "completions_target", targetValue: 50, isDone: false, doneAt: null },
-  { id: 3, habitId: 3, userId: 1, targetType: "streak", targetValue: 15, isDone: true, doneAt: "2026-05-20T00:00:00Z" },
+  { id: 3, habitId: 3, userId: 1, targetType: "streak", targetValue: 15, isDone: false, doneAt: "2026-05-20T00:00:00Z" },
   { id: 4, habitId: 4, userId: 1, targetType: "completions_target", targetValue: 20, isDone: false, doneAt: null },
   { id: 5, habitId: 5, userId: 1, targetType: "streak", targetValue: 10, isDone: false, doneAt: null },
-  { id: 6, habitId: 6, userId: 1, targetType: "completions_target", targetValue: 30, isDone: true, doneAt: "2026-05-28T00:00:00Z" },
+  { id: 6, habitId: 6, userId: 1, targetType: "completions_target", targetValue: 30, isDone: false, doneAt: "2026-05-28T00:00:00Z" },
   { id: 7, habitId: 7, userId: 1, targetType: "streak", targetValue: 21, isDone: false, doneAt: null },
   { id: 8, habitId: 8, userId: 1, targetType: "completions_target", targetValue: 10, isDone: false, doneAt: null },
   { id: 9, habitId: 9, userId: 2, targetType: "streak", targetValue: 40, isDone: false, doneAt: null },
