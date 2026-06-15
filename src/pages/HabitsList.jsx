@@ -18,6 +18,7 @@ import HabitForm from '@/components/HabitList/HabitForm';
 import { useHabitContext } from '@/hooks/useHabits';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { toast } from 'react-toastify';
+import List from '@/components/HabitList/List';
 
 export default function HabitsList() {
     const [query, setQuery] = useQueryParams({
@@ -311,69 +312,6 @@ export default function HabitsList() {
             </div>
         </div>
     )
-}
-
-
-const List = ({
-    groupedHabits, habits, statusMap, groupBy, onHabitClick, date,
-    onEditHabit, onChangeStatus, onDeleteHabit
-}) => {
-    return (
-        <div className="w-full pb-4 mt-6">
-            <div className="flex flex-col gap-2">
-                {groupedHabits ? (
-                    groupedHabits.map(([key, items]) => (
-                        <Collapsible
-                            key={key}
-                            defaultOpen
-                            className="rounded-lg"
-                        >
-                            <CollapsibleTrigger className="group flex w-full gap-4 items-center px-4 py-2 font-semibold">
-                                <ChevronDown className="h-4 w-4 transition-transform duration-300 group-data-[state=open]:rotate-180" />
-                                <span className='text-sm'>
-                                    {key} ({items.length})
-                                </span>
-                            </CollapsibleTrigger>
-
-                            <CollapsibleContent>
-                                <div className="flex flex-col gap-3 p-4 pt-0">
-                                    {items.map((habit) => (
-                                        <HabitCard
-                                            key={habit.id}
-                                            habit={habit}
-                                            checkin={statusMap[habit.id].checkin}
-                                            groupBy={groupBy}
-                                            onClick={() => onHabitClick(habit)}
-
-                                            onEdit={onEditHabit}
-                                            onChangeStatus={onChangeStatus}
-                                            onDelete={onDeleteHabit}
-                                            date={date}
-                                        />
-                                    ))}
-                                </div>
-                            </CollapsibleContent>
-                        </Collapsible>
-                    ))
-                ) : (
-                    habits.map((habit) => (
-                        <HabitCard
-                            key={habit.id}
-                            habit={habit}
-                            checkin={statusMap[habit.id].checkin}
-                            groupBy={groupBy}
-                            onClick={() => onHabitClick(habit)}
-
-                            onEdit={onEditHabit}
-                            onChangeStatus={onChangeStatus}
-                            onDelete={onDeleteHabit}
-                            date={date}
-                        />
-                    ))
-                )}
-            </div>
-        </div>
-    );
 }
 
 

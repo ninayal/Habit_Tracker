@@ -13,6 +13,7 @@ import {
     AlertDialogHeader,
     AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { toast } from 'react-toastify';
 
 
 export default function HabitNoteTimeline({ habit, checkins }) {
@@ -27,6 +28,7 @@ export default function HabitNoteTimeline({ habit, checkins }) {
             updateCheckin(habit.id, editingCheckin.date, { note: newNote });
             setEditingCheckin(null);
         }
+        toast.success("Saved note successfully!")
     };
 
     const handleClearNote = () => {

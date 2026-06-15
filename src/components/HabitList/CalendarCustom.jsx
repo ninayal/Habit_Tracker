@@ -137,6 +137,7 @@ export function CalendarCustom({ habitDataMap, onCellAction, className, ...props
                                                     status={status}
                                                     progress={record?.completedCount}
                                                     mode='popover'
+                                                    record={record}
                                                 >
                                                     {cellContent}
                                                 </HabitCellDropdown>

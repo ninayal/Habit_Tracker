@@ -11,55 +11,23 @@ import HabitDetail from '@/components/HabitList/HabitDetail';
 import HabitForm from '@/components/HabitList/HabitForm';
 import TodayProgressRing from '@/components/Dashboard/TodayProgressRing';
 import { celebrateBig } from '@/components/HabitList/Confetti';
+import List from '@/components/HabitList/List';
 
 export default function TodayHabitSection() {
-    const { todaysHabits, loading } = useHabitsQuery();
-    const { checkins, loadCheckins, loading: loadingCheckins } = useCheckinContext();
+    const { todaysHabits, statusMap, todayProgress, loading } = useHabitsQuery();
+    const { loadCheckins } = useCheckinContext();
     const { updateHabit, deleteHabit } = useHabitContext();
 
     const [selectedHabit, setSelectedHabit] = useState(null);
     const [openDrawer, setOpenDrawer] = useState(false);
-
     const [openForm, setOpenForm] = useState(false);
     const [editingHabit, setEditingHabit] = useState(null);
     const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
     const [deletingHabit, setDeletingHabit] = useState(null);
 
-    const todayStr = format(new Date(), "yyyy-MM-dd");
-
     useEffect(() => {
         loadCheckins();
     }, [loadCheckins]);
-
-    const checkinMap = useMemo(() => {
-        const map = {};
-        checkins.forEach(c => {
-            map[`${c.habitId}-${c.date}`] = c;
-        });
-        return map;
-    }, [checkins]);
-
-    const statusMap = useMemo(() => {
-        const map = {};
-        todaysHabits.forEach(habit => {
-            map[habit.id] = { checkin: checkinMap[`${habit.id}-${todayStr}`] };
-        });
-        return map;
-    }, [todaysHabits, checkinMap, todayStr]);
-
-    const todayProgress = useMemo(() => {
-        if (!todaysHabits || todaysHabits.length === 0) return 0;
-
-        let completedCount = 0;
-        todaysHabits.forEach(habit => {
-            const checkin = statusMap[habit.id]?.checkin;
-            if (checkin && checkin.completionStatus === "completed") {
-                completedCount++;
-            }
-        });
-
-        return Math.round((completedCount / todaysHabits.length) * 100);
-    }, [todaysHabits, statusMap]);
 
     const prevProgressRef = useRef(todayProgress);
     const isReadyToCelebrate = useRef(false);
@@ -76,6 +44,27 @@ export default function TodayHabitSection() {
         }
         prevProgressRef.current = todayProgress;
     }, [todayProgress]);
+
+    const groupedHabits = useMemo(() => {
+        const groups = todaysHabits.reduce((acc, habit) => {
+            const category = habit.category;
+
+            if (!acc[category]) {
+                acc[category] = [];
+            }
+
+            acc[category].push(habit);
+            return acc;
+        }, {});
+
+        Object.keys(groups).forEach((category) => {
+            groups[category].sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+        });
+
+        return Object.entries(groups).sort(([a], [b]) =>
+            a.localeCompare(b)
+        );
+    }, [todaysHabits]);
 
     const handleEditHabit = (habit) => {
         setEditingHabit(habit);
@@ -109,14 +98,14 @@ export default function TodayHabitSection() {
         setOpenDrawer(true);
     };
 
-    if (loading || loadingCheckins) {
+    if (loading) {
         return (
             <div className="flex items-center justify-center min-h-screen text-blue-500">
                 <Spinner className="size-15" />
             </div>
         );
     }
-
+    const today = new Date();
     return (
         <div className='brand-card rounded-lg shadow-md mt-4 p-4 md:p-6 min-h-10/12'>
             <div className='flex items-center justify-between'>
@@ -134,22 +123,18 @@ export default function TodayHabitSection() {
                 </div>
             </div>
 
-            <div className="w-full pb-4 mt-6">
-                <div className="flex flex-col gap-3">
-                    {todaysHabits.map((habit) => (
-                        <HabitCard
-                            key={habit.id}
-                            habit={habit}
-                            checkin={statusMap[habit.id].checkin}
-                            onClick={() => handleOpenHabitDetail(habit)}
+            <List
+                groupedHabits={groupedHabits}
+                habits={todaysHabits}
+                statusMap={statusMap}
+                groupBy={'category'}
+                onHabitClick={handleOpenHabitDetail}
 
-                            onEdit={handleEditHabit}
-                            onChangeStatus={handleChangeStatus}
-                            onDelete={handleDeleteHabit}
-                        />
-                    ))}
-                </div>
-            </div>
+                onEditHabit={handleEditHabit}
+                onChangeStatus={handleChangeStatus}
+                onDeleteHabit={handleDeleteHabit}
+                date={today}
+            />
 
             <HabitForm
                 key={editingHabit?.id ?? "create"}

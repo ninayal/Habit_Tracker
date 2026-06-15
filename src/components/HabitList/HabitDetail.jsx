@@ -1,7 +1,8 @@
-import React, { useMemo, useState } from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
 import {
     Drawer,
     DrawerContent,
+    DrawerDescription,
     DrawerHeader,
     DrawerTitle,
     DrawerTrigger,
@@ -17,7 +18,9 @@ import { getLocalTimeZone, today } from '@internationalized/date';
 import { I18nProvider } from 'react-aria-components';
 import { CalendarCustom } from '@/components/HabitList/CalendarCustom';
 import { useCheckinContext } from '@/hooks/useCheckins';
-
+import { toast } from "react-toastify";
+import { celebrate } from '@/components/HabitList/Confetti';
+import { HabitNoteDialog } from '@/components/HabitList/HabitNoteDialog';
 
 const pluralize = (count, singular, plural = `${singular}s`) =>
     `${count} ${count > 1 ? plural : singular}`;
@@ -103,10 +106,14 @@ export default function HabitDetail({
                             </div>
                         </div>
                     </DrawerTitle>
-
+                    <DrawerDescription>
+                        <span className='pl-13'>
+                            View habit statistics and notes.
+                        </span>
+                    </DrawerDescription>
                 </DrawerHeader>
                 <div className="no-scrollbar overflow-y-auto px-4 pb-6 flex flex-col gap-4">
-                    <div className="grid grid-cols-2 gap-3">
+                    <div className="grid grid-cols-2 gap-3 mt-4">
                         <HabitStatCard
                             title="Current Streak"
                             value={`${pluralize(stats.currentStreak, "day")}`}
@@ -162,6 +169,10 @@ function Calendar({ habit, habitCheckins }) {
     const currentDate = today(getLocalTimeZone());
     const { updateCheckin, resetCheckin } = useCheckinContext();
 
+    const [isNoteDialogOpen, setIsNoteDialogOpen] = useState(false);
+    const [selectedDate, setSelectedDate] = useState("");
+    const [noteContent, setNoteContent] = useState("");
+
     const habitLogDataMap = useMemo(() => {
         if (!habit || !habit?.id) return {};
 
@@ -191,6 +202,27 @@ function Calendar({ habit, habitCheckins }) {
     const handleCellAction = (action, dateString, value = null) => {
         switch (action) {
             case "update_progress": {
+                const target = habit.targetPerDay;
+                if (value < 0) {
+                    toast.error("Progress cannot be less than 0");
+                    return;
+                }
+                if (value > target) {
+                    toast.error(`Progress cannot exceed target (${target})`);
+                    return;
+                }
+                if (value === 0) {
+                    resetCheckin(habit.id, dateString);
+                }
+                if (value === target) {
+                    celebrate();
+                    if (habit.autoOpenNote) {
+                        setTimeout(() => {
+                            setSelectedDate(dateString)
+                            setIsNoteDialogOpen(true)
+                        }, 400);
+                    }
+                }
                 updateCheckin(habit.id, dateString, {
                     completedCount: value,
                 });
@@ -199,6 +231,10 @@ function Calendar({ habit, habitCheckins }) {
             }
 
             case "skipped":
+                if (habit.autoOpenNote) {
+                    setSelectedDate(dateString)
+                    setIsNoteDialogOpen(true)
+                }
                 updateCheckin(habit.id, dateString, {
                     completionStatus: "skipped",
                 });
@@ -206,6 +242,10 @@ function Calendar({ habit, habitCheckins }) {
                 return;
 
             case "failed":
+                if (habit.autoOpenNote) {
+                    setSelectedDate(dateString)
+                    setIsNoteDialogOpen(true)
+                }
                 updateCheckin(habit.id, dateString, {
                     completionStatus: "failed",
                 });
@@ -216,7 +256,20 @@ function Calendar({ habit, habitCheckins }) {
                 resetCheckin(habit.id, dateString);
                 // console.log("reset" ,habit.id, dateString)
                 return;
+
+            case "note": {
+                setSelectedDate(dateString)
+                setNoteContent(value)
+                setIsNoteDialogOpen(true);
+            }
         }
+    };
+
+    const handleSaveNote = (noteContent) => {
+        updateCheckin(habit.id, selectedDate, {
+            note: noteContent
+        });
+        toast.success("Saved note successfully!")
     };
 
     return (
@@ -232,6 +285,15 @@ function Calendar({ habit, habitCheckins }) {
                     className={`w-[calc(12*var(--spacing)*9)]`}
                 />
             </I18nProvider>
+
+            <HabitNoteDialog
+                open={isNoteDialogOpen}
+                onOpenChange={setIsNoteDialogOpen}
+                habitName={habit.name}
+                initialNote={noteContent}
+                onSave={handleSaveNote}
+                dateStr={selectedDate}
+            />
         </div>
     )
 }

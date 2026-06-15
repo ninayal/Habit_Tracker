@@ -9,14 +9,16 @@ import {
     SkipForward,
     EllipsisVertical, PlusIcon
 } from "lucide-react";
-import React, { useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { useCheckinContext } from "@/hooks/useCheckins";
 import { HabitCellDropdown } from "@/components/HabitList/HabitCellDropdown";
 import { HabitCardDropdown } from "@/components/HabitList/HabitCardDropdown";
 import { formatDate } from "@/utils/helper";
-import { celebrate } from "@/components/HabitList/Confetti";
+import { celebrate, celebrateBig } from "@/components/HabitList/Confetti";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { HabitNoteDialog } from "@/components/HabitList/HabitNoteDialog";
+import { useHabitsQuery } from "@/hooks/useHabitsQuery";
+import { toast } from "react-toastify";
 
 
 const checkinStyles = {
@@ -68,7 +70,7 @@ const checkinStyles = {
 };
 
 export default function HabitCard({
-    habit, checkin, groupBy="", onClick, date = new Date(),
+    habit, checkin, groupBy = "", onClick, date = new Date(),
     onEdit, onChangeStatus, onDelete
 }) {
     const [openDropdown, setOpenDropdown] = useState(false);
@@ -123,7 +125,7 @@ export default function HabitCard({
                                     </Badge>
                                 )}
 
-                                {groupBy === "priority" && groupBy !== ""   && (
+                                {groupBy === "priority" && groupBy !== "" && (
                                     <Badge
                                         variant="outline"
                                         className={` text-[var(--brand-muted-text)] text-xs`}
@@ -209,6 +211,7 @@ export default function HabitCard({
 
 function HabitStatusCell({ checkin, target, habit, dateString }) {
     const [isNoteDialogOpen, setIsNoteDialogOpen] = useState(false);
+    const { todayProgress, loading } = useHabitsQuery();
 
     const current = checkin ?? {
         completionStatus: "not_checked",
@@ -222,6 +225,24 @@ function HabitStatusCell({ checkin, target, habit, dateString }) {
     const handleAction = (action, dateString, value) => {
         switch (action) {
             case "update_progress": {
+                const target = habit.targetPerDay;
+                if (value < 0) {
+                    toast.error("Progress cannot be less than 0");
+                    return;
+                }
+                if (value > target) {
+                    toast.error(`Progress cannot exceed target (${target})`);
+                    return;
+                }
+                if (value === 0) {
+                    resetCheckin(habit.id, dateString);
+                }
+                if (value === target) {
+                    celebrate();
+                    if (habit.autoOpenNote) {
+                        setTimeout(() => setIsNoteDialogOpen(true), 400);
+                    }
+                }
                 updateCheckin(habit.id, dateString, {
                     completedCount: value,
                 });
@@ -230,6 +251,9 @@ function HabitStatusCell({ checkin, target, habit, dateString }) {
             }
 
             case "skipped":
+                if (habit.autoOpenNote) {
+                    setIsNoteDialogOpen(true)
+                }
                 updateCheckin(habit.id, dateString, {
                     completionStatus: "skipped",
                 });
@@ -237,6 +261,9 @@ function HabitStatusCell({ checkin, target, habit, dateString }) {
                 return;
 
             case "failed":
+                if (habit.autoOpenNote) {
+                    setIsNoteDialogOpen(true)
+                }
                 updateCheckin(habit.id, dateString, {
                     completionStatus: "failed",
                 });
@@ -258,6 +285,10 @@ function HabitStatusCell({ checkin, target, habit, dateString }) {
                     });
                 }
                 return;
+            }
+
+            case "note": {
+                setIsNoteDialogOpen(true);
             }
         }
     };
@@ -281,10 +312,27 @@ function HabitStatusCell({ checkin, target, habit, dateString }) {
         });
     };
 
+    const prevProgressRef = useRef(todayProgress);
+    const isReadyToCelebrate = useRef(false);
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            isReadyToCelebrate.current = true;
+        }, 500);
+        return () => clearTimeout(timer);
+    }, []);
+
+    useEffect(() => {
+        if (isReadyToCelebrate.current && todayProgress === 100 && prevProgressRef.current < 100) {
+            celebrateBig();
+        }
+        prevProgressRef.current = todayProgress;
+    }, [todayProgress]);
+
     const handleSaveNote = (noteContent) => {
         updateCheckin(habit.id, selectedDate, {
             note: noteContent
         });
+        toast.success("Saved note successfully!")
     };
 
     const buttonElement = (() => {
@@ -361,6 +409,10 @@ function HabitStatusCell({ checkin, target, habit, dateString }) {
         tooltipText = "Click to reset";
     }
 
+    if (loading) {
+        return;
+    }
+
     return (
         <>
             <HabitCellDropdown
@@ -369,6 +421,7 @@ function HabitStatusCell({ checkin, target, habit, dateString }) {
                 progress={current.completedCount}
                 onAction={handleAction}
                 mode="quick"
+                target={target}
             >
                 <TooltipProvider delayDuration={100}>
                     <Tooltip>
@@ -391,6 +444,7 @@ function HabitStatusCell({ checkin, target, habit, dateString }) {
                 habitName={habit.name}
                 initialNote={current.note}
                 onSave={handleSaveNote}
+                dateStr={selectedDate}
             />
         </>
     );

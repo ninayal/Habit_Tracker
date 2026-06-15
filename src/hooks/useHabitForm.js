@@ -1,15 +1,17 @@
 import { useEffect, useState } from "react";
-import { habitService } from "@/services/habits";
 import { useHabitContext } from "@/hooks/useHabits";
+import { formatDate, normalizeFrequency } from "@/utils/helper";
 
 export function useHabitForm({ habit, onSuccess }) {
     const isEdit = !!habit;
+
+    const today = formatDate();
 
     const getInitialValues = () => ({
         icon: habit?.icon || "💧",
         name: habit?.name || "",
         category: habit?.category || "Health",
-        startDate: habit?.startDate || "",
+        startDate: habit?.startDate || today,
         frequency: habit?.frequency || {
             repeatType: "specific_days",
             daysOfWeek: [],
@@ -76,13 +78,19 @@ export function useHabitForm({ habit, onSuccess }) {
             return false;
         }
 
+        const habitData = {
+            ...form,
+            frequency: normalizeFrequency(form.frequency),
+        };
+
         try {
             setLoading(true);
             let result;
             if (isEdit) {
-                result = updateHabit(habit.id, form);
+                result = updateHabit(habit.id, habitData);
             } else {
-                result = createHabit(form);
+                result = createHabit(habitData);
+                // console.log(habitData)
             }
 
             onSuccess?.(result);

@@ -1,13 +1,16 @@
+import { useCheckinContext } from "@/hooks/useCheckins";
 import { useHabitContext } from "@/hooks/useHabits";
 import { authService } from "@/services/auth";
 import { habitService } from "@/services/habits";
 import { useMemo } from "react";
+import { format } from "date-fns";
 
 export function useHabitsQuery(query = {}) {
     // const { currentUser } = useAuth();
     const currentUser = authService.getCurrentUser();
 
     const { allHabits, loading, error, } = useHabitContext();
+    const { checkins, loading: checkinsLoading } = useCheckinContext();
 
     const habits = useMemo(() => {
         if (!currentUser?.id || !allHabits) {
@@ -34,11 +37,41 @@ export function useHabitsQuery(query = {}) {
             }));
     }, [habits]);
 
+    const todayStr = format(new Date(), "yyyy-MM-dd");
+    const statusMap = useMemo(() => {
+        const cMap = {};
+        checkins.forEach(c => {
+            cMap[`${c.habitId}-${c.date}`] = c;
+        });
+
+        const sMap = {};
+        todaysHabits.forEach(habit => {
+            sMap[habit.id] = { checkin: cMap[`${habit.id}-${todayStr}`] };
+        });
+        return sMap;
+    }, [todaysHabits, checkins, todayStr]);
+
+    const todayProgress = useMemo(() => {
+        if (!todaysHabits || todaysHabits.length === 0) return 0;
+
+        let completedCount = 0;
+        todaysHabits.forEach(habit => {
+            const checkin = statusMap[habit.id]?.checkin;
+            if (checkin && checkin.completionStatus === "completed") {
+                completedCount++;
+            }
+        });
+
+        return Math.round((completedCount / todaysHabits.length) * 100);
+    }, [todaysHabits, statusMap]);
+
 
     return {
         habits,
         todaysHabits,
-        loading,
+        statusMap,
+        todayProgress,
+        loading: loading || checkinsLoading,
         error,
     };
 }

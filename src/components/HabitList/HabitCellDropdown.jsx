@@ -1,9 +1,10 @@
 import { useEffect, useState } from "react";
-import { ChevronLast, RotateCcw, X, Minus } from "lucide-react";
+import { ChevronLast, RotateCcw, X, Minus, StickyNote } from "lucide-react";
 import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuTrigger, } from "@/components/ui/context-menu";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { toast } from "react-toastify";
 
 export function HabitCellDropdown({
     children,
@@ -11,7 +12,8 @@ export function HabitCellDropdown({
     onAction,
     status,
     progress = 0,
-    mode = "popover"
+    record = null,
+    mode = "popover",
 }) {
     const [value, setValue] = useState(progress);
     const [open, setOpen] = useState(false);
@@ -70,7 +72,7 @@ export function HabitCellDropdown({
                                         return;
                                     }
                                     const num = Number(val);
-                                    setValue(Math.max(0, num));
+                                    setValue(num);
                                 }}
                                 className="
                                     focus-visible:border-blue focus-visible:ring-0 focus-visible:ring-transparent outline-none
@@ -89,9 +91,16 @@ export function HabitCellDropdown({
                         </div>
                     </PopoverContent>
 
-                    <ContextMenuContent className="w-52 z-50">
+                    <ContextMenuContent
+                        className="w-52 z-50"
+                        onCloseAutoFocus={(e) => {
+                            e.preventDefault();
+                        }}
+                    >
                         {progress > 0 && status === "in_progress" && mode !== "popover" && (
-                            <ContextMenuItem onSelect={() => onAction("decrease_progress", dateString)}>
+                            <ContextMenuItem
+                                onSelect={() => { onAction("decrease_progress", dateString) }}
+                            >
                                 <Minus size={16} className="mr-2" />
                                 Undo progress
                             </ContextMenuItem>
@@ -109,6 +118,11 @@ export function HabitCellDropdown({
                                 Mark as Failed
                             </ContextMenuItem>
                         )}
+
+                        <ContextMenuItem onSelect={() => onAction("note", dateString, record?.note)}>
+                            <StickyNote size={16} className="mr-2" />
+                            Note
+                        </ContextMenuItem>
 
                         {(status === "skipped" || status === "failed" || status === "completed" || status === "in_progress") && (
                             <ContextMenuItem onSelect={() => onAction("reset", dateString)}>

@@ -54,14 +54,14 @@ export default function HabitsFilter({ query, setQuery }) {
                     className="py-2 px-3 flex items-center gap-1 rounded-lg cursor-pointer"
                 >
                     <SortDropdown query={query} setQuery={setQuery}>
-                        <ArrowDownUp size={20}></ArrowDownUp>
+                        <ArrowDownUp className='cursor-pointer' size={20}></ArrowDownUp>
                     </SortDropdown>
                 </div>
                 <div
                     className="py-2 px-3 flex items-center gap-1 rounded-lg cursor-pointer"
                 >
                     <FilterDropdown query={query} setQuery={setQuery}>
-                        <SlidersHorizontal size={20}></SlidersHorizontal>
+                        <SlidersHorizontal className='cursor-pointer' size={20}></SlidersHorizontal>
                     </FilterDropdown>
 
                 </div>

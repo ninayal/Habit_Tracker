@@ -4,7 +4,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 
-export function HabitNoteDialog({ open, onOpenChange, habitName, initialNote = "", onSave }) {
+export function HabitNoteDialog({ open, onOpenChange, habitName, initialNote = "", dateStr, onSave }) {
     const [note, setNote] = useState(initialNote);
 
     useEffect(() => {
@@ -22,9 +22,12 @@ export function HabitNoteDialog({ open, onOpenChange, habitName, initialNote = "
         <Dialog open={open} onOpenChange={onOpenChange}>
             <DialogContent className="sm:max-w-[425px]">
                 <DialogHeader>
-                    <DialogTitle>🎉 Awesome! You completed: {habitName}</DialogTitle>
+                    <DialogTitle className={`flex flex-col gap-2`}>
+                        <span className="text-xs text-slate-500">{dateStr}</span>
+                        🎉 Awesome! You completed: {habitName}
+                    </DialogTitle>
                 </DialogHeader>
-                <div className="grid gap-4 py-4">
+                <div className="grid gap-4">
                     <p className="text-sm text-muted-foreground">
                         Would you like to add a quick note about this check-in?
                     </p>

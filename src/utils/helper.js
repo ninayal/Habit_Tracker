@@ -10,6 +10,17 @@ export const getFrequencyText = (freq) => {
     return freq.repeatType;
 };
 
+export const normalizeFrequency = (frequency) => {
+    if (frequency.repeatType === "specific_days" && frequency.daysOfWeek.length === 7) {
+        return {
+            repeatType: "daily",
+            daysOfWeek: [],
+        };
+    }
+
+    return frequency;
+};
+
 //chuyển date thành string YYYY-MM-DD
 export function formatDate(date = new Date()) {
     const year = date.getFullYear();
