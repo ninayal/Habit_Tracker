@@ -1,8 +1,7 @@
 import { useCheckinContext } from '@/hooks/useCheckins';
 import { authService } from '@/services/auth';
-import { checkinService } from '@/services/checkin';
-import { habitService } from '@/services/habits';
 import { formatDate } from '@/utils/helper';
+import { calculateCurrentStreak, calculateLongestStreak, isScheduledDay } from '@/utils/statsHelper';
 import React, { useMemo } from 'react'
 
 export default function useHabitStats(habit) {
@@ -30,8 +29,8 @@ export default function useHabitStats(habit) {
         const habitCheckins = checkins.filter(c => c.habitId === habit.id);
         const completedCheckins = habitCheckins.filter(c => c.completionStatus === "completed");
 
-        const currentStreak = checkinService.calculateCurrentStreak(habit.id, userId);
-        const longestStreak = checkinService.calculateLongestStreakByIteratingDays(habit.id, userId);
+        const currentStreak = calculateCurrentStreak(habit, habitCheckins);
+        const longestStreak = calculateLongestStreak(habit, habitCheckins);
         const totalCompletions = completedCheckins.length;
 
         let completionsLast7Days = 0;
@@ -49,7 +48,7 @@ export default function useHabitStats(habit) {
             const d = new Date(today);
             d.setDate(today.getDate() - i);
 
-            if (habitService.isScheduledDay(habit, d)) {
+            if (isScheduledDay(habit, d)) {
                 const dateStr = formatDate(d);
                 const checkin = checkinMap.get(dateStr);
                 const isCompleted = checkin && checkin.completionStatus === "completed";

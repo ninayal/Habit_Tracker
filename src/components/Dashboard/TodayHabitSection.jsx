@@ -12,6 +12,7 @@ import HabitForm from '@/components/HabitList/HabitForm';
 import TodayProgressRing from '@/components/Dashboard/TodayProgressRing';
 import { celebrateBig } from '@/components/HabitList/Confetti';
 import List from '@/components/HabitList/List';
+import { FolderOpen } from 'lucide-react';
 
 export default function TodayHabitSection() {
     const { todaysHabits, statusMap, todayProgress, loading } = useHabitsQuery();
@@ -123,18 +124,34 @@ export default function TodayHabitSection() {
                 </div>
             </div>
 
-            <List
-                groupedHabits={groupedHabits}
-                habits={todaysHabits}
-                statusMap={statusMap}
-                groupBy={'category'}
-                onHabitClick={handleOpenHabitDetail}
+            {todaysHabits.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-16 text-center">
+                    <div className="rounded-full bg-gray-100 p-4 mb-4">
+                        <FolderOpen className="h-10 w-10 text-gray-400" />
+                    </div>
 
-                onEditHabit={handleEditHabit}
-                onChangeStatus={handleChangeStatus}
-                onDeleteHabit={handleDeleteHabit}
-                date={today}
-            />
+                    <h3 className="text-lg font-semibold">
+                        No habits scheduled for today
+                    </h3>
+
+                    <p className="mt-2 max-w-sm text-sm text-muted-foreground">
+                        You don't have any habits scheduled today. Create a new habit or
+                        update an existing one to include today.
+                    </p>
+                </div>
+            ) : (
+                <List
+                    groupedHabits={groupedHabits}
+                    habits={todaysHabits}
+                    statusMap={statusMap}
+                    groupBy="category"
+                    onHabitClick={handleOpenHabitDetail}
+                    onEditHabit={handleEditHabit}
+                    onChangeStatus={handleChangeStatus}
+                    onDeleteHabit={handleDeleteHabit}
+                    date={today}
+                />
+            )}
 
             <HabitForm
                 key={editingHabit?.id ?? "create"}

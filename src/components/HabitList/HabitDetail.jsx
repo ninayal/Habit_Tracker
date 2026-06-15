@@ -14,7 +14,7 @@ import HabitStatCard from '@/components/HabitList/HabitStatCard';
 import useHabitStats from '@/hooks/useHabitStats';
 import { Badge } from '@/components/ui/badge';
 import HabitNoteTimeline from '@/components/HabitList/HabitNoteTimeline';
-import { getLocalTimeZone, today } from '@internationalized/date';
+import { getLocalTimeZone, today, parseDate } from '@internationalized/date';
 import { I18nProvider } from 'react-aria-components';
 import { CalendarCustom } from '@/components/HabitList/CalendarCustom';
 import { useCheckinContext } from '@/hooks/useCheckins';
@@ -127,10 +127,10 @@ export default function HabitDetail({
                             desc='best streak ever'
                         />
                         <HabitStatCard
-                            title="Total Completions"
-                            value={`${pluralize(stats.completionsLast7Days, "day")}`}
+                            title="Total Completed Days"
+                            value={`${pluralize(stats.totalCompletions, "day")}`}
                             icon={<CheckCircle2 size={18} className='text-purple-600' />}
-                            desc='in last 7 days'
+                            desc='the whole time'
                         />
                         <HabitStatCard
                             title="Last 7 Days Rate"
@@ -167,6 +167,8 @@ export default function HabitDetail({
 
 function Calendar({ habit, habitCheckins }) {
     const currentDate = today(getLocalTimeZone());
+    const startDate = habit?.startDate ? parseDate(habit.startDate.split('T')[0]) : undefined;
+    console.log(startDate)
     const { updateCheckin, resetCheckin } = useCheckinContext();
 
     const [isNoteDialogOpen, setIsNoteDialogOpen] = useState(false);
@@ -278,6 +280,7 @@ function Calendar({ habit, habitCheckins }) {
                 <CalendarCustom
                     aria-label="Checking Calendar"
                     visibleDuration={{ months: 1 }}
+                    minValue={startDate}
                     maxValue={currentDate}
                     habitDataMap={habitLogDataMap}
                     isReadOnly

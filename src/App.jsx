@@ -10,6 +10,7 @@ import Landing from "@/pages/Landing";
 import Profile from "@/pages/Profile";
 import SignIn from "@/pages/SignIn";
 import SignUp from "@/pages/SignUp";
+import Statistics from "@/pages/Statistics";
 import { initializeData } from "@/utils/initializeData";
 import { storage, STORAGE_KEYS } from "@/utils/storage";
 import { useEffect } from "react";
@@ -51,8 +52,8 @@ function App() {
                   <Route path="/dashboard-demo" element={<DashboardDemo />} />
                   <Route path="/all-habits" element={<HabitsList />} />
                   <Route path="/profile" element={<Profile />} />
-
-                  {/* <Route path="/statistics" element={}/> */}
+                  <Route path="/statistics" element={<Statistics/> }/>
+                  
                 </Route>
               </Route>
             </Routes>

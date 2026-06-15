@@ -4,6 +4,7 @@ import { authService } from "@/services/auth";
 import { habitService } from "@/services/habits";
 import { useMemo } from "react";
 import { format } from "date-fns";
+import { isScheduledDay, isValidDate } from "@/utils/statsHelper";
 
 export function useHabitsQuery(query = {}) {
     // const { currentUser } = useAuth();
@@ -29,7 +30,8 @@ export function useHabitsQuery(query = {}) {
         return habits
             .filter(habit => {
                 if (habit.status === "Archived" || habit.status === "Paused") return false;
-                return habitService.isScheduledDay(habit, today);
+                if (!isValidDate(habit, today)) return false;
+                return isScheduledDay(habit, today);
             })
             .map(habit => ({
                 ...habit,

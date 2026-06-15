@@ -40,7 +40,7 @@ export default function HabitForm({ children, open, setOpen, habit }) {
         habit,
         onSuccess: () => {
             setOpen(false);
-            toast.success(isEdit? "Update habit successfully!" : "Create habit successfully!")
+            toast.success(isEdit ? "Update habit successfully!" : "Create habit successfully!")
         }
     });
 
@@ -49,7 +49,7 @@ export default function HabitForm({ children, open, setOpen, habit }) {
         updateField("frequency.daysOfWeek",
             exists ? form.frequency.daysOfWeek.filter(
                 d => d !== index
-            ) : [ ...form.frequency.daysOfWeek, index ]
+            ) : [...form.frequency.daysOfWeek, index]
         );
         setErrors(prev => ({
             ...prev,
@@ -255,7 +255,54 @@ export default function HabitForm({ children, open, setOpen, habit }) {
                         )}
                     </div>
 
-
+                    {/* --- GOAL --- */}
+                    <div className="grid grid-cols-2 gap-4 w-full my-4">
+                        <div className="space-y-2 w-full">
+                            <Label>Goal Type</Label>
+                            <Select
+                                value={form.goal?.targetType}
+                                onValueChange={(value) =>
+                                    updateField("goal.targetType", value)
+                                }
+                            >
+                                <SelectTrigger className="w-full shadow-none ring-0 focus:ring-pink-400 focus-visible:border-pink-400 focus-visible:ring-pink-400">
+                                    <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem className="p-2" value="streak">Streak (Days)</SelectItem>
+                                    <SelectItem className="p-2" value="completions_target">Total Completions</SelectItem>
+                                </SelectContent>
+                            </Select>
+                            {errors["goal.targetType"] && (
+                                <p className="text-xs text-red-500">
+                                    {errors["goal.targetType"]}
+                                </p>
+                            )}
+                        </div>
+                        <div className="space-y-2 w-full">
+                            <Label>Goal Value</Label>
+                            <Input
+                                type="number"
+                                // min={1}
+                                value={form.goal?.targetValue}
+                                onChange={(e) => {
+                                    const value = e.target.value
+                                    if (value === "") {
+                                        updateField("goal.targetValue", "")
+                                        return
+                                    }
+                                    const num = Number(value)
+                                    updateField("goal.targetValue", num)
+                                }}
+                                className="focus-visible:border-pink-400 focus-visible:ring-0 focus-visible:ring-transparent outline-none"
+                            />
+                            {errors["goal.targetValue"] && (
+                                <p className="text-xs text-red-500">
+                                    {errors["goal.targetValue"]}
+                                </p>
+                            )}
+                        </div>
+                    </div>
 
                     {/* AUTO OPEN NOTE */}
                     <div className="flex items-center justify-between">
