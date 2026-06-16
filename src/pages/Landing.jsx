@@ -694,9 +694,9 @@ export default function Landing() {
               <div className="lp-fc-undo-left">
                 <div className="lp-fc-undo-icon">↩️</div>
                 <div>
-                  <div className="lp-fc-undo-title">Undo & Reset</div>
+                  <div className="lp-fc-undo-title">Reset</div>
                   <div className="lp-fc-undo-body">
-                    Made a mistake? Undo your last check-in or reset to initial
+                    Made a mistake? Reset to initial
                     state. Your progress is always recoverable.
                   </div>
                 </div>
