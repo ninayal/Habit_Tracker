@@ -1,13 +1,12 @@
-import { useMemo, useState } from "react";
-import { mockHabits, mockCheckins, mockGoals } from "@/mockData";
+import { useEffect, useMemo, useRef } from "react";
+import { mockGoals } from "@/mockData";
+import TodayHabitSection from "@/components/Dashboard/TodayHabitSection";
+import { useCheckinContext } from "@/hooks/useCheckins";
+import { useHabitsQuery } from "@/hooks/useHabitsQuery";
+import { Spinner } from "@/components/ui/spinner";
 import "./styles/Dashboard.css";
 
 const DEMO_USER_ID = 1;
-
-// Dữ liệu mockData.js của bạn đang chủ yếu ở tháng 05/2026.
-// Để dashboard demo có số liệu đẹp, mình dùng ngày này.
-// Sau này muốn dùng ngày hiện tại thật thì đổi thành: getTodayKey()
-const DASHBOARD_DATE = "2026-05-30";
 
 function getTodayKey() {
   return new Date().toISOString().slice(0, 10);
@@ -27,12 +26,10 @@ function formatDateLabel(dateKey) {
   });
 }
 
-function normalizeStatus(status) {
-  if (status === "completed") return "Completed";
-  if (status === "in_progress") return "In Progress";
-  if (status === "failed") return "At Risk";
-  if (status === "skipped") return "Not Started";
-  return "Not Started";
+function formatMonthLabel(dateKey) {
+  return new Date(dateKey).toLocaleDateString("en-US", {
+    month: "long",
+  });
 }
 
 function getColorByCategory(category) {
@@ -43,6 +40,10 @@ function getColorByCategory(category) {
   return "purple";
 }
 
+function getTargetPerDay(habit) {
+  return Number(habit.targetPerDay || habit.target || 1);
+}
+
 function getCheckinForDate(habitId, dateKey, checkins) {
   return checkins.find(
     (checkin) =>
@@ -51,13 +52,58 @@ function getCheckinForDate(habitId, dateKey, checkins) {
   );
 }
 
-function isCompleted(checkin, habit) {
+function isCompletedCheckin(checkin, habit) {
   if (!checkin) return false;
 
   return (
     checkin.completionStatus === "completed" ||
-    Number(checkin.completedCount) >= Number(habit.targetPerDay)
+    checkin.status === "completed" ||
+    checkin.status === "Completed" ||
+    Number(checkin.completedCount || 0) >= getTargetPerDay(habit)
   );
+}
+
+function getStatusEntry(statusMap, habitId) {
+  if (!statusMap) return null;
+
+  return (
+    statusMap[habitId] ||
+    statusMap[String(habitId)] ||
+    statusMap.get?.(habitId) ||
+    statusMap.get?.(String(habitId)) ||
+    null
+  );
+}
+
+function isDoneFromTodayHabit(habit, statusMap, todayCheckin) {
+  const statusEntry = getStatusEntry(statusMap, habit.id);
+
+  if (typeof statusEntry === "boolean") {
+    return statusEntry;
+  }
+
+  if (statusEntry) {
+    if (statusEntry.isDone === true) return true;
+    if (statusEntry.done === true) return true;
+    if (statusEntry.completed === true) return true;
+    if (statusEntry.completionStatus === "completed") return true;
+    if (statusEntry.status === "completed") return true;
+    if (statusEntry.status === "Completed") return true;
+
+    const countFromStatus = Number(
+      statusEntry.completedCount ||
+        statusEntry.count ||
+        statusEntry.current ||
+        statusEntry.value ||
+        0
+    );
+
+    if (countFromStatus >= getTargetPerDay(habit)) {
+      return true;
+    }
+  }
+
+  return isCompletedCheckin(todayCheckin, habit);
 }
 
 function getCurrentStreak(habit, checkins, todayKey) {
@@ -67,7 +113,23 @@ function getCurrentStreak(habit, checkins, todayKey) {
   while (true) {
     const checkin = getCheckinForDate(habit.id, cursor, checkins);
 
-    if (!isCompleted(checkin, habit)) break;
+    if (!isCompletedCheckin(checkin, habit)) break;
+
+    streak += 1;
+    cursor = addDays(cursor, -1);
+  }
+
+  return streak;
+}
+
+function getPreviousStreak(habit, checkins, todayKey) {
+  let streak = 0;
+  let cursor = addDays(todayKey, -1);
+
+  while (true) {
+    const checkin = getCheckinForDate(habit.id, cursor, checkins);
+
+    if (!isCompletedCheckin(checkin, habit)) break;
 
     streak += 1;
     cursor = addDays(cursor, -1);
@@ -81,7 +143,7 @@ function getLongestStreak(habit, checkins) {
     .filter(
       (checkin) =>
         Number(checkin.habitId) === Number(habit.id) &&
-        isCompleted(checkin, habit)
+        isCompletedCheckin(checkin, habit)
     )
     .map((checkin) => checkin.date)
     .sort();
@@ -94,7 +156,7 @@ function getLongestStreak(habit, checkins) {
   for (let i = 1; i < completedDates.length; i++) {
     if (addDays(completedDates[i - 1], 1) === completedDates[i]) {
       current += 1;
-    } else {
+    } else if (completedDates[i - 1] !== completedDates[i]) {
       current = 1;
     }
 
@@ -108,7 +170,7 @@ function getTotalCompletions(habit, checkins) {
   return checkins.filter(
     (checkin) =>
       Number(checkin.habitId) === Number(habit.id) &&
-      isCompleted(checkin, habit)
+      isCompletedCheckin(checkin, habit)
   ).length;
 }
 
@@ -119,7 +181,7 @@ function getLast7Rate(habit, checkins, todayKey) {
     const dateKey = addDays(todayKey, -i);
     const checkin = getCheckinForDate(habit.id, dateKey, checkins);
 
-    if (isCompleted(checkin, habit)) {
+    if (isCompletedCheckin(checkin, habit)) {
       completedDays += 1;
     }
   }
@@ -136,7 +198,7 @@ function getWeeklyData(habits, checkins, todayKey) {
 
     const done = habits.filter((habit) => {
       const checkin = getCheckinForDate(habit.id, dateKey, checkins);
-      return isCompleted(checkin, habit);
+      return isCompletedCheckin(checkin, habit);
     }).length;
 
     return {
@@ -149,8 +211,11 @@ function getWeeklyData(habits, checkins, todayKey) {
 
 function getCategoryData(habits, checkins, todayKey) {
   const grouped = habits.reduce((result, habit) => {
-    if (!result[habit.category]) result[habit.category] = [];
-    result[habit.category].push(habit);
+    const category = habit.category || "Other";
+
+    if (!result[category]) result[category] = [];
+    result[category].push(habit);
+
     return result;
   }, {});
 
@@ -230,61 +295,24 @@ function ProgressRing({ value = 75, size = 140, stroke = 12 }) {
   );
 }
 
-function HabitRow({ habit }) {
-  const pct = Math.min(Math.round((habit.current / habit.target) * 100), 100);
+function MiniCalendar({ checkins, habits, todayKey }) {
+  const date = new Date(todayKey);
+  const year = date.getFullYear();
+  const month = date.getMonth();
+  const totalDays = new Date(year, month + 1, 0).getDate();
 
-  return (
-    <div className={`db-habit-row db-${habit.color}`}>
-      <div className="db-habit-left">
-        <div className="db-habit-icon">{habit.icon}</div>
-
-        <div className="db-habit-main">
-          <div className="db-habit-title-row">
-            <h3>{habit.name}</h3>
-
-            <span
-              className={`db-status ${habit.status
-                .toLowerCase()
-                .replace(" ", "-")}`}
-            >
-              {habit.status}
-            </span>
-          </div>
-
-          <div className="db-habit-meta">
-            <span>{habit.category}</span>
-            <span>·</span>
-            <span>
-              {habit.current}/{habit.target} {habit.unit}
-            </span>
-            <span>·</span>
-            <span>🔥 {habit.streak} days</span>
-          </div>
-
-          <div className="db-progress-track">
-            <div className="db-progress-fill" style={{ width: `${pct}%` }} />
-          </div>
-        </div>
-      </div>
-
-      <button className={pct >= 100 ? "db-check done" : "db-check"}>
-        {pct >= 100 ? "✓" : "+"}
-      </button>
-    </div>
-  );
-}
-
-function MiniCalendar({ checkins, habits }) {
-  const days = Array.from({ length: 31 }, (_, i) => i + 1);
+  const days = Array.from({ length: totalDays }, (_, index) => index + 1);
 
   return (
     <div className="db-calendar-grid">
-      {days.slice(0, 28).map((day) => {
-        const dateKey = `2026-05-${String(day).padStart(2, "0")}`;
+      {days.map((day) => {
+        const dateKey = `${year}-${String(month + 1).padStart(2, "0")}-${String(
+          day
+        ).padStart(2, "0")}`;
 
         const completedCount = habits.filter((habit) => {
           const checkin = getCheckinForDate(habit.id, dateKey, checkins);
-          return isCompleted(checkin, habit);
+          return isCompletedCheckin(checkin, habit);
         }).length;
 
         const active = completedCount > 0;
@@ -306,102 +334,103 @@ function MiniCalendar({ checkins, habits }) {
 }
 
 export default function Dashboard() {
-  const [filter, setFilter] = useState("All");
+  const todayKey = getTodayKey();
+  const todayHabitsRef = useRef(null);
+
+  const {
+    todaysHabits = [],
+    statusMap,
+    todayProgress = 0,
+    loading,
+  } = useHabitsQuery();
+
+  const checkinContext = useCheckinContext();
+  const loadCheckins = checkinContext?.loadCheckins;
+  const contextCheckins =
+    checkinContext?.checkins ||
+    checkinContext?.checkinList ||
+    checkinContext?.data ||
+    [];
+
+  useEffect(() => {
+    loadCheckins?.();
+  }, [loadCheckins]);
 
   const dashboardData = useMemo(() => {
-    const userHabits = mockHabits
-      .filter((habit) => habit.userId === DEMO_USER_ID)
-      .filter((habit) => habit.status !== "Archived")
-      .sort((a, b) => a.order - b.order);
-
-    const userCheckins = mockCheckins.filter(
-      (checkin) => checkin.userId === DEMO_USER_ID
+    const userCheckins = contextCheckins.filter(
+      (checkin) =>
+        checkin.userId == null || Number(checkin.userId) === DEMO_USER_ID
     );
 
-    const userGoals = mockGoals.filter((goal) => goal.userId === DEMO_USER_ID);
+    const activeHabits = todaysHabits
+      .filter((habit) => habit.status !== "Archived")
+      .filter((habit) => habit.status !== "Paused")
+      .sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
 
-    const enrichedHabits = userHabits.map((habit) => {
-      const todayCheckin = getCheckinForDate(
-        habit.id,
-        DASHBOARD_DATE,
-        userCheckins
-      );
+    const enrichedHabits = activeHabits.map((habit) => {
+      const todayCheckin = getCheckinForDate(habit.id, todayKey, userCheckins);
 
-      const current = Number(todayCheckin?.completedCount || 0);
-      const target = Number(habit.targetPerDay || 1);
+      const isDone = isDoneFromTodayHabit(habit, statusMap, todayCheckin);
 
-      const status = todayCheckin
-        ? normalizeStatus(todayCheckin.completionStatus)
-        : "Not Started";
-
-      const currentStreak = getCurrentStreak(
-        habit,
-        userCheckins,
-        DASHBOARD_DATE
-      );
-
+      const currentStreak = getCurrentStreak(habit, userCheckins, todayKey);
+      const previousStreak = getPreviousStreak(habit, userCheckins, todayKey);
       const longestStreak = getLongestStreak(habit, userCheckins);
       const totalCompletions = getTotalCompletions(habit, userCheckins);
-      const last7Rate = getLast7Rate(habit, userCheckins, DASHBOARD_DATE);
+      const last7Rate = getLast7Rate(habit, userCheckins, todayKey);
 
-      const isAtRisk =
-        habit.status === "Active" &&
-        status !== "Completed" &&
-        currentStreak > 0;
+      const isAtRisk = !isDone && previousStreak > 0;
 
       return {
         ...habit,
-        current,
-        target,
-        unit: target > 1 ? "times" : "session",
-        streak: currentStreak,
+        isDone,
+        isAtRisk,
+        currentStreak: isDone ? currentStreak : previousStreak,
         longestStreak,
         totalCompletions,
         last7Rate,
-        status: isAtRisk ? "At Risk" : status,
         color: getColorByCategory(habit.category),
       };
     });
 
-    const activeHabits = enrichedHabits.filter(
-      (habit) => habit.status !== "Paused"
-    );
-
-    const completed = activeHabits.filter(
-      (habit) => habit.status === "Completed"
-    ).length;
-
-    const atRisk = activeHabits.filter((habit) => habit.status === "At Risk")
-      .length;
+    const completed = enrichedHabits.filter((habit) => habit.isDone).length;
+    const atRisk = enrichedHabits.filter((habit) => habit.isAtRisk).length;
 
     const completionRate =
-      activeHabits.length === 0
+      typeof todayProgress === "number"
+        ? todayProgress
+        : enrichedHabits.length === 0
         ? 0
-        : Math.round((completed / activeHabits.length) * 100);
+        : Math.round((completed / enrichedHabits.length) * 100);
 
     const bestStreakHabit = enrichedHabits.reduce((best, habit) => {
+      if (!best) return habit;
       return habit.longestStreak > best.longestStreak ? habit : best;
-    }, enrichedHabits[0]);
+    }, null);
 
-    const weekly = getWeeklyData(activeHabits, userCheckins, DASHBOARD_DATE);
-    const categories = getCategoryData(activeHabits, userCheckins, DASHBOARD_DATE);
+    const weekly = getWeeklyData(enrichedHabits, userCheckins, todayKey);
+    const categories = getCategoryData(enrichedHabits, userCheckins, todayKey);
 
     const highlightedGoal = enrichedHabits
       .map((habit) =>
-        getGoalProgress(habit, userCheckins, userGoals, DASHBOARD_DATE)
+        getGoalProgress(
+          habit,
+          userCheckins,
+          mockGoals.filter((goal) => goal.userId === DEMO_USER_ID),
+          todayKey
+        )
       )
       .filter(Boolean)
       .sort((a, b) => b.progress - a.progress)[0];
 
     return {
       habits: enrichedHabits,
-      activeHabits,
+      activeHabits: enrichedHabits,
       weekly,
       categories,
       checkins: userCheckins,
       highlightedGoal,
       stats: {
-        total: activeHabits.length,
+        total: enrichedHabits.length,
         completed,
         atRisk,
         completionRate,
@@ -409,22 +438,61 @@ export default function Dashboard() {
         bestStreakHabit: bestStreakHabit?.name || "No habit",
       },
     };
-  }, []);
-
-  const filteredHabits =
-    filter === "All"
-      ? dashboardData.habits
-      : dashboardData.habits.filter((habit) => habit.category === filter);
-
-  const filterOptions = [
-    "All",
-    ...new Set(dashboardData.habits.map((habit) => habit.category)),
-  ];
+  }, [contextCheckins, statusMap, todayProgress, todaysHabits, todayKey]);
 
   const stats = dashboardData.stats;
   const weekly = dashboardData.weekly;
   const categories = dashboardData.categories;
   const highlightedGoal = dashboardData.highlightedGoal;
+
+  const activeHabitText = `${stats.completed} of ${stats.total} active habits completed`;
+
+  const handleScrollToTodayHabits = () => {
+    todayHabitsRef.current?.scrollIntoView({
+      behavior: "smooth",
+      block: "start",
+    });
+  };
+
+  const handleExportData = () => {
+    const exportData = {
+      exportedAt: new Date().toISOString(),
+      dashboardDate: todayKey,
+      userId: DEMO_USER_ID,
+      summary: {
+        activeHabits: stats.total,
+        completedToday: stats.completed,
+        atRisk: stats.atRisk,
+        completionRate: stats.completionRate,
+        bestStreak: stats.bestStreak,
+        bestStreakHabit: stats.bestStreakHabit,
+      },
+      habits: dashboardData.habits,
+      checkins: dashboardData.checkins,
+      goals: mockGoals.filter((goal) => goal.userId === DEMO_USER_ID),
+    };
+
+    const json = JSON.stringify(exportData, null, 2);
+    const blob = new Blob([json], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `habit-dashboard-${todayKey}.json`;
+    link.click();
+
+    URL.revokeObjectURL(url);
+  };
+
+  if (loading) {
+    return (
+      <main className="db-page db-page-inside-layout">
+        <div className="flex items-center justify-center min-h-screen text-blue-500">
+          <Spinner className="size-15" />
+        </div>
+      </main>
+    );
+  }
 
   return (
     <main className="db-page db-page-inside-layout">
@@ -435,14 +503,19 @@ export default function Dashboard() {
       <section className="db-main">
         <header className="db-topbar">
           <div>
-            <span className="db-kicker">{formatDateLabel(DASHBOARD_DATE)}</span>
+            <span className="db-kicker">{formatDateLabel(todayKey)}</span>
             <h1>Welcome back, habit hero.</h1>
             <p>Small wins today. Big change later.</p>
           </div>
 
           <div className="db-top-actions">
-            <button className="db-btn-light">Export</button>
-            <button className="db-btn-dark">+ Add Habit</button>
+            <button className="db-btn-light" onClick={handleExportData}>
+              Export
+            </button>
+
+            <button className="db-btn-dark" onClick={handleScrollToTodayHabits}>
+              Start check-in
+            </button>
           </div>
         </header>
 
@@ -451,19 +524,25 @@ export default function Dashboard() {
             <div className="db-hero-copy">
               <span className="db-pill">Today’s focus</span>
 
-              <h2>
-                Complete {stats.total - stats.completed} habits before 9 PM
-              </h2>
+              <h2>{activeHabitText}</h2>
 
               <p>
-                You have finished {stats.completed} of {stats.total} active habits today.
-                {stats.atRisk > 0
-                  ? ` ${stats.atRisk} habit is at risk of breaking a streak.`
-                  : " No habit is at risk today."}
+                {stats.total === 0
+                  ? "You do not have any active habits scheduled for today. Add a new habit to start building your daily routine."
+                  : `${stats.total - stats.completed} habits are still waiting for your check-in today. ${
+                      stats.atRisk > 0
+                        ? `${stats.atRisk} habit${
+                            stats.atRisk > 1 ? "s are" : " is"
+                          } currently at risk of breaking a streak.`
+                        : "None of your habits are at risk right now, so you are on track to maintain your progress today."
+                    }`}
               </p>
 
               <div className="db-hero-actions">
-                <button>Start check-in</button>
+                <button onClick={handleScrollToTodayHabits}>
+                  View today’s habits
+                </button>
+
                 <span>{stats.total - stats.completed} habits left</span>
               </div>
             </div>
@@ -497,31 +576,8 @@ export default function Dashboard() {
         </section>
 
         <section className="db-content-grid">
-          <div className="db-panel db-habits-panel">
-            <div className="db-panel-head">
-              <div>
-                <span className="db-section-label">Daily check-ins</span>
-                <h2>Today’s habits</h2>
-              </div>
-
-              <div className="db-filter">
-                {filterOptions.map((item) => (
-                  <button
-                    key={item}
-                    className={filter === item ? "active" : ""}
-                    onClick={() => setFilter(item)}
-                  >
-                    {item}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            <div className="db-habit-list">
-              {filteredHabits.map((habit) => (
-                <HabitRow key={habit.id} habit={habit} />
-              ))}
-            </div>
+          <div className="db-habits-panel db-today-demo-panel" ref={todayHabitsRef}>
+            <TodayHabitSection />
           </div>
 
           <div className="db-panel db-week-panel">
@@ -531,7 +587,9 @@ export default function Dashboard() {
                 <h2>7-day rhythm</h2>
               </div>
 
-              <span className="db-small-badge">{stats.completionRate}% rate</span>
+              <span className="db-small-badge">
+                {stats.completionRate}% rate
+              </span>
             </div>
 
             <div className="db-week-chart">
@@ -585,13 +643,14 @@ export default function Dashboard() {
             <div className="db-panel-head compact">
               <div>
                 <span className="db-section-label">Consistency</span>
-                <h2>May heatmap</h2>
+                <h2>{formatMonthLabel(todayKey)} heatmap</h2>
               </div>
             </div>
 
             <MiniCalendar
               habits={dashboardData.activeHabits}
               checkins={dashboardData.checkins}
+              todayKey={todayKey}
             />
           </div>
 

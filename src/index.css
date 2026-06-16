@@ -178,11 +178,11 @@
     --sidebar-ring: oklch(0.556 0 0);
     --background-brand-page: var(--brand-page-bg);
 
-    --surface: rgba(255, 255, 255, 0.72);
-    --surface-strong: rgba(255, 255, 255, 0.88);
-    --surface-hover: rgba(255, 255, 255, 0.85);
-    --surface-border: rgba(255, 255, 255, 0.55);
-    --surface-ring: rgba(255, 255, 255, 0.9);
+    --surface: rgba(31, 41, 55, 0.82);
+    --surface-strong: rgba(31, 41, 55, 0.94);
+    --surface-hover: rgba(51, 65, 85, 0.9);
+    --surface-border: rgba(255, 255, 255, 0.12);
+    --surface-ring: rgba(255, 255, 255, 0.18);
 }
 
 @layer base {
