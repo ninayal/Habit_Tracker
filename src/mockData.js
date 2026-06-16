@@ -5,6 +5,7 @@ export const mockUsers = [
     email: "quyen@gmail.com",
     password: "dev_9f4x_k2m_2026",
     image: "https://randomuser.me/api/portraits/men/1.jpg",
+    dateOfBirth: "1998-04-18",
     reminderTime: "07:00",
     weekStartsOn: "monday",
     habitDefaults: {
@@ -27,6 +28,7 @@ export const mockUsers = [
     email: "abc@gmail.com",
     password: "dev_9f4x_k2m_2026",
     image: "https://randomuser.me/api/portraits/women/2.jpg",
+    dateOfBirth: "1996-09-24",
     reminderTime: "08:30",
     weekStartsOn: "sunday",
     habitDefaults: {

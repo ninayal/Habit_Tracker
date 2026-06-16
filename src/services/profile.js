@@ -86,6 +86,7 @@ function normalizeUser(user) {
         fullName,
         email,
         image: user.image?.trim() || "",
+        dateOfBirth: user.dateOfBirth?.trim() || "",
         bio: user.bio?.trim() || DEFAULT_EDITABLE_FIELDS.bio,
         habitGoal: user.habitGoal?.trim() || DEFAULT_EDITABLE_FIELDS.habitGoal,
         reminderTime: user.reminderTime || DEFAULT_EDITABLE_FIELDS.reminderTime,
@@ -124,6 +125,7 @@ export function getProfileFormValues(profile) {
     return {
         fullName: profile?.fullName || "",
         email: profile?.email || "",
+        dateOfBirth: profile?.dateOfBirth || "",
         reminderTime: profile?.reminderTime || DEFAULT_EDITABLE_FIELDS.reminderTime,
     };
 }
@@ -139,6 +141,7 @@ export function getDefaultProfileFormValues(profile) {
     return {
         fullName,
         email,
+        dateOfBirth: profile?.dateOfBirth || "",
         bio: DEFAULT_EDITABLE_FIELDS.bio,
         habitGoal: DEFAULT_EDITABLE_FIELDS.habitGoal,
         reminderTime: DEFAULT_EDITABLE_FIELDS.reminderTime,
@@ -230,6 +233,18 @@ export function getActiveHabitCount(userId = getCurrentUserProfile()?.id) {
 }
 
 export function formatJoinedDate(dateValue) {
+    return formatReadableDate(dateValue, {
+        month: "short",
+        day: "numeric",
+        year: "numeric",
+    });
+}
+
+export function formatDateOfBirth(dateValue) {
+    if (!dateValue) {
+        return "";
+    }
+
     return formatReadableDate(dateValue, {
         month: "short",
         day: "numeric",

@@ -9,6 +9,7 @@ import {
     getProfileFormValues,
     updateCurrentUserProfile,
 } from "@/services/profile";
+import { formatDate } from "@/utils/helper";
 
 function validateProfileForm(values) {
     const errors = {};
@@ -17,10 +18,8 @@ function validateProfileForm(values) {
         errors.fullName = "Full name is required.";
     }
 
-    if (!values.email.trim()) {
-        errors.email = "Email is required.";
-    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(values.email.trim())) {
-        errors.email = "Enter a valid email address.";
+    if (values.dateOfBirth && values.dateOfBirth > formatDate()) {
+        errors.dateOfBirth = "Date of birth cannot be in the future.";
     }
 
     return errors;
@@ -208,7 +207,7 @@ export default function Profile() {
             try {
                 const updatedProfile = updateCurrentUserProfile({
                     fullName: draftValues.fullName.trim(),
-                    email: draftValues.email.trim(),
+                    dateOfBirth: draftValues.dateOfBirth?.trim() || "",
                 });
 
                 if (!updatedProfile) {

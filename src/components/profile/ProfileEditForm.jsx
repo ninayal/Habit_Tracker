@@ -1,3 +1,5 @@
+import { Lock } from "lucide-react";
+
 import { Button } from "@/components/ui/button";
 
 const FIELDS = [
@@ -9,17 +11,17 @@ const FIELDS = [
         span: "md:col-span-1",
     },
     {
-        name: "email",
-        label: "Email",
-        placeholder: "you@example.com",
-        type: "email",
+        name: "dateOfBirth",
+        label: "Date of birth",
+        placeholder: "",
+        type: "date",
         span: "md:col-span-1",
     },
 ];
 
-function Field({ field, value, error, onChange }) {
+function Field({ field, value, error, onChange, readOnly = false }) {
     const baseClassName = "mt-2 w-full rounded-2xl border border-brand-border bg-[#FAFAFA] px-4 py-3 text-sm text-[color:var(--brand-text)] shadow-sm outline-none transition placeholder:text-[color:var(--brand-muted-text)] focus:border-brand-pink focus:ring-2 focus:ring-brand-pink/20 dark:bg-[#172033] dark:text-[#F9FAFB] dark:placeholder:text-[#CBD5E1]";
-    const className = `${baseClassName} ${error ? "border-destructive" : ""}`;
+    const className = `${baseClassName} ${error ? "border-destructive" : ""} ${readOnly ? "bg-[#F3F4F6] text-[color:var(--brand-label-text)] dark:bg-[#111827] dark:text-[#CBD5E1]" : ""}`;
 
     return (
         <label className={`block ${field.span}`}>
@@ -30,6 +32,8 @@ function Field({ field, value, error, onChange }) {
                 value={value}
                 onChange={onChange}
                 placeholder={field.placeholder}
+                readOnly={readOnly}
+                disabled={readOnly}
                 className={className}
             />
             {error ? <p className="mt-2 text-sm text-destructive">{error}</p> : null}
@@ -58,6 +62,22 @@ export default function ProfileEditForm({ values, errors, onChange, onSubmit, on
                         onChange={onChange}
                     />
                 ))}
+
+                <label className="block md:col-span-2">
+                    <span className="flex items-center gap-2 text-sm font-medium text-[color:var(--brand-text)] dark:text-[#F9FAFB]">
+                        Email
+                        <Lock className="h-3.5 w-3.5 text-[color:var(--brand-label-text)] dark:text-[#9CA3AF]" aria-hidden="true" />
+                    </span>
+                    <input
+                        name="email"
+                        type="email"
+                        value={values.email}
+                        readOnly
+                        aria-readonly="true"
+                        tabIndex={-1}
+                        className="mt-2 w-full cursor-not-allowed rounded-2xl border border-brand-border bg-[#F3F4F6] px-4 py-3 text-sm text-[color:var(--brand-label-text)] shadow-sm outline-none transition placeholder:text-[color:var(--brand-muted-text)] dark:border-white/10 dark:bg-[#111827] dark:text-[#CBD5E1]"
+                    />
+                </label>
             </div>
 
             <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center">

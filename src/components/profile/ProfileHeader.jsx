@@ -3,7 +3,7 @@ import { useRef } from "react";
 import { Camera } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import { formatJoinedDate } from "@/services/profile";
+import { formatDateOfBirth, formatJoinedDate } from "@/services/profile";
 import ProfileAvatar from "@/components/profile/ProfileAvatar";
 import ProfileSaveStatus from "@/components/profile/ProfileSaveStatus";
 
@@ -72,6 +72,11 @@ export default function ProfileHeader({
                                     {profile.fullName}
                                 </h2>
                                 <p className="text-sm text-[color:var(--brand-label-text)] dark:text-[#E5E7EB]">{profile.email}</p>
+                                {profile.dateOfBirth ? (
+                                    <p className="text-sm text-[color:var(--brand-label-text)] dark:text-[#CBD5E1]">
+                                        Date of birth: {formatDateOfBirth(profile.dateOfBirth)}
+                                    </p>
+                                ) : null}
                                 <div className="space-y-1">
                                     {avatarSaveStatus?.message ? (
                                         <ProfileSaveStatus status={avatarSaveStatus.status} message={avatarSaveStatus.message} />
