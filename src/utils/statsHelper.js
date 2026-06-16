@@ -117,7 +117,7 @@ export function calculateGoalProgress(habit, goal, checkins) {
 
     let currentValue = 0;
     if (goal.targetType === "streak") {
-        currentValue = calculateLongestStreak(habit, checkins);
+        currentValue = calculateCurrentStreak(habit, checkins);
     } else if (goal.targetType === "completions_target") {
         currentValue = calculateTotalCompletions(habit, checkins);
     }

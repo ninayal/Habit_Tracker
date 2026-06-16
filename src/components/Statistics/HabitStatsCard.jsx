@@ -65,7 +65,7 @@ export default function HabitStatsCard({ habit }) {
 
             <div className="flex-1 min-w-0">
                 <div className="font-medium truncate text-gray-800">{habit.name}</div>
-                <div className="text-xs text-gray-500 pt-0.5">{habit.frequency?.repeatType === "daily" ? "Daily" : "Specific days"} | {habit.category} | {habit.goal.targetType === "streak" ? "Longest Streak" : "Total Completions"}</div>
+                <div className="text-xs text-gray-500 pt-0.5">{habit.frequency?.repeatType === "daily" ? "Daily" : "Specific days"} | {habit.category} | {habit.goal.targetType === "streak" ? "Current Streak" : "Total Completions"}</div>
             </div>
             <div className="flex items-center gap-4 sm:gap-6 text-sm">
                 <div className="flex items-center gap-1.5" title="Current streak">

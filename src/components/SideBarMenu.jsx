@@ -13,11 +13,6 @@ const menuItems = [
         href: "/dashboard",
     },
     {
-        title: "Dashboard-Demo",
-        icon: ListChecks,
-        href: "/dashboard-demo",
-    },
-    {
         title: "All habits",
         icon: GalleryVerticalEnd,
         href: "/all-habits",

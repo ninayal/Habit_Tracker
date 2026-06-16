@@ -104,11 +104,11 @@ export default function CategoryProgressChart({ habits, checkins }) {
 
                 <div className="w-36 shrink-0">
                     <Select value={timeRange} onValueChange={setTimeRange}>
-                        <SelectTrigger className="h-9 text-sm focus:ring-pink-400 focus-visible:ring-pink-400 focus-visible:border-pink-400 shadow-none">
+                        <SelectTrigger className="h-9 text-sm text-gray-600 focus:ring-pink focus-visible:ring-pink focus-visible:border-pink shadow-none">
                             <SelectValue />
                         </SelectTrigger>
                         <SelectContent className={``}>
-                            <SelectItem className={`px-3`} value="7d">Last 7 Days</SelectItem>
+                            <SelectItem className={`px-3 `} value="7d">Last 7 Days</SelectItem>
                             <SelectItem className={`px-3`} value="30d">Last 30 Days</SelectItem>
                             {/* <SelectItem value="all">All Time</SelectItem> */}
                         </SelectContent>

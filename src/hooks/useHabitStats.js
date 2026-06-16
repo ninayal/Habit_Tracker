@@ -85,7 +85,7 @@ export default function useHabitStats(habit) {
                 rateTrend,
                 goalProgress
             },
-            habitCheckins: habitCheckins.sort((a, b) => b.date.localeCompare(a.date))
+            habitCheckins: [...habitCheckins].sort((a, b) => b.date.localeCompare(a.date))
         };
 
     }, [habit, userId, checkins]);
