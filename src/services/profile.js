@@ -1,4 +1,5 @@
 import { formatReadableDate } from "@/utils/date";
+import { formatDate } from "@/utils/helper";
 import { storage, STORAGE_KEYS } from "@/utils/storage";
 
 const DEFAULT_EDITABLE_FIELDS = {
@@ -8,6 +9,62 @@ const DEFAULT_EDITABLE_FIELDS = {
     defaultHabitCategory: "Health",
     weekStartsOn: "monday",
 };
+
+function createDefaultHabitDefaults() {
+    return {
+        icon: "💧",
+        name: "",
+        category: "Health",
+        startDate: formatDate(),
+        frequency: {
+            repeatType: "specific_days",
+            daysOfWeek: [],
+        },
+        targetPerDay: 1,
+        priority: "Medium",
+        autoOpenNote: false,
+        goal: {
+            targetType: "streak",
+            targetValue: 3,
+        },
+    };
+}
+
+function normalizeHabitDefaults(habitDefaults) {
+    const defaults = createDefaultHabitDefaults();
+
+    if (!habitDefaults) {
+        return defaults;
+    }
+
+    return {
+        ...defaults,
+        ...habitDefaults,
+        icon: habitDefaults.icon?.trim() || defaults.icon,
+        name: habitDefaults.name ?? defaults.name,
+        category: habitDefaults.category || defaults.category,
+        startDate: habitDefaults.startDate || defaults.startDate,
+        frequency: {
+            ...defaults.frequency,
+            ...(habitDefaults.frequency || {}),
+            daysOfWeek: Array.isArray(habitDefaults.frequency?.daysOfWeek)
+                ? [...habitDefaults.frequency.daysOfWeek]
+                : [...defaults.frequency.daysOfWeek],
+        },
+        targetPerDay: Number.isFinite(Number(habitDefaults.targetPerDay)) && Number(habitDefaults.targetPerDay) > 0
+            ? Number(habitDefaults.targetPerDay)
+            : defaults.targetPerDay,
+        priority: habitDefaults.priority || defaults.priority,
+        autoOpenNote: habitDefaults.autoOpenNote ?? defaults.autoOpenNote,
+        goal: {
+            ...defaults.goal,
+            ...(habitDefaults.goal || {}),
+            targetValue: Number.isFinite(Number(habitDefaults.goal?.targetValue)) && Number(habitDefaults.goal.targetValue) > 0
+                ? Number(habitDefaults.goal.targetValue)
+                : defaults.goal.targetValue,
+        },
+    };
+}
 
 function normalizeUser(user) {
     if (!user) {
@@ -34,6 +91,7 @@ function normalizeUser(user) {
         reminderTime: user.reminderTime || DEFAULT_EDITABLE_FIELDS.reminderTime,
         defaultHabitCategory: user.defaultHabitCategory || DEFAULT_EDITABLE_FIELDS.defaultHabitCategory,
         weekStartsOn: user.weekStartsOn || DEFAULT_EDITABLE_FIELDS.weekStartsOn,
+        habitDefaults: normalizeHabitDefaults(user.habitDefaults),
     };
 }
 
@@ -62,6 +120,10 @@ export function getProfileFormValues(profile) {
     };
 }
 
+export function getHabitDefaultFormValues(profile) {
+    return normalizeHabitDefaults(profile?.habitDefaults);
+}
+
 export function getDefaultProfileFormValues(profile) {
     const fullName = profile?.fullName || "";
     const email = profile?.email || "";
@@ -74,6 +136,7 @@ export function getDefaultProfileFormValues(profile) {
         reminderTime: DEFAULT_EDITABLE_FIELDS.reminderTime,
         defaultHabitCategory: DEFAULT_EDITABLE_FIELDS.defaultHabitCategory,
         weekStartsOn: DEFAULT_EDITABLE_FIELDS.weekStartsOn,
+        habitDefaults: createDefaultHabitDefaults(),
     };
 }
 
@@ -87,6 +150,20 @@ export function updateCurrentUserProfile(updates) {
     const nextProfile = normalizeUser({
         ...currentProfile,
         ...updates,
+        habitDefaults: updates.habitDefaults
+            ? {
+                ...currentProfile.habitDefaults,
+                ...updates.habitDefaults,
+                frequency: {
+                    ...currentProfile.habitDefaults?.frequency,
+                    ...(updates.habitDefaults.frequency || {}),
+                },
+                goal: {
+                    ...currentProfile.habitDefaults?.goal,
+                    ...(updates.habitDefaults.goal || {}),
+                },
+            }
+            : currentProfile.habitDefaults,
         updatedAt: new Date().toISOString(),
     });
 
