@@ -1,9 +1,23 @@
+import { useRef } from "react";
+
+import { Camera } from "lucide-react";
+
 import { Button } from "@/components/ui/button";
 import { formatJoinedDate } from "@/services/profile";
 import ProfileAvatar from "@/components/profile/ProfileAvatar";
 import ProfileSaveStatus from "@/components/profile/ProfileSaveStatus";
 
-export default function ProfileHeader({ profile, isEditing, onEdit, saveStatus }) {
+export default function ProfileHeader({
+    profile,
+    isEditing,
+    onEdit,
+    saveStatus,
+    avatarSaveStatus,
+    avatarError,
+    onAvatarFilePick,
+}) {
+    const avatarInputRef = useRef(null);
+
     const quickInfo = [
         { label: "Category", value: profile.defaultHabitCategory || "Health", tone: "bg-brand-pink/10" },
         { label: "Joined", value: formatJoinedDate(profile.createdAt), tone: "bg-brand-blue/30" },
@@ -21,12 +35,51 @@ export default function ProfileHeader({ profile, isEditing, onEdit, saveStatus }
                 <div className="grid gap-4 lg:grid-cols-[1.35fr_0.65fr]">
                     <div className="rounded-[2rem] bg-brand-card-bg p-5 shadow-sm dark:bg-[#172033] sm:p-6">
                         <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
-                            <ProfileAvatar src={profile.image} name={profile.fullName} />
+                            <div
+                                className="relative w-fit overflow-visible"
+                                onClick={() => avatarInputRef.current?.click()}
+                                role="button"
+                                tabIndex={0}
+                                onKeyDown={(event) => {
+                                    if (event.key === "Enter" || event.key === " ") {
+                                        event.preventDefault();
+                                        avatarInputRef.current?.click();
+                                    }
+                                }}
+                            >
+                                <ProfileAvatar src={profile.image} name={profile.fullName} />
+                                <button
+                                    type="button"
+                                    onClick={(event) => {
+                                        event.stopPropagation();
+                                        avatarInputRef.current?.click();
+                                    }}
+                                    className="absolute bottom-1 right-1 inline-flex h-8 w-8 items-center justify-center rounded-full border border-white/70 bg-white shadow-sm transition hover:border-brand-pink hover:bg-brand-yellow/20 dark:border-white/10 dark:bg-[#111827] dark:text-[#F9FAFB]"
+                                    aria-label="Change avatar"
+                                >
+                                    <Camera className="h-4 w-4 text-[color:var(--brand-text)] dark:text-[#F9FAFB]" />
+                                </button>
+                                <input
+                                    ref={avatarInputRef}
+                                    type="file"
+                                    accept="image/*"
+                                    className="hidden"
+                                    onChange={(event) => onAvatarFilePick?.(event.target.files?.[0], event)}
+                                />
+                            </div>
                             <div className="max-w-2xl space-y-3">
                                 <h2 className="text-3xl font-semibold tracking-tight text-[color:var(--brand-text)] sm:text-4xl dark:text-[#F9FAFB]">
                                     {profile.fullName}
                                 </h2>
                                 <p className="text-sm text-[color:var(--brand-label-text)] dark:text-[#E5E7EB]">{profile.email}</p>
+                                <div className="space-y-1">
+                                    {avatarSaveStatus?.message ? (
+                                        <ProfileSaveStatus status={avatarSaveStatus.status} message={avatarSaveStatus.message} />
+                                    ) : null}
+                                    {avatarError ? (
+                                        <p className="text-xs text-red-500">{avatarError}</p>
+                                    ) : null}
+                                </div>
                             </div>
                         </div>
                         <div className="pt-3">

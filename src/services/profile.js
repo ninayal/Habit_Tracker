@@ -109,6 +109,14 @@ export function getCurrentUserProfile() {
     const users = getUsers();
     const fallbackUser = normalizeUser(users[0]);
 
+    if (currentUser && storedProfile) {
+        return normalizeUser({
+            ...currentUser,
+            ...storedProfile,
+            image: storedProfile.image || currentUser.image,
+        });
+    }
+
     return currentUser || storedProfile || fallbackUser || null;
 }
 
@@ -168,6 +176,28 @@ export function updateCurrentUserProfile(updates) {
     });
 
     storage.set(STORAGE_KEYS.PROFILE, nextProfile);
+
+    const currentUser = storage.get(STORAGE_KEYS.CURRENT_USER, null);
+    if (currentUser?.id === nextProfile.id) {
+        storage.set(STORAGE_KEYS.CURRENT_USER, normalizeUser({
+            ...currentUser,
+            ...updates,
+            image: updates.image ?? currentUser.image,
+            updatedAt: nextProfile.updatedAt,
+        }));
+    }
+
+    const users = storage.get(STORAGE_KEYS.USERS, []);
+    const userIndex = users.findIndex((user) => user.id === nextProfile.id);
+    if (userIndex !== -1) {
+        users[userIndex] = normalizeUser({
+            ...users[userIndex],
+            ...updates,
+            image: updates.image ?? users[userIndex].image,
+            updatedAt: nextProfile.updatedAt,
+        });
+        storage.set(STORAGE_KEYS.USERS, users);
+    }
 
     return nextProfile;
 }

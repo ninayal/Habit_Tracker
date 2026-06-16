@@ -51,10 +51,57 @@ function getProfileSettingsDraft(profile) {
     };
 }
 
+function readFileAsDataUrl(file) {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = () => reject(new Error("Unable to read image file."));
+        reader.readAsDataURL(file);
+    });
+}
+
+function loadImageFromDataUrl(dataUrl) {
+    return new Promise((resolve, reject) => {
+        const image = new Image();
+        image.onload = () => resolve(image);
+        image.onerror = () => reject(new Error("Unable to load image."));
+        image.src = dataUrl;
+    });
+}
+
+async function compressAvatarFile(file) {
+    const sourceDataUrl = await readFileAsDataUrl(file);
+    const image = await loadImageFromDataUrl(sourceDataUrl);
+
+    const maxDimension = 512;
+    const widthScale = maxDimension / image.width;
+    const heightScale = maxDimension / image.height;
+    const scale = Math.min(1, widthScale, heightScale);
+    const width = Math.max(1, Math.round(image.width * scale));
+    const height = Math.max(1, Math.round(image.height * scale));
+
+    const canvas = document.createElement("canvas");
+    canvas.width = width;
+    canvas.height = height;
+
+    const context = canvas.getContext("2d");
+    if (!context) {
+        throw new Error("Unable to process image.");
+    }
+
+    context.fillStyle = "#FFFFFF";
+    context.fillRect(0, 0, width, height);
+    context.drawImage(image, 0, 0, width, height);
+
+    return canvas.toDataURL("image/jpeg", 0.82);
+}
+
 export default function Profile() {
     const [profile, setProfile] = useState(() => getCurrentUserProfile());
     const [draftValues, setDraftValues] = useState(() => getProfileFormValues(profile));
     const [profileSettingsDraft, setProfileSettingsDraft] = useState(() => getProfileSettingsDraft(profile));
+    const [avatarError, setAvatarError] = useState("");
+    const [avatarSaveStatus, setAvatarSaveStatus] = useState({ status: "idle", message: "" });
     const [errors, setErrors] = useState({});
     const [isEditing, setIsEditing] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
@@ -62,6 +109,7 @@ export default function Profile() {
     const [profileSettingsSaveStatus, setProfileSettingsSaveStatus] = useState({ status: "idle", message: "" });
     const profileStatusTimerRef = useRef(null);
     const profileSettingsStatusTimerRef = useRef(null);
+    const avatarStatusTimerRef = useRef(null);
     const profileUpdateTimerRef = useRef(null);
     const profileSettingsUpdateTimerRef = useRef(null);
 
@@ -96,6 +144,10 @@ export default function Profile() {
 
             if (profileSettingsStatusTimerRef.current) {
                 window.clearTimeout(profileSettingsStatusTimerRef.current);
+            }
+
+            if (avatarStatusTimerRef.current) {
+                window.clearTimeout(avatarStatusTimerRef.current);
             }
 
             if (profileUpdateTimerRef.current) {
@@ -211,14 +263,53 @@ export default function Profile() {
         }, 120);
     };
 
+    const handleAvatarFilePick = async (file, event) => {
+        if (event?.target) {
+            event.target.value = "";
+        }
+
+        if (!file) {
+            return;
+        }
+
+        if (!file.type?.startsWith("image/")) {
+            setAvatarError("Please choose an image file.");
+            setAvatarSaveStatus({ status: "error", message: "Save failed" });
+            return;
+        }
+
+        setAvatarError("");
+        setAvatarSaveStatus({ status: "saving", message: "Saving..." });
+
+        try {
+            const compressedDataUrl = await compressAvatarFile(file);
+            const nextProfile = updateCurrentUserProfile({ image: compressedDataUrl });
+
+            if (!nextProfile) {
+                setAvatarSaveStatus({ status: "error", message: "Save failed" });
+                return;
+            }
+
+            setProfile(nextProfile);
+            setAvatarSaveStatus({ status: "success", message: "Avatar updated" });
+            scheduleStatusReset(setAvatarSaveStatus, avatarStatusTimerRef);
+        } catch {
+            setAvatarError("Image is too large or unsupported.");
+            setAvatarSaveStatus({ status: "error", message: "Save failed" });
+        }
+    };
+
     return (
-        <div className="brand-page relative overflow-hidden px-4 py-6 sm:px-6 lg:px-8">
+        <div className="brand-page relative overflow-visible px-4 py-6 sm:px-6 lg:px-8">
             <div className="relative mx-auto max-w-6xl space-y-6">
                 <ProfileHeader
                     profile={profile}
                     isEditing={isEditing}
                     onEdit={openEditMode}
                     saveStatus={profileSaveStatus}
+                    avatarError={avatarError}
+                    avatarSaveStatus={avatarSaveStatus}
+                    onAvatarFilePick={handleAvatarFilePick}
                 />
 
                 {isEditing ? (
