@@ -4,6 +4,8 @@ import TodayHabitSection from "@/components/Dashboard/TodayHabitSection";
 import { useCheckinContext } from "@/hooks/useCheckins";
 import { useHabitsQuery } from "@/hooks/useHabitsQuery";
 import { Spinner } from "@/components/ui/spinner";
+import { getWeekStartsOn } from "@/services/profile";
+import { getWeekDateStrings } from "@/utils/date";
 import "./styles/Dashboard.css";
 
 const DEMO_USER_ID = 1;
@@ -189,12 +191,9 @@ function getLast7Rate(habit, checkins, todayKey) {
   return Math.round((completedDays / 7) * 100);
 }
 
-function getWeeklyData(habits, checkins, todayKey) {
-  return Array.from({ length: 7 }, (_, index) => {
-    const dateKey = addDays(todayKey, index - 6);
-    const date = new Date(dateKey);
-
-    const total = habits.length;
+function getWeeklyData(habits, checkins, weekStartsOn) {
+    return getWeekDateStrings(new Date(), weekStartsOn).map((dateKey) => {
+    const date = new Date(`${dateKey}T00:00:00`);
 
     const done = habits.filter((habit) => {
       const checkin = getCheckinForDate(habit.id, dateKey, checkins);
@@ -204,7 +203,7 @@ function getWeeklyData(habits, checkins, todayKey) {
     return {
       day: date.toLocaleDateString("en-US", { weekday: "short" }),
       done,
-      total,
+      total: habits.length,
     };
   });
 }
@@ -336,6 +335,7 @@ function MiniCalendar({ checkins, habits, todayKey }) {
 export default function Dashboard() {
   const todayKey = getTodayKey();
   const todayHabitsRef = useRef(null);
+  const weekStartsOn = getWeekStartsOn();
 
   const {
     todaysHabits = [],
@@ -346,11 +346,14 @@ export default function Dashboard() {
 
   const checkinContext = useCheckinContext();
   const loadCheckins = checkinContext?.loadCheckins;
-  const contextCheckins =
-    checkinContext?.checkins ||
-    checkinContext?.checkinList ||
-    checkinContext?.data ||
-    [];
+  const contextCheckins = useMemo(
+    () =>
+      checkinContext?.checkins ||
+      checkinContext?.checkinList ||
+      checkinContext?.data ||
+      [],
+    [checkinContext]
+  );
 
   useEffect(() => {
     loadCheckins?.();
@@ -392,9 +395,8 @@ export default function Dashboard() {
       };
     });
 
-    const completed = enrichedHabits.filter((habit) => habit.isDone).length;
-    const atRisk = enrichedHabits.filter((habit) => habit.isAtRisk).length;
-
+  const completed = enrichedHabits.filter((habit) => habit.isDone).length;
+  const atRisk = enrichedHabits.filter((habit) => habit.isAtRisk).length;
     const completionRate =
       typeof todayProgress === "number"
         ? todayProgress
@@ -407,7 +409,7 @@ export default function Dashboard() {
       return habit.longestStreak > best.longestStreak ? habit : best;
     }, null);
 
-    const weekly = getWeeklyData(enrichedHabits, userCheckins, todayKey);
+    const weekly = getWeeklyData(enrichedHabits, userCheckins, weekStartsOn);
     const categories = getCategoryData(enrichedHabits, userCheckins, todayKey);
 
     const highlightedGoal = enrichedHabits
@@ -438,7 +440,7 @@ export default function Dashboard() {
         bestStreakHabit: bestStreakHabit?.name || "No habit",
       },
     };
-  }, [contextCheckins, statusMap, todayProgress, todaysHabits, todayKey]);
+  }, [contextCheckins, statusMap, todayProgress, todaysHabits, todayKey, weekStartsOn]);
 
   const stats = dashboardData.stats;
   const weekly = dashboardData.weekly;

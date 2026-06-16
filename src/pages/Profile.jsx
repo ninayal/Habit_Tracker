@@ -1,15 +1,19 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 import ProfileEditForm from "@/components/profile/ProfileEditForm";
 import ProfileSettingsCard from "@/components/profile/ProfileSettingsCard";
 import ProfileHeader from "@/components/profile/ProfileHeader";
+import { useCheckinContext } from "@/hooks/useCheckins";
+import { useHabitContext } from "@/hooks/useHabits";
 import {
     getCurrentUserProfile,
     getHabitDefaultFormValues,
     getProfileFormValues,
+    formatJoinedDate,
     updateCurrentUserProfile,
 } from "@/services/profile";
 import { formatDate } from "@/utils/helper";
+import { calculateLongestStreak, calculateTotalCompletions } from "@/utils/statsHelper";
 
 function validateProfileForm(values) {
     const errors = {};
@@ -111,6 +115,8 @@ export default function Profile() {
     const avatarStatusTimerRef = useRef(null);
     const profileUpdateTimerRef = useRef(null);
     const profileSettingsUpdateTimerRef = useRef(null);
+    const { allHabits } = useHabitContext();
+    const { checkins } = useCheckinContext();
 
     const openEditMode = () => {
         setDraftValues(getProfileFormValues(profile));
@@ -134,6 +140,53 @@ export default function Profile() {
             timerRef.current = null;
         }, delay);
     };
+
+    const summaryCards = useMemo(() => {
+        const checkinsByHabitId = new Map();
+
+        (checkins || []).forEach((checkin) => {
+            if (!checkinsByHabitId.has(checkin.habitId)) {
+                checkinsByHabitId.set(checkin.habitId, []);
+            }
+
+            checkinsByHabitId.get(checkin.habitId).push(checkin);
+        });
+
+        const habits = allHabits || [];
+
+        const completedCount = habits.reduce((total, habit) => {
+            const habitCheckins = checkinsByHabitId.get(habit.id) || [];
+            return total + calculateTotalCompletions(habit, habitCheckins);
+        }, 0);
+
+        const bestStreak = habits.reduce((maxStreak, habit) => {
+            const habitCheckins = checkinsByHabitId.get(habit.id) || [];
+            return Math.max(maxStreak, calculateLongestStreak(habit, habitCheckins));
+        }, 0);
+
+        return [
+            {
+                label: "Joined",
+                value: profile?.createdAt ? formatJoinedDate(profile.createdAt) : "Unknown",
+                tone: "bg-brand-blue/30",
+            },
+            {
+                label: "Week starts",
+                value: profile?.weekStartsOn === "sunday" ? "Sunday" : "Monday",
+                tone: "bg-brand-green/30",
+            },
+            {
+                label: "Completed",
+                value: completedCount.toLocaleString(),
+                tone: "bg-brand-pink/10",
+            },
+            {
+                label: "Best streak",
+                value: `${bestStreak} day${bestStreak === 1 ? "" : "s"}`,
+                tone: "bg-brand-yellow/40",
+            },
+        ];
+    }, [allHabits, checkins, profile?.createdAt, profile?.weekStartsOn]);
 
     useEffect(
         () => () => {
@@ -303,6 +356,7 @@ export default function Profile() {
             <div className="relative mx-auto max-w-6xl space-y-6">
                 <ProfileHeader
                     profile={profile}
+                    summaryCards={summaryCards}
                     isEditing={isEditing}
                     onEdit={openEditMode}
                     saveStatus={profileSaveStatus}

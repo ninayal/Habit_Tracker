@@ -3,12 +3,13 @@ import { useRef } from "react";
 import { Camera } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import { formatDateOfBirth, formatJoinedDate } from "@/services/profile";
+import { formatDateOfBirth } from "@/services/profile";
 import ProfileAvatar from "@/components/profile/ProfileAvatar";
 import ProfileSaveStatus from "@/components/profile/ProfileSaveStatus";
 
 export default function ProfileHeader({
     profile,
+    summaryCards = [],
     isEditing,
     onEdit,
     saveStatus,
@@ -17,17 +18,6 @@ export default function ProfileHeader({
     onAvatarFilePick,
 }) {
     const avatarInputRef = useRef(null);
-
-    const quickInfo = [
-        { label: "Category", value: profile.defaultHabitCategory || "Health", tone: "bg-brand-pink/10" },
-        { label: "Joined", value: formatJoinedDate(profile.createdAt), tone: "bg-brand-blue/30" },
-        { label: "Reminder", value: profile.reminderTime || "07:00", tone: "bg-brand-yellow/50" },
-        {
-            label: "Week starts",
-            value: profile.weekStartsOn ? profile.weekStartsOn[0].toUpperCase() + profile.weekStartsOn.slice(1) : "Monday",
-            tone: "bg-brand-green/30",
-        },
-    ];
 
     return (
         <section className="brand-card rounded-[2.25rem] shadow-[0_20px_40px_rgba(31,41,55,0.08)]">
@@ -107,7 +97,7 @@ export default function ProfileHeader({
                 </div>
 
                 <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-                    {quickInfo.map((item) => (
+                    {summaryCards.map((item) => (
                         <div
                             key={item.label}
                             className={`rounded-2xl border border-brand-border px-4 py-3 shadow-sm ${item.tone} dark:bg-[#172033]`}

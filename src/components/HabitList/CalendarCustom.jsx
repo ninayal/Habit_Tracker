@@ -15,16 +15,19 @@ import { Button } from 'react-aria-components'
 import { composeTailwindRenderProps } from '@/utils/helper';
 import { CompletedCell, DefaultCell, FailedCell, InProgressCell, SkippedCell } from '@/components/HabitList/HabitCell';
 import { HabitCellDropdown } from '@/components/HabitList/HabitCellDropdown';
+import { getWeekStartsOn } from '@/services/profile';
 
 
 export function CalendarCustom({ habitDataMap, onCellAction, className, ...props }) {
     let { direction } = useLocale();
     let months = props.visibleDuration?.months || 1;
+    const weekStartsOn = getWeekStartsOn();
 
 
     return (
         <AriaCalendar
             {...props}
+            firstDayOfWeek={weekStartsOn === "sunday" ? "sun" : "mon"}
             className={composeTailwindRenderProps(
                 props.className,
                 'flex font-sans w-full max-w-fit overflow-auto gap-3'

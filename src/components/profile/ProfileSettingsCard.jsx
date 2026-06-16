@@ -172,18 +172,19 @@ export default function ProfileSettingsCard({ profileSettings, saveStatus, onFie
                         </Select>
                     </FieldCard>
 
-                    <FieldCard label="Start date" className="md:col-span-4">
-                        <Input
-                            type="date"
-                            value={profileSettings.startDate}
-                            onChange={(event) => onFieldChange("startDate", event.target.value)}
-                            className="h-11 w-full rounded-2xl border-brand-border bg-white px-4 text-sm text-[color:var(--brand-text)] shadow-sm outline-none transition focus:border-brand-pink focus:ring-2 focus:ring-brand-pink/20 dark:border-white/10 dark:bg-[#111827] dark:text-[#F9FAFB]"
-                        />
+                    <FieldCard label="Auto open note" className="md:col-span-4">
+                        <div className="flex h-11 items-center">
+                            <Switch
+                                checked={!!profileSettings.autoOpenNote}
+                                onCheckedChange={(value) => onFieldChange("autoOpenNote", value)}
+                                className="data-checked:bg-pink-400"
+                            />
+                        </div>
                     </FieldCard>
                 </div>
 
                 <div className="grid gap-3 md:grid-cols-12">
-                    <FieldCard label="Goal" className="md:col-span-8">
+                    <FieldCard label="Goal" className="md:col-span-12">
                         <div className="grid gap-2 sm:grid-cols-2">
                             <Select
                                 value={profileSettings.goal?.targetType}
@@ -217,16 +218,6 @@ export default function ProfileSettingsCard({ profileSettings, saveStatus, onFie
                                     }
                                 }}
                                 className="h-11 w-full rounded-2xl border-brand-border bg-white px-4 text-sm text-[color:var(--brand-text)] shadow-sm outline-none transition focus:border-brand-pink focus:ring-2 focus:ring-brand-pink/20 dark:border-white/10 dark:bg-[#111827] dark:text-[#F9FAFB]"
-                            />
-                        </div>
-                    </FieldCard>
-
-                    <FieldCard label="Auto open note" className="md:col-span-4">
-                        <div className="flex h-11 items-center">
-                            <Switch
-                                checked={!!profileSettings.autoOpenNote}
-                                onCheckedChange={(value) => onFieldChange("autoOpenNote", value)}
-                                className="data-checked:bg-pink-400"
                             />
                         </div>
                     </FieldCard>

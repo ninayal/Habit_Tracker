@@ -10,12 +10,12 @@ const DEFAULT_EDITABLE_FIELDS = {
     weekStartsOn: "monday",
 };
 
-function createDefaultHabitDefaults() {
+function createDefaultHabitDefaults({ includeStartDate = true } = {}) {
     return {
         icon: "💧",
         name: "",
         category: "Health",
-        startDate: formatDate(),
+        ...(includeStartDate ? { startDate: formatDate() } : {}),
         frequency: {
             repeatType: "specific_days",
             daysOfWeek: [],
@@ -31,36 +31,38 @@ function createDefaultHabitDefaults() {
 }
 
 function normalizeHabitDefaults(habitDefaults) {
-    const defaults = createDefaultHabitDefaults();
+    const defaults = createDefaultHabitDefaults({ includeStartDate: false });
 
     if (!habitDefaults) {
         return defaults;
     }
 
+    const restHabitDefaults = { ...habitDefaults };
+    delete restHabitDefaults.startDate;
+
     return {
         ...defaults,
-        ...habitDefaults,
-        icon: habitDefaults.icon?.trim() || defaults.icon,
-        name: habitDefaults.name ?? defaults.name,
-        category: habitDefaults.category || defaults.category,
-        startDate: habitDefaults.startDate || defaults.startDate,
+        ...restHabitDefaults,
+        icon: restHabitDefaults.icon?.trim() || defaults.icon,
+        name: restHabitDefaults.name ?? defaults.name,
+        category: restHabitDefaults.category || defaults.category,
         frequency: {
             ...defaults.frequency,
-            ...(habitDefaults.frequency || {}),
-            daysOfWeek: Array.isArray(habitDefaults.frequency?.daysOfWeek)
-                ? [...habitDefaults.frequency.daysOfWeek]
+            ...(restHabitDefaults.frequency || {}),
+            daysOfWeek: Array.isArray(restHabitDefaults.frequency?.daysOfWeek)
+                ? [...restHabitDefaults.frequency.daysOfWeek]
                 : [...defaults.frequency.daysOfWeek],
         },
-        targetPerDay: Number.isFinite(Number(habitDefaults.targetPerDay)) && Number(habitDefaults.targetPerDay) > 0
-            ? Number(habitDefaults.targetPerDay)
+        targetPerDay: Number.isFinite(Number(restHabitDefaults.targetPerDay)) && Number(restHabitDefaults.targetPerDay) > 0
+            ? Number(restHabitDefaults.targetPerDay)
             : defaults.targetPerDay,
-        priority: habitDefaults.priority || defaults.priority,
-        autoOpenNote: habitDefaults.autoOpenNote ?? defaults.autoOpenNote,
+        priority: restHabitDefaults.priority || defaults.priority,
+        autoOpenNote: restHabitDefaults.autoOpenNote ?? defaults.autoOpenNote,
         goal: {
             ...defaults.goal,
-            ...(habitDefaults.goal || {}),
-            targetValue: Number.isFinite(Number(habitDefaults.goal?.targetValue)) && Number(habitDefaults.goal.targetValue) > 0
-                ? Number(habitDefaults.goal.targetValue)
+            ...(restHabitDefaults.goal || {}),
+            targetValue: Number.isFinite(Number(restHabitDefaults.goal?.targetValue)) && Number(restHabitDefaults.goal.targetValue) > 0
+                ? Number(restHabitDefaults.goal.targetValue)
                 : defaults.goal.targetValue,
         },
     };
@@ -134,6 +136,42 @@ export function getHabitDefaultFormValues(profile) {
     return normalizeHabitDefaults(profile?.habitDefaults);
 }
 
+export function getWeekStartsOn(profile = getCurrentUserProfile()) {
+    return profile?.weekStartsOn === "sunday" ? "sunday" : "monday";
+}
+
+export function getCreateHabitInitialValues(profile) {
+    const defaults = createDefaultHabitDefaults();
+    const habitDefaults = normalizeHabitDefaults(profile?.habitDefaults);
+
+    return {
+        ...defaults,
+        ...habitDefaults,
+        icon: habitDefaults.icon?.trim() || defaults.icon,
+        name: habitDefaults.name ?? defaults.name,
+        category: habitDefaults.category || defaults.category,
+        frequency: {
+            ...defaults.frequency,
+            ...(habitDefaults.frequency || {}),
+            daysOfWeek: Array.isArray(habitDefaults.frequency?.daysOfWeek)
+                ? [...habitDefaults.frequency.daysOfWeek]
+                : [...defaults.frequency.daysOfWeek],
+        },
+        targetPerDay: Number.isFinite(Number(habitDefaults.targetPerDay)) && Number(habitDefaults.targetPerDay) > 0
+            ? Number(habitDefaults.targetPerDay)
+            : defaults.targetPerDay,
+        priority: habitDefaults.priority || defaults.priority,
+        autoOpenNote: habitDefaults.autoOpenNote ?? defaults.autoOpenNote,
+        goal: {
+            ...defaults.goal,
+            ...(habitDefaults.goal || {}),
+            targetValue: Number.isFinite(Number(habitDefaults.goal?.targetValue)) && Number(habitDefaults.goal.targetValue) > 0
+                ? Number(habitDefaults.goal.targetValue)
+                : defaults.goal.targetValue,
+        },
+    };
+}
+
 export function getDefaultProfileFormValues(profile) {
     const fullName = profile?.fullName || "";
     const email = profile?.email || "";
@@ -147,7 +185,7 @@ export function getDefaultProfileFormValues(profile) {
         reminderTime: DEFAULT_EDITABLE_FIELDS.reminderTime,
         defaultHabitCategory: DEFAULT_EDITABLE_FIELDS.defaultHabitCategory,
         weekStartsOn: DEFAULT_EDITABLE_FIELDS.weekStartsOn,
-        habitDefaults: createDefaultHabitDefaults(),
+        habitDefaults: createDefaultHabitDefaults({ includeStartDate: false }),
     };
 }
 

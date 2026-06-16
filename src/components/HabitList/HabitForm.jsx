@@ -35,9 +35,10 @@ export default function HabitForm({ children, open, setOpen, habit }) {
     const [showEmoji, setShowEmoji] = useState(false)
 
     const { form, errors, setErrors, loading, updateField,
-        setForm, submit, isEdit
+        submit, isEdit
     } = useHabitForm({
         habit,
+        open,
         onSuccess: () => {
             setOpen(false);
             toast.success(isEdit ? "Update habit successfully!" : "Create habit successfully!")

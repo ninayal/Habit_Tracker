@@ -1,6 +1,8 @@
-import React, { useEffect, useMemo, useRef } from 'react';
+import { useEffect, useMemo, useRef } from 'react';
 import { isScheduledDay, isValidDate } from '@/utils/statsHelper';
 import { formatDate } from '@/utils/helper';
+import { getOrderedWeekdayLabels, getStartOfWeek } from '@/utils/date';
+import { getWeekStartsOn } from '@/services/profile';
 import {
     Tooltip,
     TooltipContent,
@@ -11,16 +13,13 @@ import {
 const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 export default function HeatmapChart({ habits, checkins }) {
     const scrollRef = useRef(null);
+    const weekStartsOn = getWeekStartsOn();
 
     const heatmapData = useMemo(() => {
         const today = new Date();
         today.setHours(0, 0, 0, 0);
 
-        const startDate = new Date(today);
-        startDate.setDate(today.getDate() - 364);
-        while (startDate.getDay() !== 0) {
-            startDate.setDate(startDate.getDate() - 1);
-        }
+        const startDate = getStartOfWeek(new Date(today.getFullYear(), today.getMonth(), today.getDate() - 364), weekStartsOn);
 
         const data = [];
         const checkinMap = new Map(checkins.map(c => [`${c.habitId}-${c.date}`, c]));
@@ -64,7 +63,7 @@ export default function HeatmapChart({ habits, checkins }) {
         }
 
         return data;
-    }, [habits, checkins]);
+    }, [habits, checkins, weekStartsOn]);
 
     const getLevelColor = (level) => {
         switch (level) {
@@ -111,13 +110,16 @@ export default function HeatmapChart({ habits, checkins }) {
                         <div className="h-4 mb-2"></div>
 
                         <div className="grid grid-rows-7 gap-1.5 text-[10px] sm:text-xs font-semimedium">
-                            <div className="h-3.5 sm:h-4 hidden sm:flex items-center justify-end">Sun</div>
-                            <div className="h-3.5 sm:h-4 flex items-center justify-end">Mon</div>
-                            <div className="h-3.5 sm:h-4 hidden sm:flex items-center justify-end">Tue</div>
-                            <div className="h-3.5 sm:h-4 flex items-center justify-end">Wed</div>
-                            <div className="h-3.5 sm:h-4 hidden sm:flex items-center justify-end">Thu</div>
-                            <div className="h-3.5 sm:h-4 flex items-center justify-end">Fri</div>
-                            <div className="h-3.5 sm:h-4 hidden sm:flex items-center justify-end">Sat</div>
+                            {getOrderedWeekdayLabels(weekStartsOn).map((label, index) => (
+                                <div
+                                    key={label}
+                                    className={`h-3.5 sm:h-4 items-center justify-end ${
+                                        index % 2 === 0 ? "flex" : "hidden sm:flex"
+                                    }`}
+                                >
+                                    {label}
+                                </div>
+                            ))}
                         </div>
                     </div>
 

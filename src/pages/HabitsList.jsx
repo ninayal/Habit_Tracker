@@ -2,11 +2,11 @@ import { useCheckinContext } from '@/hooks/useCheckins';
 import { useDebounce } from '@/hooks/useDebounce';
 import { useHabitsQuery } from '@/hooks/useHabitsQuery';
 import { useQueryParams } from '@/hooks/useQueryParams';
-import React, { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { format } from "date-fns";
 import { habitService } from '@/services/habits';
 import { Spinner } from '@/components/ui/spinner';
-import { AlertCircle, CalendarIcon, ChevronDown, FolderOpen, LayoutGrid, MoreHorizontal, Plus, HelpCircle } from 'lucide-react';
+import { AlertCircle, CalendarIcon, FolderOpen, LayoutGrid, MoreHorizontal, Plus, HelpCircle } from 'lucide-react';
 import HabitCard from '@/components/HabitList/HabitCard';
 import HabitDetail from '@/components/HabitList/HabitDetail';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -20,6 +20,7 @@ import { toast } from 'react-toastify';
 import List from '@/components/HabitList/List';
 import { isScheduledDay, isValidDate } from '@/utils/statsHelper';
 import { useHabitWalkthrough } from '@/hooks/useWalkthrough';
+import { getWeekStartsOn } from '@/services/profile';
 
 export default function HabitsList() {
     const [query, setQuery] = useQueryParams({
@@ -46,7 +47,7 @@ export default function HabitsList() {
         ...query,
         search: debouncedSearch
     };
-    const { habits: allHabits, loading, error } = useHabitsQuery(finalQuery);
+    const { habits: allHabits, loading } = useHabitsQuery(finalQuery);
     const { checkins, loadCheckins } = useCheckinContext();
     const { updateHabit, deleteHabit } = useHabitContext();
     const { startTour } = useHabitWalkthrough();
@@ -213,6 +214,7 @@ export default function HabitsList() {
                                         setSelectedDate(date)
                                     }
                                     disabled={(date) => date > today}
+                                    weekStartsOn={getWeekStartsOn() === "sunday" ? 0 : 1}
                                 />
                             </PopoverContent>
                         </Popover>

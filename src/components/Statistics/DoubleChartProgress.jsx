@@ -2,25 +2,23 @@ import React, { useMemo } from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { isScheduledDay, isValidDate } from '@/utils/statsHelper';
 import { formatDate } from '@/utils/helper';
-
-const daysOfWeek = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+import { getOrderedWeekdayLabels, getStartOfWeek } from '@/utils/date';
+import { getWeekStartsOn } from '@/services/profile';
 
 function useWeeklyComparison(habits, checkins) {
+    const weekStartsOn = getWeekStartsOn();
+
     return useMemo(() => {
         const today = new Date();
         today.setHours(0, 0, 0, 0);
 
-        const currentDay = today.getDay();
-        const diffToMonday = currentDay === 0 ? -6 : 1 - currentDay;
-
-        const mondayThisWeek = new Date(today);
-        mondayThisWeek.setDate(today.getDate() + diffToMonday);
+        const weekStartThisWeek = getStartOfWeek(today, weekStartsOn);
 
         const checkinMap = new Map(checkins.map(c => [`${c.habitId}-${c.date}`, c]));
 
-        const compareData = daysOfWeek.map((label, i) => {
-            const dateThisWeek = new Date(mondayThisWeek);
-            dateThisWeek.setDate(mondayThisWeek.getDate() + i);
+        const compareData = getOrderedWeekdayLabels(weekStartsOn).map((label, i) => {
+            const dateThisWeek = new Date(weekStartThisWeek);
+            dateThisWeek.setDate(weekStartThisWeek.getDate() + i);
             const dateLastWeek = new Date(dateThisWeek);
             dateLastWeek.setDate(dateThisWeek.getDate() - 7);
 
@@ -52,7 +50,7 @@ function useWeeklyComparison(habits, checkins) {
         });
 
         return compareData;
-    }, [habits, checkins]);
+    }, [habits, checkins, weekStartsOn]);
 }
 
 export default function DoubleChartProgress({ habits, checkins }) {
