@@ -6,7 +6,7 @@ import React, { useEffect, useMemo, useState } from 'react'
 import { format } from "date-fns";
 import { habitService } from '@/services/habits';
 import { Spinner } from '@/components/ui/spinner';
-import { AlertCircle, CalendarIcon, ChevronDown, FolderOpen, LayoutGrid, MoreHorizontal, Plus } from 'lucide-react';
+import { AlertCircle, CalendarIcon, ChevronDown, FolderOpen, LayoutGrid, MoreHorizontal, Plus, HelpCircle } from 'lucide-react';
 import HabitCard from '@/components/HabitList/HabitCard';
 import HabitDetail from '@/components/HabitList/HabitDetail';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -19,6 +19,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { toast } from 'react-toastify';
 import List from '@/components/HabitList/List';
 import { isScheduledDay, isValidDate } from '@/utils/statsHelper';
+import { useHabitWalkthrough } from '@/hooks/useWalkthrough';
 
 export default function HabitsList() {
     const [query, setQuery] = useQueryParams({
@@ -48,6 +49,7 @@ export default function HabitsList() {
     const { habits: allHabits, loading, error } = useHabitsQuery(finalQuery);
     const { checkins, loadCheckins } = useCheckinContext();
     const { updateHabit, deleteHabit } = useHabitContext();
+    const { startTour } = useHabitWalkthrough();
 
     useEffect(() => {
         loadCheckins();
@@ -177,6 +179,7 @@ export default function HabitsList() {
                         <Popover>
                             <PopoverTrigger asChild>
                                 <Button
+                                    id="tour-date-picker"
                                     variant="ghost"
                                     className="
                                         justify-start
@@ -214,16 +217,28 @@ export default function HabitsList() {
                             </PopoverContent>
                         </Popover>
                     </div>
-                    <button
-                        className='py-2 px-4 rounded-lg bg-pink-400 hover:bg-pink-500 text-white font-semibold text-[14px] flex items-center gap-3'
-                        onClick={() => {
-                            setEditingHabit(null);
-                            setOpenForm(true);
-                        }}
-                    >
-                        <Plus size={20} />
-                        Create Habit
-                    </button>
+
+                    <div className="flex items-center gap-2">
+                        <button
+                            id="tour-create-habit"
+                            className='py-2 px-4 rounded-lg bg-pink-400 hover:bg-pink-500 text-white font-semibold text-[14px] flex items-center gap-3'
+                            onClick={() => {
+                                setEditingHabit(null);
+                                setOpenForm(true);
+                            }}
+                        >
+                            <Plus size={20} />
+                            Create Habit
+                        </button>
+                        <button
+                            onClick={startTour}
+                            className="p-2 text-gray-400 hover:text-pink-500 rounded-full transition-colors focus:outline-none"
+                            title="Replay Tutorial"
+                        >
+                            <HelpCircle size={22} />
+                        </button>
+                    </div>
+
 
                     <HabitForm
                         key={editingHabit?.id ?? "create"}
@@ -235,9 +250,12 @@ export default function HabitsList() {
                 </div>
 
                 <div className='brand-card rounded-lg shadow-md mt-4 p-4 md:p-6 min-h-10/12'>
-                    <HabitsFilter query={query} setQuery={setQuery} />
+                    <div id="tour-filters">
+                        <HabitsFilter query={query} setQuery={setQuery} />
+                    </div>
 
-                    <div className="mt-4 max-w-267.5">
+
+                    <div className="mt-4 max-w-267.5" id="tour-habit-list">
                         {habits.length === 0 ? (
                             <div className="flex flex-col items-center justify-center py-20 text-center">
                                 <div className="rounded-full bg-gray-100 p-4 mb-4">
@@ -251,17 +269,17 @@ export default function HabitsList() {
                                         ? "No habits match your current filters." : "Create your first habit to start building better routines."}
                                 </p>
                                 {!query.search && query.category === "All" && query.priority === "All" && !query.status && (
-                                        <button
-                                            className='py-2 px-4 rounded-lg bg-pink-400 hover:bg-pink-500 text-white font-semibold text-[14px] flex items-center gap-3'
-                                            onClick={() => {
-                                                setEditingHabit(null);
-                                                setOpenForm(true);
-                                            }}
-                                        >
-                                            <Plus size={20} />
-                                            Create Habit
-                                        </button>
-                                    )}
+                                    <button
+                                        className='py-2 px-4 rounded-lg bg-pink-400 hover:bg-pink-500 text-white font-semibold text-[14px] flex items-center gap-3'
+                                        onClick={() => {
+                                            setEditingHabit(null);
+                                            setOpenForm(true);
+                                        }}
+                                    >
+                                        <Plus size={20} />
+                                        Create Habit
+                                    </button>
+                                )}
                             </div>
                         ) : query.view === "list" ? (
                             <List

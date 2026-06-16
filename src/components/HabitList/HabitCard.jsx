@@ -88,8 +88,9 @@ export default function HabitCard({
         <Card
             onClick={onClick}
             className={` w-full transition-all duration-200 hover:shadow-lg
-                ${style.card} cursor-pointer
+                ${style.card} cursor-pointer tour-habit-card-step
             `}
+
         >
             <CardContent className="px-3">
                 <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
@@ -189,7 +190,7 @@ export default function HabitCard({
                             onDelete={() => onDelete?.(habit)}
                         >
                             <button
-                                className=" p-1 rounded-md hover:bg-blue/40 transition-colors focus:outline-none focus:ring-0 focus-visible:ring-0"
+                                className="tour-habit-dropdown-btn p-1 rounded-md hover:bg-blue/40 transition-colors focus:outline-none focus:ring-0 focus-visible:ring-0"
                                 onClick={(e) => {
                                     e.stopPropagation();
                                     setOpenDropdown(true);
@@ -426,7 +427,9 @@ function HabitStatusCell({ checkin, target, habit, dateString }) {
                 <TooltipProvider delayDuration={100}>
                     <Tooltip>
                         <TooltipTrigger asChild>
-                            {buttonElement}
+                            <div className="tour-habit-checkin-btn inline-block">
+                                {buttonElement}
+                            </div>
                         </TooltipTrigger>
                         <TooltipContent
                             side="top"
