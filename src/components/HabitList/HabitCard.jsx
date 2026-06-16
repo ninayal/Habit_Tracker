@@ -240,7 +240,7 @@ function HabitStatusCell({ checkin, target, habit, dateString }) {
                 if (value === target) {
                     celebrate();
                     if (habit.autoOpenNote) {
-                        setTimeout(() => setIsNoteDialogOpen(true), 400);
+                        setTimeout(() => setIsNoteDialogOpen(true), 600);
                     }
                 }
                 updateCheckin(habit.id, dateString, {
@@ -304,7 +304,7 @@ function HabitStatusCell({ checkin, target, habit, dateString }) {
         if (nextCount === habit?.targetPerDay) {
             celebrate();
             if (habit.autoOpenNote) {
-                setTimeout(() => setIsNoteDialogOpen(true), 400);
+                setTimeout(() => setIsNoteDialogOpen(true), 600);
             }
         }
         updateCheckin(habit.id, selectedDate, {

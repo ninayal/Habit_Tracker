@@ -7,7 +7,6 @@ import { format } from "date-fns";
 import { habitService } from '@/services/habits';
 import { Spinner } from '@/components/ui/spinner';
 import { AlertCircle, CalendarIcon, ChevronDown, FolderOpen, LayoutGrid, MoreHorizontal, Plus } from 'lucide-react';
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import HabitCard from '@/components/HabitList/HabitCard';
 import HabitDetail from '@/components/HabitList/HabitDetail';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -171,7 +170,7 @@ export default function HabitsList() {
             <div className='mx-auto'>
                 <div className='flex items-center'>
                     <div className="flex items-center flex-1 gap-4">
-                        <p className="font-jakarta font-semibold text-3xl" >
+                        <p className="font-instrument font-semibold text-4xl" >
                             All Habits
                         </p>
 
@@ -195,7 +194,7 @@ export default function HabitsList() {
                                 >
                                     <CalendarIcon className="mr-2 h-4 w-4" />
 
-                                    {format(selectedDate, "dd/MM/yyyy")}
+                                    {format(selectedDate, "yyyy-MM-dd")}
                                 </Button>
                             </PopoverTrigger>
 
@@ -244,24 +243,14 @@ export default function HabitsList() {
                                 <div className="rounded-full bg-gray-100 p-4 mb-4">
                                     <FolderOpen className="h-10 w-10 text-gray-400" />
                                 </div>
-
                                 <h3 className="text-lg font-semibold">
                                     No habits found
                                 </h3>
-
                                 <p className="text-sm text-muted-foreground m-2 max-w-md">
-                                    {query.search ||
-                                        query.status ||
-                                        query.category !== "All" ||
-                                        query.priority !== "All"
-                                        ? "No habits match your current filters."
-                                        : "Create your first habit to start building better routines."}
+                                    {query.search || query.status || query.category !== "All" || query.priority !== "All"
+                                        ? "No habits match your current filters." : "Create your first habit to start building better routines."}
                                 </p>
-
-                                {!query.search &&
-                                    query.category === "All" &&
-                                    query.priority === "All" &&
-                                    !query.status && (
+                                {!query.search && query.category === "All" && query.priority === "All" && !query.status && (
                                         <button
                                             className='py-2 px-4 rounded-lg bg-pink-400 hover:bg-pink-500 text-white font-semibold text-[14px] flex items-center gap-3'
                                             onClick={() => {

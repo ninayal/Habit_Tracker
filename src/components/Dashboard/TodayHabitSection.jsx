@@ -115,12 +115,12 @@ export default function TodayHabitSection() {
                     <p className='text-xl font-medium'>Today’s habits</p>
                 </div>
                 <div className="flex items-center gap-3">
-                    <div className="relative">
+                    {/* <div className="relative">
                         <TodayProgressRing value={todayProgress} size={52} stroke={6} />
                         <div className="absolute inset-0 flex items-center justify-center text-xs font-semibold">
                             {todayProgress}%
                         </div>
-                    </div>
+                    </div> */}
                 </div>
             </div>
 

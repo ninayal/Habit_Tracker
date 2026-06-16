@@ -168,7 +168,7 @@ export default function HabitDetail({
 function Calendar({ habit, habitCheckins }) {
     const currentDate = today(getLocalTimeZone());
     const startDate = habit?.startDate ? parseDate(habit.startDate.split('T')[0]) : undefined;
-    console.log(startDate)
+    
     const { updateCheckin, resetCheckin } = useCheckinContext();
 
     const [isNoteDialogOpen, setIsNoteDialogOpen] = useState(false);
@@ -222,7 +222,7 @@ function Calendar({ habit, habitCheckins }) {
                         setTimeout(() => {
                             setSelectedDate(dateString)
                             setIsNoteDialogOpen(true)
-                        }, 400);
+                        }, 600);
                     }
                 }
                 updateCheckin(habit.id, dateString, {

@@ -35,7 +35,12 @@ export function CalendarCustom({ habitDataMap, onCellAction, className, ...props
                     <header className="flex items-center mb-2">
                         {/* Logic chỉ hiển thị nút quay lại ở tháng đầu tiên kèm kiểm tra */}
                         {i === 0 && (
-                            <Button variant="quiet" slot="previous">
+                            <Button variant="quiet" slot="previous"
+                                className="
+                                    data-[disabled]:opacity-30
+                                    data-[disabled]:cursor-not-allowed
+                                "
+                            >
                                 {direction === 'rtl' ? (
                                     <ChevronRight aria-hidden size={18} />
                                 ) : (
@@ -117,7 +122,7 @@ export function CalendarCustom({ habitDataMap, onCellAction, className, ...props
                                                         <span
                                                             className={`flex items-center justify-center pt-1 text-xs  
                                                                 ${isToday ? "text-blue-500" : "text-slate-500"
-                                                            }`}
+                                                                }`}
                                                         >
                                                             {formattedDate}
                                                         </span>

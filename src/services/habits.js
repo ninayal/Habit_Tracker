@@ -301,6 +301,8 @@ function updateHabit(id, updates) {
                 };
                 storage.set(STORAGE_KEYS.GOALS, goals);
                 updatedHabit.goal = goals[goalIndex];
+
+                resultHabit.goal = updatedHabit.goal;
             } else {
                 throw new ServiceError(404, `Goal for Habit ID ${id} not found to update.`);
             }
