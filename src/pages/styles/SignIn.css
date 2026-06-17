@@ -1,24 +1,54 @@
 @import url("https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap");
 
+/* Mặc định: LIGHT MODE cho trang Sign In */
 .signin-container {
   display: flex;
   justify-content: center;
   align-items: center;
   min-height: 100vh;
-  background-color: #121212;
-  color: #ffffff;
+  width: 100%;
+  padding-top: 80px; /* Tạo khoảng trống an toàn cố định dưới thanh Nav 64px */
+  padding-bottom: 40px;
+  background-color: #f8fafc; /* Màu nền sáng nhã nhặn */
+  color: #0f172a;
   font-family: "Plus Jakarta Sans", sans-serif;
+  position: relative;
+  box-sizing: border-box;
+}
+
+/* DARK MODE áp dụng khi class .dark được kích hoạt */
+.dark .signin-container {
+  background-color: #121212 !important; /* Trùng khớp hoàn toàn với màu của AuthCard */
+  color: #ffffff;
 }
 
 .signin-card {
-  background: rgba(30, 30, 30, 0.75);
+  background: rgba(255, 255, 255, 0.8);
   backdrop-filter: blur(16px);
   padding: 40px;
   border-radius: 20px;
-  border: 1px solid rgba(255, 255, 255, 0.05);
-  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5);
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.05);
   width: 100%;
   max-width: 420px;
+}
+
+.dark .signin-card {
+  background: rgba(30, 30, 30, 0.75);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5);
+}
+
+/* Đảm bảo thẻ html và body hệ thống không bị lộ nền đen gốc */
+html,
+body {
+  background-color: #f8fafc;
+  margin: 0;
+  padding: 0;
+}
+.dark html,
+.dark body {
+  background-color: #121212;
 }
 
 .signin-title {
@@ -27,57 +57,25 @@
   font-family: "Instrument Serif", serif;
   font-size: 2.5rem;
   font-weight: 600;
-  letter-spacing: -0.5px;
-
-  background: linear-gradient(135deg, #f9b2d7 20%, #f6ffdc 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  letter-spacing: -0.02em;
 }
 
-.form-group {
-  margin-bottom: 24px;
-  display: flex;
-  flex-direction: column;
-}
-
-.form-group label {
-  margin-bottom: 8px;
-  font-size: 13px;
-  font-weight: 500;
-  color: #a1a1aa;
-  letter-spacing: 0.3px;
-}
-
-.form-group input {
-  padding: 14px 16px;
-  border-radius: 10px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  background-color: rgba(255, 255, 255, 0.04);
-  color: white;
-  font-size: 15px;
-  transition: all 0.2s ease;
-}
-
-.form-group input:focus {
-  border-color: #f9b2d7;
-  background-color: rgba(255, 255, 255, 0.08);
-  outline: none;
-  box-shadow: 0 0 10px rgba(249, 178, 215, 0.15);
+/* Vị trí đặt nút Toggle Theme ở góc trên bên phải trang Sign In */
+.signin-theme-toggle {
+  position: absolute;
+  top: 24px;
+  right: 24px;
+  z-index: 50;
 }
 
 .signin-button {
   width: 100%;
-  padding: 16px;
+  padding: 14px;
   border: none;
-  font-size: 16px;
-  font-weight: 700;
-  letter-spacing: 0.5px;
-  cursor: pointer;
   border-radius: 12px;
-  color: #18181b;
-
-  background: linear-gradient(90deg, #f9b2d7 0%, #f6ffdc 100%);
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
   box-shadow: 0 4px 15px rgba(249, 178, 215, 0.25);
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
@@ -103,24 +101,29 @@
   border: 1px solid rgba(255, 107, 107, 0.2);
 }
 
+/* ── GIỮ NGUYÊN MÀU THƯƠNG HIỆU ── */
 .signup-link {
   text-align: center;
   margin-top: 24px;
   font-size: 14px;
+  color: #64748b; /* Ở chế độ sáng chữ này mờ vừa phải */
+}
+
+.dark .signup-link {
   color: #a1a1aa;
 }
 
+/* Giữ nguyên màu hồng thương hiệu của dòng chữ Sign up now */
 .signup-link span {
   color: #f9b2d7;
   font-weight: 600;
   cursor: pointer;
   margin-left: 4px;
-  transition: color 0.2s;
+  transition: opacity 0.2s;
 }
 
 .signup-link span:hover {
-  color: #f6ffdc;
-  text-decoration: underline;
+  opacity: 0.8;
 }
 
 /* ────────────────RESPONSIVE──────────────── */

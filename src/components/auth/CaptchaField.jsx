@@ -27,13 +27,13 @@ export default function CaptchaField({
       htmlFor="captchaInput"
       error={captchaError}
       touched={isTouched}
-      className="mb-4 p-4 rounded-xl border border-white/5 bg-white/[0.02]"
+      className="mb-4 p-4 rounded-xl border border-slate-200 dark:border-white/5 bg-slate-50/50 dark:bg-white/[0.02]"
     >
       <div className="flex items-center gap-3">
         {/* Hộp hiển thị chuỗi mã CAPTCHA ngẫu nhiên */}
         <div
           onClick={onRefreshCaptcha}
-          className="bg-zinc-800 text-[#f9b2d7] px-4 py-3 rounded-lg font-mono font-bold tracking-widest text-lg select-none cursor-pointer line-through decoration-zinc-500/50 shadow-inner hover:bg-zinc-700 transition-colors"
+          className="bg-white dark:bg-zinc-800 border border-slate-200 dark:border-transparent text-[#f9b2d7] px-4 py-3 rounded-lg font-mono font-bold tracking-widest text-lg select-none cursor-pointer line-through decoration-slate-400 dark:decoration-zinc-500/50 shadow-sm dark:shadow-inner hover:bg-slate-50 dark:hover:bg-zinc-700 transition-colors"
           title="Click to refresh captcha code"
         >
           {captchaCode}

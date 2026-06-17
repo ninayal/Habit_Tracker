@@ -24,7 +24,8 @@ export default function FormField({
       {label && (
         <label
           htmlFor={htmlFor}
-          className="text-xs font-medium tracking-wide text-zinc-400 uppercase"
+          // Đổi sang text-slate-500 ở bản Light để dễ nhìn, dark giữ nguyên text-zinc-400
+          className="text-xs font-medium tracking-wide text-slate-500 dark:text-zinc-400 uppercase"
         >
           {label}
         </label>
@@ -33,9 +34,10 @@ export default function FormField({
       {children}
 
       {showError && (
-        <span className="text-xs text-red-400 flex items-center gap-1">
+        // Đổi màu thông báo lỗi thích ứng với nền sáng (text-red-500) và nền tối (dark:text-red-400)
+        <span className="text-xs text-red-500 dark:text-red-400 flex items-center gap-1">
           {/* mini warning dot */}
-          <span className="inline-block w-1 h-1 rounded-full bg-red-400 shrink-0" />
+          <span className="inline-block w-1 h-1 rounded-full bg-red-500 dark:bg-red-400 shrink-0" />
           {error}
         </span>
       )}
