@@ -25,7 +25,7 @@ export default function AuthCard({ title, subtitle, children, className }) {
         // "px-4",
 
         // Thay đổi nền theo theme: light là slate-50, dark là slate-900 (hoặc #121212)
-        "min-h-screen bg-slate-50 dark:bg-[#121212] text-slate-900 dark:text-white",
+        "w-full h-auto bg-slate-50 dark:bg-[#121212] text-slate-900 dark:text-white",
         "flex items-center justify-center",
         "max-sm:items-start max-sm:pt-10 max-sm:pb-10",
         "px-4 position-relative",

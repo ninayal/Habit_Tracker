@@ -4,16 +4,20 @@
 .signin-container {
   display: flex;
   justify-content: center;
-  align-items: center;
+  align-items: flex-start;
+
   min-height: 100vh;
   width: 100%;
-  padding-top: 80px; /* Tạo khoảng trống an toàn cố định dưới thanh Nav 64px */
+
+  /* Đẩy form xuống cách thanh Top Navbar một khoảng cách vừa vặn, đẹp mắt */
+  padding-top: 100px;
   padding-bottom: 40px;
-  background-color: #f8fafc; /* Màu nền sáng nhã nhặn */
+  box-sizing: border-box;
+
+  background-color: #f8fafc;
   color: #0f172a;
   font-family: "Plus Jakarta Sans", sans-serif;
   position: relative;
-  box-sizing: border-box;
 }
 
 /* DARK MODE áp dụng khi class .dark được kích hoạt */
