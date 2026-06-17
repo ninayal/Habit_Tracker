@@ -140,6 +140,9 @@ export default function SignUp() {
               hasError={!!showError("password")}
               showStrengthBar
             />
+            <p className="mt-1.5 text-xs text-zinc-500 dark:text-zinc-400">
+              Password must achieve at least "Good" strength (8+ chars and contain uppercase, number, or special character).
+            </p>
           </FormField>
 
           {/* ── Confirm Password ── */}

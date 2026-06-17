@@ -113,11 +113,14 @@ export function getCurrentUserProfile() {
     const fallbackUser = normalizeUser(users[0]);
 
     if (currentUser && storedProfile) {
-        return normalizeUser({
-            ...currentUser,
-            ...storedProfile,
-            image: storedProfile.image || currentUser.image,
-        });
+        if (currentUser.id === storedProfile.id) {
+            return normalizeUser({
+                ...currentUser,
+                ...storedProfile,
+                image: storedProfile.image || currentUser.image,
+            });
+        }
+        return currentUser;
     }
 
     return currentUser || storedProfile || fallbackUser || null;

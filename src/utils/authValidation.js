@@ -11,7 +11,7 @@ export function getPasswordStrength(pw) {
   if (/[A-Z]/.test(pw)) score++;
   if (/[0-9]/.test(pw)) score++;
   if (/[^A-Za-z0-9]/.test(pw)) score++;
-  return score;
+  return score === 0 ? 1 : score;
 }
 
 export const PASSWORD_STRENGTH_META = [
@@ -48,8 +48,11 @@ export function validateSignUp({
 
   if (!password) {
     errors.password = "Password is required.";
-  } else if (password.length < 6) {
-    errors.password = "Password must be at least 6 characters.";
+  } else {
+    const strength = getPasswordStrength(password);
+    if (strength <= 2) {
+      errors.password = "Password must be stronger.";
+    }
   }
 
   if (!confirmPassword) {
