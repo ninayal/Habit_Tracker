@@ -141,7 +141,8 @@ export default function SignUp() {
               showStrengthBar
             />
             <p className="mt-1.5 text-xs text-zinc-500 dark:text-zinc-400">
-              Password must achieve at least "Good" strength (8+ chars and contain uppercase, number, or special character).
+              Password must achieve at least "Good" strength (8+ chars and
+              contain uppercase, number, or special character).
             </p>
           </FormField>
 
@@ -178,11 +179,17 @@ export default function SignUp() {
               />
               <span className="text-sm text-zinc-400 leading-relaxed">
                 I agree to the{" "}
-                <span className="font-semibold text-[#f9b2d7] hover:text-[#f6ffdc] transition-colors cursor-pointer">
+                <span
+                  className="font-semibold text-[#c172a0] hover:text-[#f9b2d7] 
+                  dark:text-[#f9b2d7] dark:hover:text-[#f6ffdc] transition-colors cursor-pointer"
+                >
                   Terms of Service
                 </span>{" "}
                 and{" "}
-                <span className="font-semibold text-[#f9b2d7] hover:text-[#f6ffdc] transition-colors cursor-pointer">
+                <span
+                  className="font-semibold text-[#c172a0] hover:text-[#f9b2d7] 
+                  dark:text-[#f9b2d7] dark:hover:text-[#f6ffdc] transition-colors cursor-pointer"
+                >
                   Privacy Policy
                 </span>
               </span>
