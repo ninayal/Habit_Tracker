@@ -15,10 +15,11 @@ import { Button } from 'react-aria-components'
 import { composeTailwindRenderProps } from '@/utils/helper';
 import { CompletedCell, DefaultCell, FailedCell, InProgressCell, SkippedCell } from '@/components/HabitList/HabitCell';
 import { HabitCellDropdown } from '@/components/HabitList/HabitCellDropdown';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { getWeekStartsOn } from '@/services/profile';
 
 
-export function CalendarCustom({ habitDataMap, onCellAction, className, ...props }) {
+export function CalendarCustom({ habitDataMap, onCellAction, isHabitDisabled, className, ...props }) {
     let { direction } = useLocale();
     let months = props.visibleDuration?.months || 1;
     const weekStartsOn = getWeekStartsOn();
@@ -137,6 +138,15 @@ export function CalendarCustom({ habitDataMap, onCellAction, className, ...props
                                             if (isDisabled) {
                                                 return cellContent;
                                             }
+                                            
+                                            //archived / paused
+                                            if (isHabitDisabled) {
+                                                return (
+                                                    <div className="cursor-default">
+                                                        {cellContent}
+                                                    </div>
+                                                );
+                                            }
 
                                             return (
                                                 <HabitCellDropdown
@@ -146,8 +156,24 @@ export function CalendarCustom({ habitDataMap, onCellAction, className, ...props
                                                     progress={record?.completedCount}
                                                     mode='popover'
                                                     record={record}
+                                                    canUndo={record?.canUndo}
                                                 >
-                                                    {cellContent}
+                                                    
+                                                    <TooltipProvider delayDuration={100}>
+                                                        <Tooltip>
+                                                            <TooltipTrigger asChild>
+                                                                <div className="inline-block">
+                                                                    {cellContent}
+                                                                </div>
+                                                            </TooltipTrigger>
+                                                            <TooltipContent
+                                                                side="bottom"
+                                                                className="text-xs w-40 text-center text-[var(--brand-muted-text)] bg-accent border-none shadow-sm z-60"
+                                                            >
+                                                                <p>Click to edit or Right click for more actions.</p>
+                                                            </TooltipContent>
+                                                        </Tooltip>
+                                                    </TooltipProvider>
                                                 </HabitCellDropdown>
                                             );
                                         }}

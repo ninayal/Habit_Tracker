@@ -113,7 +113,7 @@ export default function HeatmapChart({ habits, checkins }) {
                             {getOrderedWeekdayLabels(weekStartsOn).map((label, index) => (
                                 <div
                                     key={label}
-                                    className={`h-3.5 sm:h-4 items-center justify-end ${
+                                    className={`h-3.5 sm:h-4 items-center justify-end text-slate-600 ${
                                         index % 2 === 0 ? "flex" : "hidden sm:flex"
                                     }`}
                                 >
@@ -129,7 +129,7 @@ export default function HeatmapChart({ habits, checkins }) {
                             <div className="grid grid-flow-col gap-1.5 mb-2 text-[10px] sm:text-xs font-semimedium">
                                 {monthLabels.map((label, i) => (
                                     <div key={`month-${i}`} className="w-3.5 sm:w-4 relative h-4">
-                                        {label && <span className="absolute bottom-0 left-0">{label}</span>}
+                                        {label && <span className="absolute bottom-0 left-0 text-slate-600 ">{label}</span>}
                                     </div>
                                 ))}
                             </div>

@@ -1,7 +1,7 @@
 import React, { Fragment } from 'react'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuGroup, DropdownMenuItem, DropdownMenuLabel, DropdownMenuPortal, DropdownMenuSeparator, DropdownMenuSub, DropdownMenuSubContent, DropdownMenuSubTrigger, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
 import { Separator } from '@/components/ui/separator'
-import { Search, ArrowDownUp, SlidersHorizontal, Siren, Check } from 'lucide-react'
+import { Search, ArrowDownUp, SlidersHorizontal, Siren, Check, RotateCcw } from 'lucide-react'
 
 const statusList = ["Active", "Paused", "Archived"];
 const PRIORITIES = ["All", "High", "Medium", "Low"];
@@ -12,6 +12,17 @@ const FREQUENCY = [
     { label: "Specific days", value: "specific_days" },
 ];
 
+const DEFAULT_QUERY = {
+    view: "list",
+    search: "",
+    status: "",
+    category: "All",
+    priority: "All",
+    frequency: "all",
+    groupBy: "priority",
+    sortBy: "order",
+};
+
 export default function HabitsFilter({ query, setQuery }) {
     const toggleStatus = (status, setQuery) => {
         setQuery(prev => ({
@@ -19,6 +30,19 @@ export default function HabitsFilter({ query, setQuery }) {
             status: prev.status === status ? "" : status
         }));
     };
+
+    const handleReset = () => {
+        setQuery(DEFAULT_QUERY);
+    };
+
+    const isFiltered = query.search !== DEFAULT_QUERY.search ||
+        query.status !== DEFAULT_QUERY.status ||
+        query.category !== DEFAULT_QUERY.category ||
+        query.priority !== DEFAULT_QUERY.priority ||
+        query.frequency !== DEFAULT_QUERY.frequency ||
+        query.view !== DEFAULT_QUERY.view ||
+        query.groupBy !== DEFAULT_QUERY.groupBy ||
+        query.sortBy !== DEFAULT_QUERY.sortBy;
 
     return (
         <div className={`flex flex-col sm:flex-row sm:items-center gap-3`}>
@@ -58,7 +82,7 @@ export default function HabitsFilter({ query, setQuery }) {
                     </SortDropdown>
                 </div>
                 <div
-                    className="py-2 px-3 flex items-center gap-1 rounded-lg cursor-pointer"
+                    className="py-2 px-3 flex items-center gap-1 rounded-lg cursor-pointer relative"
                 >
                     <FilterDropdown query={query} setQuery={setQuery}>
                         <SlidersHorizontal className='cursor-pointer' size={20}></SlidersHorizontal>
@@ -87,6 +111,15 @@ export default function HabitsFilter({ query, setQuery }) {
                         </div>
                     ))}
                 </div>
+
+                <button
+                    onClick={handleReset}
+                    className="p-2 ml-1 rounded-full transition-all text-gray-500 hover:text-pink-500 disabled:text-gray-300 disabled:cursor-not-allowed disabled:hover:text-gray-300"
+                    title="Reset Filters"
+                    disabled={!isFiltered}
+                >
+                    <RotateCcw size={18} />
+                </button>
             </div>
         </div>
     )

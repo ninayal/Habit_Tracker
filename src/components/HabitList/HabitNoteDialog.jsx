@@ -24,7 +24,7 @@ export function HabitNoteDialog({ open, onOpenChange, habitName, initialNote = "
                 <DialogHeader>
                     <DialogTitle className={`flex flex-col gap-2`}>
                         <span className="text-xs text-slate-500">{dateStr}</span>
-                        🎉 Awesome! You completed: {habitName}
+                        Add note for today: {habitName}
                     </DialogTitle>
                 </DialogHeader>
                 <div className="grid gap-4">

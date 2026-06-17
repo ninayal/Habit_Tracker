@@ -38,10 +38,10 @@ function App() {
         <HabitProvider>
           <CheckinProvider>
             <Routes>
-
-
+              
+              <Route path="/" element={<Landing />} />
               <Route element={<AuthRoute requireAuth={false} />}>
-                <Route path="/" element={<Landing />} />
+                
                 <Route path="/signin" element={<SignIn />} />
                 <Route path="/signup" element={<SignUp />} />
               </Route>

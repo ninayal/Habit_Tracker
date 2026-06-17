@@ -212,6 +212,7 @@ export default function HabitCard({
 
 function HabitStatusCell({ checkin, target, habit, dateString }) {
     const [isNoteDialogOpen, setIsNoteDialogOpen] = useState(false);
+    const [history, setHistory] = useState([]);
     const { todayProgress, loading } = useHabitsQuery();
 
     const current = checkin ?? {
@@ -222,6 +223,13 @@ function HabitStatusCell({ checkin, target, habit, dateString }) {
 
     const selectedDate = checkin?.date || dateString;
     const { updateCheckin, resetCheckin } = useCheckinContext();
+
+    const trackHistory = () => {
+        setHistory(prev => {
+            const newHistory = [...prev, { ...current }];
+            return newHistory.slice(-10);
+        });
+    };
 
     const handleAction = (action, dateString, value) => {
         switch (action) {
@@ -235,48 +243,50 @@ function HabitStatusCell({ checkin, target, habit, dateString }) {
                     toast.error(`Progress cannot exceed target (${target})`);
                     return;
                 }
+                trackHistory();
                 if (value === 0) {
                     resetCheckin(habit.id, dateString);
-                }
-                if (value === target) {
-                    celebrate();
-                    if (habit.autoOpenNote) {
-                        setTimeout(() => setIsNoteDialogOpen(true), 600);
+                } else {
+                    if (value === target) {
+                        celebrate();
+                        if (habit.autoOpenNote) {
+                            setTimeout(() => setIsNoteDialogOpen(true), 600);
+                        }
                     }
+                    updateCheckin(habit.id, dateString, {
+                        completedCount: value,
+                    });
                 }
-                updateCheckin(habit.id, dateString, {
-                    completedCount: value,
-                });
-                // console.log("update_progress" ,habit.id, dateString, value)
                 return;
             }
 
             case "skipped":
+                trackHistory();
                 if (habit.autoOpenNote) {
                     setIsNoteDialogOpen(true)
                 }
                 updateCheckin(habit.id, dateString, {
                     completionStatus: "skipped",
                 });
-                // console.log("skipped" ,habit.id, dateString)
                 return;
 
             case "failed":
+                trackHistory();
                 if (habit.autoOpenNote) {
                     setIsNoteDialogOpen(true)
                 }
                 updateCheckin(habit.id, dateString, {
                     completionStatus: "failed",
                 });
-                // console.log("failed" ,habit.id, dateString)
                 return;
 
             case "reset":
+                trackHistory();
                 resetCheckin(habit.id, dateString);
-                // console.log("reset" ,habit.id, dateString)
                 return;
 
             case "decrease_progress": {
+                trackHistory();
                 const currentCount = current.completedCount ?? 0;
                 if (currentCount <= 1) {
                     resetCheckin(habit.id, dateString);
@@ -284,6 +294,25 @@ function HabitStatusCell({ checkin, target, habit, dateString }) {
                     updateCheckin(habit.id, dateString, {
                         completedCount: currentCount - 1,
                     });
+                }
+                return;
+            }
+
+            case "undo": {
+                if (history.length > 0) {
+                    const newHistory = [...history];
+                    const prevState = newHistory.pop();
+                    setHistory(newHistory);
+
+                    if (!prevState.completionStatus || prevState.completionStatus === "not_checked") {
+                        resetCheckin(habit.id, dateString);
+                    } else {
+                        updateCheckin(habit.id, dateString, {
+                            completionStatus: prevState.completionStatus,
+                            completedCount: prevState.completedCount,
+                            note: prevState.note || ""
+                        });
+                    }
                 }
                 return;
             }
@@ -296,6 +325,7 @@ function HabitStatusCell({ checkin, target, habit, dateString }) {
 
     const handleClick = (e) => {
         e.stopPropagation();
+        trackHistory();
         if (current.completionStatus === "completed" || current.completionStatus === "failed" || current.completionStatus === "skipped") {
             resetCheckin(habit.id, selectedDate);
             return;
@@ -321,7 +351,6 @@ function HabitStatusCell({ checkin, target, habit, dateString }) {
         }, 500);
         return () => clearTimeout(timer);
     }, []);
-
     useEffect(() => {
         if (isReadyToCelebrate.current && todayProgress === 100 && prevProgressRef.current < 100) {
             celebrateBig();
@@ -403,7 +432,7 @@ function HabitStatusCell({ checkin, target, habit, dateString }) {
         }
     })();
 
-    let tooltipText = "+1 time";
+    let tooltipText = "Click to +1 time";
     if (current.completionStatus === "completed") {
         tooltipText = "Click to reset";
     } else if (current.completionStatus === "skipped" || current.completionStatus === "failed") {
@@ -412,6 +441,10 @@ function HabitStatusCell({ checkin, target, habit, dateString }) {
 
     if (loading) {
         return;
+    }
+
+    if (habit.status === "Archived" || habit.status === "Paused") {
+        return <div className="w-8 h-8"></div>; 
     }
 
     return (
@@ -423,6 +456,7 @@ function HabitStatusCell({ checkin, target, habit, dateString }) {
                 onAction={handleAction}
                 mode="quick"
                 target={target}
+                canUndo={history.length > 0}
             >
                 <TooltipProvider delayDuration={100}>
                     <Tooltip>
@@ -433,9 +467,9 @@ function HabitStatusCell({ checkin, target, habit, dateString }) {
                         </TooltipTrigger>
                         <TooltipContent
                             side="top"
-                            className="text-xs text-[var(--brand-muted-text)] bg-accent border-none shadow-sm z-60"
+                            className="text-xs w-35 text-[var(--brand-muted-text)] bg-accent border-none shadow-sm z-60"
                         >
-                            <p>{tooltipText}</p>
+                            <p>{tooltipText} or Right click for more.</p>
                         </TooltipContent>
                     </Tooltip>
                 </TooltipProvider>

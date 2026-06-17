@@ -49,7 +49,7 @@ export const useHabitWalkthrough = () => {
                     element: '.tour-habit-checkin-btn',
                     popover: {
                         title: 'Check-in & Actions',
-                        description: 'Click the circle to increase progress. Right-click to Decrease progress, Mark as Skipped/Failed or add a Note!',
+                        description: 'Click the circle to increase progress. Right-click for more actions.',
                         side: "top", align: 'end'
                     }
                 },

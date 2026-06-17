@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react'
+import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import {
     Drawer,
     DrawerContent,
@@ -168,17 +168,20 @@ export default function HabitDetail({
 function Calendar({ habit, habitCheckins }) {
     const currentDate = today(getLocalTimeZone());
     const startDate = habit?.startDate ? parseDate(habit.startDate.split('T')[0]) : undefined;
-    
+
     const { updateCheckin, resetCheckin } = useCheckinContext();
 
     const [isNoteDialogOpen, setIsNoteDialogOpen] = useState(false);
     const [selectedDate, setSelectedDate] = useState("");
     const [noteContent, setNoteContent] = useState("");
 
+    const [history, setHistory] = useState({});
+    const isHabitDisabled = habit?.status === "Archived" || habit?.status === "Paused";
+
     const habitLogDataMap = useMemo(() => {
         if (!habit || !habit?.id) return {};
 
-        return habitCheckins
+        const map = habitCheckins
             .reduce((acc, checkin) => {
                 let currentStatus = checkin?.completionStatus;
                 if (!currentStatus) {
@@ -192,16 +195,47 @@ function Calendar({ habit, habitCheckins }) {
                 }
 
                 acc[checkin.date] = {
-                    ...checkin, // userId, habitId, date, completedCount, completionStatus
+                    ...checkin,
                     target: habit.targetPerDay,
-                    status: currentStatus
+                    status: currentStatus,
+                    canUndo: !!history[checkin.date]?.length
                 };
 
                 return acc;
             }, {});
-    }, [habit, habitCheckins]);
 
-    const handleCellAction = (action, dateString, value = null) => {
+        Object.keys(history).forEach(dateStr => {
+            if (!map[dateStr] && history[dateStr]?.length > 0) {
+                map[dateStr] = {
+                    completedCount: 0,
+                    completionStatus: 'not_checked',
+                    target: habit.targetPerDay,
+                    status: 'not_checked',
+                    canUndo: true
+                };
+            }
+        });
+
+        return map;
+    }, [habit, habitCheckins, history]);
+
+    const trackHistory = useCallback((dateString) => {
+        setHistory(prev => {
+            const currentState = habitLogDataMap[dateString] ?? {
+                completionStatus: "not_checked",
+                completedCount: 0,
+                note: ""
+            };
+
+            const dateStack = prev[dateString] || [];
+            return {
+                ...prev,
+                [dateString]: [...dateStack, { ...currentState }].slice(-10)
+            };
+        });
+    }, [habitLogDataMap]);
+
+    const handleCellAction = useCallback((action, dateString, value = null) => {
         switch (action) {
             case "update_progress": {
                 const target = habit.targetPerDay;
@@ -213,59 +247,92 @@ function Calendar({ habit, habitCheckins }) {
                     toast.error(`Progress cannot exceed target (${target})`);
                     return;
                 }
+
+                trackHistory(dateString);
+
                 if (value === 0) {
                     resetCheckin(habit.id, dateString);
-                }
-                if (value === target) {
-                    celebrate();
-                    if (habit.autoOpenNote) {
-                        setTimeout(() => {
-                            setSelectedDate(dateString)
-                            setIsNoteDialogOpen(true)
-                        }, 600);
+                } else {
+                    if (value === target) {
+                        celebrate();
+                        if (habit.autoOpenNote) {
+                            setTimeout(() => {
+                                setSelectedDate(dateString);
+                                setIsNoteDialogOpen(true);
+                            }, 600);
+                        }
                     }
+                    updateCheckin(habit.id, dateString, {
+                        completedCount: value,
+                    });
                 }
-                updateCheckin(habit.id, dateString, {
-                    completedCount: value,
-                });
-                // console.log("update_progress" ,habit.id, dateString, value)
                 return;
             }
 
             case "skipped":
+                trackHistory(dateString);
                 if (habit.autoOpenNote) {
-                    setSelectedDate(dateString)
-                    setIsNoteDialogOpen(true)
+                    setSelectedDate(dateString);
+                    setIsNoteDialogOpen(true);
                 }
                 updateCheckin(habit.id, dateString, {
                     completionStatus: "skipped",
                 });
-                // console.log("skipped" ,habit.id, dateString)
                 return;
 
             case "failed":
+                trackHistory(dateString);
                 if (habit.autoOpenNote) {
-                    setSelectedDate(dateString)
-                    setIsNoteDialogOpen(true)
+                    setSelectedDate(dateString);
+                    setIsNoteDialogOpen(true);
                 }
                 updateCheckin(habit.id, dateString, {
                     completionStatus: "failed",
                 });
-                // console.log("failed" ,habit.id, dateString)
                 return;
 
             case "reset":
+                trackHistory(dateString);
                 resetCheckin(habit.id, dateString);
-                // console.log("reset" ,habit.id, dateString)
                 return;
 
+            case "undo": {
+                const dateStack = history[dateString];
+                if (!dateStack || dateStack.length === 0) return;
+
+                const newDateStack = [...dateStack];
+                const prevState = newDateStack.pop();
+                if (!prevState.completionStatus || prevState.completionStatus === "not_checked") {
+                    resetCheckin(habit.id, dateString);
+                } else {
+                    updateCheckin(habit.id, dateString, {
+                        completionStatus: prevState.completionStatus,
+                        completedCount: prevState.completedCount,
+                        note: prevState.note || ""
+                    });
+                }
+
+                setHistory(prev => {
+                    const newHistory = { ...prev };
+                    if (newDateStack.length === 0) {
+                        delete newHistory[dateString]; 
+                    } else {
+                        newHistory[dateString] = newDateStack;
+                    }
+                    return newHistory;
+                });
+
+                return;
+            }
+
             case "note": {
-                setSelectedDate(dateString)
-                setNoteContent(value)
+                setSelectedDate(dateString);
+                setNoteContent(value);
                 setIsNoteDialogOpen(true);
+                return;
             }
         }
-    };
+    }, [habit, history, trackHistory, updateCheckin, resetCheckin]);
 
     const handleSaveNote = (noteContent) => {
         updateCheckin(habit.id, selectedDate, {
@@ -286,6 +353,7 @@ function Calendar({ habit, habitCheckins }) {
                     isReadOnly
                     onCellAction={handleCellAction}
                     className={`w-[calc(12*var(--spacing)*9)]`}
+                    isHabitDisabled={isHabitDisabled}
                 />
             </I18nProvider>
 

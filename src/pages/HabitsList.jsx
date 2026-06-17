@@ -22,17 +22,19 @@ import { isScheduledDay, isValidDate } from '@/utils/statsHelper';
 import { useHabitWalkthrough } from '@/hooks/useWalkthrough';
 import { getWeekStartsOn } from '@/services/profile';
 
+const DEFAULT_QUERY = {
+    view: "list",
+    search: "",
+    status: "",
+    category: "All",
+    priority: "All",
+    frequency: "all",
+    groupBy: "priority",
+    sortBy: "order",
+};
+
 export default function HabitsList() {
-    const [query, setQuery] = useQueryParams({
-        view: "list",
-        search: "",
-        status: "",
-        category: "All",
-        priority: "All",
-        frequency: "all",
-        groupBy: "priority",
-        sortBy: "order",
-    });
+    const [query, setQuery] = useQueryParams(DEFAULT_QUERY);
     const [selectedDate, setSelectedDate] = useState(new Date());
     const [selectedHabit, setSelectedHabit] = useState(null);
     const [openDrawer, setOpenDrawer] = useState(false);

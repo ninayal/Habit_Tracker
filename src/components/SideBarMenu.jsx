@@ -5,6 +5,18 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import { authService } from "@/services/auth";
 import { storage, STORAGE_KEYS } from "@/utils/storage";
 import { initializeData } from "@/utils/initializeData";
+import Logo from "@/components/auth/Logo";
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+    AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 const menuItems = [
     {
@@ -47,14 +59,23 @@ export default function SideBarMenu({ isCollapsed, setIsCollapsed, isMobileOpen,
     };
 
     const handleResetData = () => {
-        storage.remove(STORAGE_KEYS.USERS);
-        storage.remove(STORAGE_KEYS.HABITS);
-        storage.remove(STORAGE_KEYS.CHECKINS);
-        storage.remove(STORAGE_KEYS.GOALS);
+        const currentUser = storage.get(STORAGE_KEYS.CURRENT_USER);
+        if (currentUser && currentUser.id) {
+            const userId = currentUser.id;
+            const allHabits = storage.get(STORAGE_KEYS.HABITS) || [];
+            const allCheckins = storage.get(STORAGE_KEYS.CHECKINS) || [];
+            const allGoals = storage.get(STORAGE_KEYS.GOALS) || [];
 
-        initializeData();
+            const filteredHabits = allHabits.filter(h => h.userId !== userId);
+            const filteredCheckins = allCheckins.filter(c => c.userId !== userId);
+            const filteredGoals = allGoals.filter(g => g.userId !== userId);
 
-        window.location.reload();
+            storage.set(STORAGE_KEYS.HABITS, filteredHabits);
+            storage.set(STORAGE_KEYS.CHECKINS, filteredCheckins);
+            storage.set(STORAGE_KEYS.GOALS, filteredGoals);
+
+            window.location.reload();
+        }
     };
 
     const showText = !isCollapsed || isMobileOpen;
@@ -80,9 +101,7 @@ export default function SideBarMenu({ isCollapsed, setIsCollapsed, isMobileOpen,
                             <p className="text-[10px] uppercase tracking-[0.28em] text-[color:var(--brand-sidebar-muted)]">
                                 Habit tracker
                             </p>
-                            <h2 className="mt-1 text-lg font-semibold text-[color:var(--brand-text)]">
-                                1Percent
-                            </h2>
+                            <Logo />
                         </div>
                     )}
 
@@ -138,16 +157,36 @@ export default function SideBarMenu({ isCollapsed, setIsCollapsed, isMobileOpen,
                         {showText && <span>{themeLabel} mode</span>}
                     </button>
 
-                    <button
-                        type="button"
-                        onClick={handleResetData}
-                        className={`flex items-center rounded-lg py-2.5 text-sm font-medium transition-colors duration-150 ${themeButtonClassName}
-                            ${isCollapsed && !isMobileOpen ? "justify-center px-0" : "px-3 gap-3 w-full"}
-                        `}
-                    >
-                        <ListRestart className="h-5 w-5 shrink-0 text-brand-pink" />
-                        {showText && <span>Reset all data</span>}
-                    </button>
+                    <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                            <button
+                                type="button"
+                                className={`flex items-center rounded-lg py-2.5 text-sm font-medium transition-colors duration-150 ${themeButtonClassName}
+                                    ${isCollapsed && !isMobileOpen ? "justify-center px-0" : "px-3 gap-3 w-full"}
+                                `}
+                            >
+                                <ListRestart className="h-5 w-5 shrink-0 text-brand-pink" />
+                                {showText && <span>Reset all data</span>}
+                            </button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                            <AlertDialogHeader>
+                                <AlertDialogTitle>Are you completely sure?</AlertDialogTitle>
+                                <AlertDialogDescription>
+                                    This action cannot be undone. It will permanently delete your habits, check-ins, and related data.
+                                </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter className={`brand-card`}>
+                                <AlertDialogCancel className={`hover:bg-white`} variant='outline'>Cancel</AlertDialogCancel>
+                                <AlertDialogAction
+                                    onClick={handleResetData}
+                                    variant='destructive'
+                                >
+                                    Reset My Data
+                                </AlertDialogAction>
+                            </AlertDialogFooter>
+                        </AlertDialogContent>
+                    </AlertDialog>
 
                     <button
                         type="button"
