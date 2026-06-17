@@ -21,7 +21,7 @@ export default function Logo() {
       href="/"
       onClick={handleLogoClick}
       // Khôi phục chính xác cấu trúc style của class .lp-nav-logo, pointer-events-auto giúp click tốt trong div header
-      className="inline-flex items-center gap-2 font-['Instrument_Serif'] text-[1.4rem] font-medium tracking-tight no-underline select-none pointer-events-auto"
+      className="inline-flex items-center gap-2 font-['Instrument_Serif'] text-[1.4rem] no-underline select-none pointer-events-auto"
       style={{ color: "#18181b" }} // Màu --ink nguyên bản của logo cố định
     >
       {/* Chữ thương hiệu cố định màu hồng đậm #b94d8e theo CSS gốc */}
