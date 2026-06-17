@@ -1,4 +1,4 @@
-import Logo from "./Logo";
+import Logo from "../ui/Logo";
 import ThemeToggle from "../profile/ThemeToggle";
 
 /**
@@ -9,7 +9,6 @@ export default function AuthNav({ theme, toggleTheme }) {
   return (
     <nav
       className={`
-        /* Định vị trải dài toàn màn hình trên cùng y hệt cấu trúc gốc của bạn */
         fixed top-0 left-0 right-0 z-[200] h-[64px] px-6 sm:px-10
         flex items-center justify-between
         
