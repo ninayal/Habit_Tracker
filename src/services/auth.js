@@ -6,6 +6,7 @@ const CAPTCHA_THRESHOLD = 3; // Sai 3 lần xuất hiện CAPTCHA
 const INITIAL_MAX_ATTEMPTS = 8; // Vòng đầu tiên: Có tối đa 8 lần thử
 const REPEAT_MAX_ATTEMPTS = 3; // Các vòng sau (đã từng bị block): Chỉ có 3 lần thử
 const BASE_LOCKOUT_TIME = 30 * 1000; // Thời gian phạt cơ sở: 30 giây
+const RESCUE_BAN_KEY = `rescue_bypass_permanently_locked`;
 
 export const authService = {
   // ── METHOD: XỬ LÝ ĐĂNG NHẬP ──
@@ -86,22 +87,13 @@ export const authService = {
       (user) => user.email === email && user.password === password,
     );
 
-    if (!matchedUser && email === "admin@gmail.com" && password === "123456") {
-      matchedUser = {
-        id: 0,
-        fullName: "Default Admin",
-        email: "admin@gmail.com",
-        image: "https://randomuser.me/api/portraits/men/99.jpg",
-        createdAt: new Date().toISOString(),
-      };
-    }
-
     // ── CASE A: ĐĂNG NHẬP THÀNH CÔNG ──
     if (matchedUser) {
       storage.remove(globalAttemptsKey);
       storage.remove(globalLockKey);
       storage.remove(lockoutMultiplierKey);
       storage.remove(`login_rescue_attempts`);
+      storage.remove(RESCUE_BAN_KEY);
       // Reset hoàn toàn trạng thái phạt về ban đầu
 
       const { password: _, ...safeUserInfo } = matchedUser;
@@ -202,6 +194,7 @@ export const authService = {
     const currentRescueAttempts = parseInt(storage.get(rescueAttemptsKey, 0));
 
     if (currentRescueAttempts >= maxRescueAttempts) {
+      storage.set(RESCUE_BAN_KEY, true);
       return {
         success: false,
         isRescueBanned: true,
@@ -217,6 +210,7 @@ export const authService = {
       storage.remove(`login_global_lock_until`);
       storage.remove(`login_lockout_multiplier`);
       storage.remove(rescueAttemptsKey);
+      storage.set(RESCUE_BAN_KEY, false);
 
       // Thêm lệnh return để ngắt hàm ngay lập tức khi thành công!
       return {
@@ -241,8 +235,24 @@ export const authService = {
     return {
       success: false,
       isRescueBanned: false,
-      message: `Invalid Admin Rescue Code. Emergency bypass denied (${maxRescueAttempts - newRescueAttempts} attempts left).`,
+      message: `Invalid Admin Rescue Code. Emergency bypass denied.`,
     };
+  },
+
+  isRescueBanned: () => {
+    return storage.get(RESCUE_BAN_KEY, false);
+  },
+
+  resetRescueStatus: () => {
+    storage.remove(`login_rescue_attempts`);
+    storage.remove(RESCUE_BAN_KEY);
+  },
+
+  getRemainingRescueAttempts: () => {
+    const rescueAttemptsKey = `login_rescue_attempts`;
+    const maxRescueAttempts = 5;
+    const currentAttempts = parseInt(storage.get(rescueAttemptsKey, 0));
+    return Math.max(0, maxRescueAttempts - currentAttempts);
   },
 
   /**

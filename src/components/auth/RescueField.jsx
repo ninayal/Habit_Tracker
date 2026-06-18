@@ -14,6 +14,7 @@ export default function RescueField({
   rescueError,
   onAdminUnlock,
   rescueSuccessCountdown, // Nhận thời gian đếm ngược thành công từ cha
+  remainingRescueAttempts,
 }) {
   // Nếu thiết bị không bị khóa, không hiển thị gì cả
   if (lockCountdown <= 0) return null;
@@ -61,6 +62,9 @@ export default function RescueField({
             the button or ask your Administrator for an emergency rescue key to
             unlock immediately.
           </p>
+          <span className="text-[11px] font-semibold bg-amber-500/10 border border-amber-500/20 text-red-600 px-2 py-1 rounded-md shrink-0 whitespace-nowrap">
+            {remainingRescueAttempts} attempts left
+          </span>
 
           <div className="flex items-center gap-2">
             <div className="flex-1">

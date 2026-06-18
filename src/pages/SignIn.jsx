@@ -18,8 +18,13 @@ export default function SignIn() {
   const { theme, toggleTheme } = useTheme();
 
   const [adminRescueCodeInput, setAdminRescueCodeInput] = useState("");
+  const [remainingRescueAttempts, setRemainingRescueAttempts] = useState(() =>
+    authService.getRemainingRescueAttempts(),
+  );
   const [rescueError, setRescueError] = useState("");
-  const [isRescueFieldBanned, setIsRescueFieldBanned] = useState(false); // State kiểm soát khóa ô nhập
+  const [isRescueFieldBanned, setIsRescueFieldBanned] = useState(() =>
+    authService.isRescueBanned(),
+  ); // State kiểm soát khóa ô nhập
   const [rescueSuccessCountdown, setRescueSuccessCountdown] = useState(0);
 
   const [form, setForm] = useState({ email: "", password: "" });
@@ -64,6 +69,7 @@ export default function SignIn() {
 
   // Drive penalty clock ticker interval
   // Đồng bộ đếm ngược và tự động dọn dẹp thông báo lỗi cũ khi hết giờ
+  // SignIn.jsx
   useEffect(() => {
     if (lockCountdown <= 0) return;
 
@@ -72,9 +78,11 @@ export default function SignIn() {
         if (prev <= 1) {
           clearInterval(timer);
 
+          // Dọn dẹp các thông báo lỗi và input tạm thời trên UI khi hết giờ lock
           setServerError("");
+          setRescueError(""); // <--- QUAN TRỌNG: Xóa thông báo lỗi cũ của Rescue
+          setAdminRescueCodeInput(""); // <--- QUAN TRỌNG: Xóa chữ đã gõ trong ô nhập cũ
 
-          setIsRescueFieldBanned(false); // Giải ban cho ô cứu hộ Admin ở chu kỳ kế tiếp
           return 0;
         }
         return prev - 1;
@@ -100,7 +108,7 @@ export default function SignIn() {
           setAdminRescueCodeInput("");
           setShowCaptcha(false);
           setUserCaptchaInput("");
-          setIsRescueFieldBanned(false);
+          // setIsRescueFieldBanned(false);
 
           return 0;
         }
@@ -124,12 +132,15 @@ export default function SignIn() {
   const touch = (field) => () =>
     setTouched((prev) => ({ ...prev, [field]: true }));
 
+  // SignIn.jsx
   const handleAdminUnlock = (e) => {
     e.preventDefault();
     setRescueError("");
 
-    // Nếu đang bị ban hoặc đang chạy đếm ngược thành công thì không cho bấm tiếp
-    if (isRescueFieldBanned || rescueSuccessCountdown > 0) return;
+    // Nếu đang bị ban hoặc đang chạy đếm ngược thành công thì không cho làm gì hết
+    if (isRescueFieldBanned || rescueSuccessCountdown > 0) {
+      return;
+    }
 
     if (!adminRescueCodeInput.trim()) {
       setRescueError("Please enter the rescue code.");
@@ -137,15 +148,17 @@ export default function SignIn() {
     }
 
     const result = authService.unlockDeviceByAdminCode(adminRescueCodeInput);
+    setRemainingRescueAttempts(authService.getRemainingRescueAttempts());
 
     if (result.success) {
-      // Nhập đúng mã -> Kích hoạt bộ đếm ngược 3 giây trước khi reload sạch form
       setRescueSuccessCountdown(3);
       setRescueError("");
+      setIsRescueFieldBanned(false); // Đảm bảo giải ban khi nhập đúng thành công
     } else {
       setRescueError(result.message);
       if (result.isRescueBanned) {
         setIsRescueFieldBanned(true);
+        setAdminRescueCodeInput(""); // Xóa text trong ô nhập ngay khi bị ban thẳng tay
       }
     }
   };
@@ -274,25 +287,9 @@ export default function SignIn() {
             rescueError={rescueError}
             onAdminUnlock={handleAdminUnlock}
             rescueSuccessCountdown={rescueSuccessCountdown}
+            remainingRescueAttempts={remainingRescueAttempts}
           />
 
-          {/* Submit */}
-          {/* <button
-            type="submit"
-            id="signin-submit-btn"
-            disabled={lockCountdown > 0 || rescueSuccessCountdown > 0}
-            className={`w-full py-4 rounded-xl mt-2 text-base font-bold tracking-wide transition-all duration-300 ${
-              lockCountdown > 0 || rescueSuccessCountdown > 0
-                ? "bg-zinc-800 text-zinc-500 cursor-not-allowed shadow-none translate-y-0"
-                : "text-zinc-900 bg-gradient-to-r from-[#f9b2d7] to-[#f6ffdc] shadow-[0_4px_15px_rgba(249,178,215,0.25)] hover:-translate-y-0.5 hover:shadow-[0_6px_20px_rgba(249,178,215,0.4)] active:translate-y-0"
-            }`}
-          >
-            {rescueSuccessCountdown > 0
-              ? `Reloading Form (${rescueSuccessCountdown}s)...`
-              : lockCountdown > 0
-                ? `Form Locked (${lockCountdown}s)`
-                : "Sign In"}
-          </button> */}
           <button
             type="submit"
             id="signin-submit-btn"
@@ -314,16 +311,6 @@ export default function SignIn() {
 
         <p className="mt-6 text-center text-sm text-zinc-500">
           Don&apos;t have an account?{" "}
-          {/* <span
-            onClick={() => lockCountdown === 0 && navigate("/signup")}
-            className={`font-semibold transition-colors ${
-              lockCountdown > 0
-                ? "text-zinc-600 cursor-not-allowed"
-                : "text-[#f9b2d7] hover:text-[#f6ffdc] cursor-pointer"
-            }`}
-          >
-            Sign up now
-          </span> */}
           <span
             onClick={() => lockCountdown === 0 && navigate("/signup")}
             className={`font-semibold transition-colors duration-200 ${
