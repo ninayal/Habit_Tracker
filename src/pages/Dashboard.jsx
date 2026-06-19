@@ -261,6 +261,21 @@ function getGoalProgress(habit, checkins, goals, todayKey) {
   };
 }
 
+function DashboardEmptyState({
+  icon = "🌱",
+  title = "No habits for this day",
+  description = "There are no habits scheduled for this date yet.",
+  compact = false,
+}) {
+  return (
+    <div className={compact ? "db-empty-card compact" : "db-empty-card"}>
+      <div className="db-empty-card-icon">{icon}</div>
+      <h3>{title}</h3>
+      <p>{description}</p>
+    </div>
+  );
+}
+
 function ProgressRing({ value = 75, size = 140, stroke = 12 }) {
   const radius = (size - stroke) / 2;
   const circumference = 2 * Math.PI * radius;
@@ -295,6 +310,17 @@ function ProgressRing({ value = 75, size = 140, stroke = 12 }) {
   );
 }
 
+function getHeatmapLevel(completedCount, totalHabits) {
+  if (totalHabits === 0 || completedCount === 0) return "level-0";
+
+  const rate = completedCount / totalHabits;
+
+  if (rate <= 0.25) return "level-1";
+  if (rate <= 0.5) return "level-2";
+  if (rate <= 0.75) return "level-3";
+  return "level-4";
+}
+
 function MiniCalendar({ checkins, habits, todayKey }) {
   const date = new Date(todayKey);
   const year = date.getFullYear();
@@ -306,29 +332,27 @@ function MiniCalendar({ checkins, habits, todayKey }) {
   return (
     <div className="db-calendar-grid">
       {days.map((day) => {
-        const dateKey = `${year}-${String(month + 1).padStart(2, "0")}-${String(
-          day
-        ).padStart(2, "0")}`;
+      const dateKey = `${year}-${String(month + 1).padStart(2, "0")}-${String(
+        day
+      ).padStart(2, "0")}`;
 
-        const completedCount = habits.filter((habit) => {
-          const checkin = getCheckinForDate(habit.id, dateKey, checkins);
-          return isCompletedCheckin(checkin, habit);
-        }).length;
+      const completedCount = habits.filter((habit) => {
+        const checkin = getCheckinForDate(habit.id, dateKey, checkins);
+        return isCompletedCheckin(checkin, habit);
+      }).length;
 
-        const active = completedCount > 0;
-        const hot = completedCount >= 3;
+      const level = getHeatmapLevel(completedCount, habits.length);
 
-        return (
-          <div
-            key={day}
-            className={`db-calendar-day ${active ? "active" : ""} ${
-              hot ? "hot" : ""
-            }`}
-          >
-            {day}
-          </div>
-        );
-      })}
+      return (
+        <div
+          key={day}
+          className={`db-calendar-day ${level}`}
+          title={`${completedCount}/${habits.length} habits completed`}
+        >
+          {day}
+        </div>
+      );
+    })}
     </div>
   );
 }
@@ -440,12 +464,16 @@ export default function Dashboard() {
     };
   }, [contextCheckins, statusMap, todayProgress, todaysHabits, todayKey]);
 
-  const stats = dashboardData.stats;
-  const weekly = dashboardData.weekly;
-  const categories = dashboardData.categories;
-  const highlightedGoal = dashboardData.highlightedGoal;
+const stats = dashboardData.stats;
+const weekly = dashboardData.weekly;
+const categories = dashboardData.categories;
+const highlightedGoal = dashboardData.highlightedGoal;
 
-  const activeHabitText = `${stats.completed} of ${stats.total} active habits completed`;
+const hasNoHabits = stats.total === 0;
+
+const activeHabitText = hasNoHabits
+  ? "No habits scheduled for today"
+  : `${stats.completed} of ${stats.total} active habits completed`;
 
   const handleScrollToTodayHabits = () => {
     todayHabitsRef.current?.scrollIntoView({
@@ -527,8 +555,8 @@ export default function Dashboard() {
               <h2>{activeHabitText}</h2>
 
               <p>
-                {stats.total === 0
-                  ? "You do not have any active habits scheduled for today. Add a new habit to start building your daily routine."
+                {hasNoHabits
+                  ? "This day does not have any active habits yet. Create a new habit or choose another date to start tracking your progress."
                   : `${stats.total - stats.completed} habits are still waiting for your check-in today. ${
                       stats.atRisk > 0
                         ? `${stats.atRisk} habit${
@@ -540,10 +568,12 @@ export default function Dashboard() {
 
               <div className="db-hero-actions">
                 <button onClick={handleScrollToTodayHabits}>
-                  View today’s habits
+                  {hasNoHabits ? "View empty day" : "View today’s habits"}
                 </button>
 
-                <span>{stats.total - stats.completed} habits left</span>
+                <span>
+                  {hasNoHabits ? "0 habits today" : `${stats.total - stats.completed} habits left`}
+                </span>
               </div>
             </div>
 
@@ -577,7 +607,22 @@ export default function Dashboard() {
 
         <section className="db-content-grid">
           <div className="db-habits-panel db-today-demo-panel" ref={todayHabitsRef}>
-            <TodayHabitSection />
+            {hasNoHabits ? (
+              <div className="brand-card db-empty-today-panel">
+                <div>
+                  <span className="db-section-label">Daily check-ins</span>
+                  <h2>Today’s habits</h2>
+                </div>
+
+                <DashboardEmptyState
+                  icon="🗓️"
+                  title="No habits scheduled"
+                  description="There are no habits to check in for this day. Add a new habit or select another date to continue tracking."
+                />
+              </div>
+            ) : (
+              <TodayHabitSection />
+            )}
           </div>
 
           <div className="db-panel db-week-panel">
@@ -592,6 +637,14 @@ export default function Dashboard() {
               </span>
             </div>
 
+            {hasNoHabits ? (
+            <DashboardEmptyState
+              compact
+              icon="📊"
+              title="No performance data"
+              description="No habits are available for this day, so the 7-day rhythm cannot be calculated."
+            />
+          ) : (
             <div className="db-week-chart">
               {weekly.map((item) => {
                 const height =
@@ -609,6 +662,7 @@ export default function Dashboard() {
                 );
               })}
             </div>
+          )}
           </div>
 
           <div className="db-panel db-category-panel">
@@ -619,6 +673,14 @@ export default function Dashboard() {
               </div>
             </div>
 
+            {hasNoHabits || categories.length === 0 ? (
+            <DashboardEmptyState
+              compact
+              icon="🧩"
+              title="No categories yet"
+              description="Habit categories will appear here once this day has active habits."
+            />
+          ) : (
             <div className="db-category-list">
               {categories.map((cat) => (
                 <div className="db-category-row" key={cat.name}>
@@ -637,6 +699,7 @@ export default function Dashboard() {
                 </div>
               ))}
             </div>
+          )}
           </div>
 
           <div className="db-panel db-calendar-panel">
@@ -647,11 +710,29 @@ export default function Dashboard() {
               </div>
             </div>
 
-            <MiniCalendar
-              habits={dashboardData.activeHabits}
-              checkins={dashboardData.checkins}
-              todayKey={todayKey}
-            />
+            {hasNoHabits ? (
+              <DashboardEmptyState
+                compact
+                icon="📅"
+                title="No consistency data"
+                description="The heatmap will appear when there are habits and check-ins for this period."
+              />
+            ) : (
+              <MiniCalendar
+                habits={dashboardData.activeHabits}
+                checkins={dashboardData.checkins}
+                todayKey={todayKey}
+              />
+            )}
+            <div className="db-heatmap-legend">
+              <span>Less</span>
+              <i className="level-0" />
+              <i className="level-1" />
+              <i className="level-2" />
+              <i className="level-3" />
+              <i className="level-4" />
+              <span>More</span>
+            </div>
           </div>
 
           <div className="db-panel db-goal-panel">
@@ -659,31 +740,39 @@ export default function Dashboard() {
               <span className="db-section-label">Milestone</span>
 
               <h2>
-                {highlightedGoal?.targetType === "streak"
+                {hasNoHabits
+                  ? "No milestone for this day"
+                  : highlightedGoal?.targetType === "streak"
                   ? `${highlightedGoal.targetValue}-day streak goal`
                   : `${highlightedGoal?.targetValue || 0} completions goal`}
               </h2>
 
               <p>
-                {highlightedGoal
+                {hasNoHabits
+                  ? "Milestones are calculated from active habits and check-ins. Add a habit to start building progress."
+                  : highlightedGoal
                   ? `${highlightedGoal.habitName} is ${highlightedGoal.progress}% complete. Keep going to unlock your next milestone.`
                   : "No goals set yet. Create a goal to start tracking your progress."}
               </p>
             </div>
 
             <div className="db-goal-track">
-              <div style={{ width: `${highlightedGoal?.progress || 0}%` }} />
+              <div style={{ width: `${hasNoHabits ? 0 : highlightedGoal?.progress || 0}%` }} />
             </div>
 
             <div className="db-goal-footer">
               <span>
-                {highlightedGoal
+                {hasNoHabits
+                  ? "0 / 0"
+                  : highlightedGoal
                   ? `${highlightedGoal.currentValue} / ${highlightedGoal.targetValue}`
                   : "0 / 0"}
               </span>
 
               <strong>
-                {highlightedGoal?.progress >= 100
+                {hasNoHabits
+                  ? "No progress yet"
+                  : highlightedGoal?.progress >= 100
                   ? "Goal achieved 🎉"
                   : highlightedGoal?.progress >= 80
                   ? "Almost there 🎉"
