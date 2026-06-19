@@ -81,8 +81,7 @@ export function CalendarCustom({ habitDataMap, onCellAction, isHabitDisabled, cl
                             {(date) => {
                                 const dateString = date.toString();
                                 const record = habitDataMap[dateString];
-                                const status = record?.status || 'none';
-
+                                
                                 return (
                                     <CalendarCell
                                         date={date}
@@ -92,9 +91,21 @@ export function CalendarCustom({ habitDataMap, onCellAction, isHabitDisabled, cl
                                             if (isOutsideMonth) {
                                                 return <div className="w-7 h-7" />;
                                             }
+                                            let displayStatus = record?.status || 'none';
+                                            if (isToday) {
+                                                const currentCount = record?.completedCount || 0;
+                                                const target = record?.target || 1;
+                                                if (displayStatus === "completed" && currentCount < target) {
+                                                    displayStatus = currentCount === 0 ? "not_checked" : "in_progress";
+                                                } else if ( (displayStatus === "in_progress" || displayStatus === "not_checked" || displayStatus === "none") &&
+                                                    currentCount >= target
+                                                ) {
+                                                    displayStatus = "completed";
+                                                }
+                                            }
 
                                             let cellUI;
-                                            switch (status) {
+                                            switch (displayStatus) {
                                                 case 'completed':
                                                     cellUI = <CompletedCell day={formattedDate} isToday={isToday} />;
                                                     break;

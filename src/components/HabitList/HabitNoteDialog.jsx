@@ -14,14 +14,14 @@ export function HabitNoteDialog({ open, onOpenChange, habitName, initialNote = "
     }, [open, initialNote]);
 
     const handleSave = () => {
-        const finalNote = note.trim();
+        const finalNote = note?.trim();
         if (!finalNote) return;
 
         onSave(finalNote);
         onOpenChange(false);
     };
 
-    const isNoteEmpty = note.trim().length === 0;
+    const isNoteEmpty = note?.trim().length === 0;
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>

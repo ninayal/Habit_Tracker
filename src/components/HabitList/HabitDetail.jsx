@@ -81,7 +81,7 @@ export default function HabitDetail({
                                     {habit?.name}
                                 </h3>
                             </div>
-                            <div>
+                            {/* <div>
                                 <HabitCardDropdown
                                     open={openDropdown}
                                     setOpen={setOpenDropdown}
@@ -103,7 +103,7 @@ export default function HabitDetail({
                                     </button>
                                 </HabitCardDropdown>
 
-                            </div>
+                            </div> */}
                         </div>
                     </DrawerTitle>
                     <DrawerDescription>

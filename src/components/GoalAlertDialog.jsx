@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import {
     AlertDialog,
     AlertDialogAction,
@@ -16,12 +16,15 @@ export default function GoalAlertDialog({ alertData, onClose, onArchive }) {
 
     const isAchieved = alertData.type === "ACHIEVED";
 
-    if (alertData.type == "ENCOURAGEMENT") {
-        celebrate();
-    }
-    else if (alertData.type == "ACHIEVED") {
-        celebrateBig();
-    }
+    useEffect(() => {
+        if (!alertData) return;
+
+        if (alertData.type === "ENCOURAGEMENT") {
+            celebrate();
+        } else if (alertData.type === "ACHIEVED") {
+            celebrateBig();
+        }
+    }, [alertData]);
 
     return (
         <AlertDialog open={!!alertData} onOpenChange={(open) => !open && onClose()}>

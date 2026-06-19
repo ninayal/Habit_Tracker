@@ -3,7 +3,7 @@ import { useHabitContext } from "@/hooks/useHabits";
 import { authService } from "@/services/auth";
 import { checkinService } from "@/services/checkin";
 import { formatDate } from "@/utils/helper";
-import { createContext, useContext, useState, useCallback, useEffect } from "react";
+import { createContext, useContext, useState, useCallback, useEffect, useRef } from "react";
 
 const CheckinContext = createContext(null);
 
@@ -17,6 +17,7 @@ export function CheckinProvider({ children }) {
     const [error, setError] = useState(null);
 
     const [alertData, setAlertData] = useState(null);
+    const alertedHabits = useRef({});
 
     const loadCheckins = useCallback(() => {
         if (!currentUser?.id) return;
@@ -53,7 +54,13 @@ export function CheckinProvider({ children }) {
         });
 
         if (goalEvent) {
-            setAlertData(goalEvent);
+            const currentPercentage = goalEvent.type === "ACHIEVED" ? 100 : (goalEvent.percentage || 0);
+            const prevAlertedPercentage = alertedHabits.current[habitId] || 0;
+            
+            if (currentPercentage > prevAlertedPercentage) {
+                setAlertData(goalEvent);
+                alertedHabits.current[habitId] = currentPercentage;
+            }
         }
 
         return updatedCheckin;
@@ -76,6 +83,9 @@ export function CheckinProvider({ children }) {
             )
         )
         );
+
+        delete alertedHabits.current[habitId];
+        
         return true;
     };
 

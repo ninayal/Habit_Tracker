@@ -215,7 +215,7 @@ export default function HabitsList() {
                                         date &&
                                         setSelectedDate(date)
                                     }
-                                    disabled={(date) => date > today}
+                                    // disabled={(date) => date > today}
                                     weekStartsOn={getWeekStartsOn() === "sunday" ? 0 : 1}
                                 />
                             </PopoverContent>
@@ -314,6 +314,7 @@ export default function HabitsList() {
                         )}
 
                         <HabitDetail
+                            key={selectedHabit?.id}
                             open={openDrawer}
                             onOpenChange={setOpenDrawer}
                             habit={selectedHabit}

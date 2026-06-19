@@ -43,11 +43,17 @@ export default function HabitNoteTimeline({ habit, checkins }) {
 
     if (notesList.length === 0) {
         return (
-            <div className="mt-8 flex flex-col items-center justify-center py-8 px-4 text-center bg-white rounded-xl border border-dashed border-slate-200">
-                <MessageSquare className="h-8 w-8 text-slate-300 mb-2" />
-                <p className="text-sm text-slate-500 font-medium">No notes yet</p>
-                <p className="text-xs text-slate-400 mt-1">Complete your habit and add some reflections!</p>
-            </div>
+            <>
+                <h4 className="font-semibold mt-4 text-lg text-slate-800 flex items-center gap-2">
+                    <MessageSquare size={18} className="text-blue-500" />
+                    Notes
+                </h4>
+                <div className="mt-3 flex flex-col items-center justify-center py-8 px-4 text-center bg-white rounded-xl border border-dashed border-slate-200">
+                    <MessageSquare className="h-8 w-8 text-slate-300 mb-2" />
+                    <p className="text-sm text-slate-500 font-medium">No notes yet</p>
+                    <p className="text-xs text-slate-400 mt-1">Complete your habit and add some reflections!</p>
+                </div>
+            </>
         );
     }
 
