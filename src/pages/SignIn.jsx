@@ -67,9 +67,16 @@ export default function SignIn() {
     }
   }, []); // Đổi mảng dependency thành rỗng để không bị chạy lại khi gõ đổi email
 
+  const resetForm = () => {
+    setForm({ email: "", password: "" }); // Reset email/password
+    setUserCaptchaInput(""); // Reset input captcha của người dùng
+    setAdminRescueCodeInput(""); // Reset mã cứu hộ
+    setServerError(""); // Xóa thông báo lỗi hệ thống
+    setRescueError(""); // Xóa thông báo lỗi cứu hộ
+    //setShowCaptcha(false);
+  };
   // Drive penalty clock ticker interval
   // Đồng bộ đếm ngược và tự động dọn dẹp thông báo lỗi cũ khi hết giờ
-  // SignIn.jsx
   useEffect(() => {
     if (lockCountdown <= 0) return;
 
@@ -79,10 +86,8 @@ export default function SignIn() {
           clearInterval(timer);
 
           // Dọn dẹp các thông báo lỗi và input tạm thời trên UI khi hết giờ lock
-          setServerError("");
-          setRescueError(""); // <--- QUAN TRỌNG: Xóa thông báo lỗi cũ của Rescue
-          setAdminRescueCodeInput(""); // <--- QUAN TRỌNG: Xóa chữ đã gõ trong ô nhập cũ
-
+          resetForm();
+          generateNewCaptcha();
           return 0;
         }
         return prev - 1;
@@ -102,12 +107,10 @@ export default function SignIn() {
           clearInterval(successTimer);
 
           // Sau khi kết thúc 3 giây -> Tiến hành dọn dẹp sạch giao diện về ban đầu
+          resetForm();
+          generateNewCaptcha();
           setLockCountdown(0);
-          setServerError("");
-          setRescueError("");
-          setAdminRescueCodeInput("");
           setShowCaptcha(false);
-          setUserCaptchaInput("");
           // setIsRescueFieldBanned(false);
 
           return 0;
@@ -132,7 +135,6 @@ export default function SignIn() {
   const touch = (field) => () =>
     setTouched((prev) => ({ ...prev, [field]: true }));
 
-  // SignIn.jsx
   const handleAdminUnlock = (e) => {
     e.preventDefault();
     setRescueError("");
@@ -195,10 +197,13 @@ export default function SignIn() {
       if (result.isDeviceLocked) {
         setLockCountdown(result.remainingTime);
         // Khi bị khóa, giữ trạng thái hiển thị Captcha để tránh nhảy layout
-      } else if (result.triggerCaptcha) {
-        setShowCaptcha(true);
-        generateNewCaptcha();
-        setUserCaptchaInput("");
+      } else {
+        // Nếu Captcha đã bật, luôn luôn tạo mã mới sau mỗi lần submit thất bại
+        if (showCaptcha || result.triggerCaptcha) {
+          setShowCaptcha(true);
+          generateNewCaptcha();
+          setUserCaptchaInput("");
+        }
       }
     }
   };
@@ -276,6 +281,7 @@ export default function SignIn() {
             onRefreshCaptcha={generateNewCaptcha}
             isTouched={!!touched.captcha}
             serverError={serverError}
+            disabled={lockCountdown > 0}
           />
 
           {/* ── Emergency Rescue Component ── */}

@@ -1,3 +1,4 @@
+import { useEffect, useRef } from "react";
 import FormField from "../ui/FormField";
 import TextInput from "../ui/TextInput";
 
@@ -7,15 +8,48 @@ export default function CaptchaField({
   userCaptchaInput,
   setUserCaptchaInput,
   onRefreshCaptcha,
-  isTouched, // Nhận trạng thái touched từ form cha
+  isTouched,
   serverError,
+  disabled,
 }) {
+  const canvasRef = useRef(null);
+
+  useEffect(() => {
+    if (!showCaptcha || !canvasRef.current) return;
+    const canvas = canvasRef.current;
+    const ctx = canvas.getContext("2d");
+
+    // Reset canvas
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    // 1. Vẽ nhiễu (vài đường kẻ ngẫu nhiên)
+    ctx.strokeStyle = "#f9b2d7";
+    for (let i = 0; i < 3; i++) {
+      ctx.beginPath();
+      ctx.moveTo(Math.random() * 120, Math.random() * 40);
+      ctx.lineTo(Math.random() * 120, Math.random() * 40);
+      ctx.stroke();
+    }
+
+    // 2. Vẽ ký tự với hiệu ứng xoay và làm mờ
+    ctx.font = "bold 24px monospace";
+    ctx.fillStyle = "#f9b2d7";
+    ctx.textBaseline = "middle";
+
+    captchaCode.split("").forEach((char, i) => {
+      ctx.save();
+      ctx.translate(20 + i * 25, 20);
+      ctx.rotate((Math.random() - 0.5) * 0.4); // Xoay nhẹ +/- 0.2 rad
+      ctx.filter = "blur(0.5px)"; // Làm mờ nhẹ
+      ctx.fillText(char, 0, 0);
+      ctx.restore();
+    });
+  }, [captchaCode, showCaptcha]);
+
   if (!showCaptcha) return null;
 
-  // Tính toán lỗi Client-side: Nếu đã bấm submit (isTouched) mà ô nhập vẫn rỗng
+  // Tính toán lỗi để truyền vào FormField
   const captchaError = !userCaptchaInput.trim() ? "Captcha is required" : "";
-
-  // Xác định xem input có hiển thị viền đỏ hay không (Lỗi rỗng từ client hoặc lỗi nhập sai mã từ server)
   const hasError = !!(
     (isTouched && captchaError) ||
     serverError?.includes("CAPTCHA")
@@ -27,18 +61,19 @@ export default function CaptchaField({
       htmlFor="captchaInput"
       error={captchaError}
       touched={isTouched}
+      disabled={disabled}
       className="mb-4 p-4 rounded-xl border border-slate-200 dark:border-white/5 bg-slate-50/50 dark:bg-white/[0.02]"
     >
       <div className="flex items-center gap-3">
-        {/* Hộp hiển thị chuỗi mã CAPTCHA ngẫu nhiên */}
-        <div
-          onClick={onRefreshCaptcha}
-          className="bg-white dark:bg-zinc-800 border border-slate-200 dark:border-transparent text-[#f9b2d7] px-4 py-3 rounded-lg font-mono font-bold tracking-widest text-lg select-none cursor-pointer line-through decoration-slate-400 dark:decoration-zinc-500/50 shadow-sm dark:shadow-inner hover:bg-slate-50 dark:hover:bg-zinc-700 transition-colors"
-          title="Click to refresh captcha code"
-        >
-          {captchaCode}
-        </div>
-
+        <canvas
+          ref={canvasRef}
+          width="120"
+          height="40"
+          onClick={() => !disabled && onRefreshCaptcha()}
+          className={`bg-white dark:bg-zinc-800 border rounded-lg cursor-pointer ${
+            disabled ? "opacity-50 cursor-not-allowed" : ""
+          }`}
+        />
         {/* Ô nhập mã của người dùng */}
         <div className="flex-1">
           <TextInput
@@ -48,13 +83,14 @@ export default function CaptchaField({
             placeholder="Type code..."
             autoComplete="off"
             hasError={hasError}
+            disabled={disabled}
           />
         </div>
       </div>
 
-      {/* Dòng chữ hướng dẫn đổi mã bằng tiếng Anh */}
-      <span className="text-[11px] text-zinc-500 block mt-1 italic pl-1">
-        Can&apos;t read the code? Click the code block to change a new one.
+      {/* Dòng chữ hướng dẫn đổi mã */}
+      <span className="text-[11px] text-zinc-500 block mt-1 italic pl-1 leading-tight">
+        Input is case-sensitive. Can't read? Click code to refresh.
       </span>
     </FormField>
   );

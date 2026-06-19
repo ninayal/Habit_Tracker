@@ -41,7 +41,7 @@ export const authService = {
 
     // 2. Nếu thiết bị đang trong trạng thái phải check CAPTCHA (Từ lần sai thứ 3)
     if (isCaptchaRequired) {
-      if (userCaptcha.toLowerCase() !== serverCaptcha?.toLowerCase()) {
+      if (userCaptcha !== serverCaptcha) {
         let newAttempts = globalAttempts + 1;
         storage.set(globalAttemptsKey, newAttempts);
 
