@@ -890,15 +890,32 @@
   font-weight: 800;
 }
 
-.db-calendar-day.active {
-  background: var(--blue);
-  color: #155e75;
+/* HEATMAP COLOR LEVELS - HIGH CONTRAST */
+
+.db-calendar-day.level-0 {
+  background: #f1f5f9;
+  color: #94a3b8;
 }
 
-.db-calendar-day.hot {
-  background: var(--pink);
-  color: #9d174d;
-  box-shadow: 0 7px 18px rgba(249,178,215,0.5);
+.db-calendar-day.level-1 {
+  background: #dcfce7;
+  color: #15803d;
+}
+
+.db-calendar-day.level-2 {
+  background: #fef3c7;
+  color: #b45309;
+}
+
+.db-calendar-day.level-3 {
+  background: #fed7aa;
+  color: #c2410c;
+}
+
+.db-calendar-day.level-4 {
+  background: #f9a8d4;
+  color: #831843;
+  font-weight: 800;
 }
 
 /* GOAL */
@@ -1227,4 +1244,176 @@
   background: var(--surface) !important;
   border-color: var(--surface-border) !important;
   color: var(--brand-text) !important;
+}
+
+
+
+
+/* --------------- */
+/* ===== SIMPLE DASHBOARD RESPONSIVE SCALE ===== */
+
+html,
+body {
+  overflow-x: hidden;
+}
+
+.db-page {
+  overflow-x: hidden;
+}
+
+/* Màn hình laptop nhỏ / MacBook */
+@media (max-width: 1440px) {
+  .db-main {
+    zoom: 0.9;
+  }
+}
+
+/* Màn hình nhỏ hơn nữa */
+@media (max-width: 1280px) {
+  .db-main {
+    zoom: 0.82;
+  }
+}
+
+/* Tablet hoặc màn rất hẹp */
+@media (max-width: 1100px) {
+  .db-main {
+    zoom: 0.75;
+  }
+}
+
+
+/* ------------------------ */
+/* Biểu đồ */
+/* EMPTY STATES */
+
+.db-empty-card {
+  min-height: 260px;
+  border-radius: 26px;
+  border: 1px dashed var(--brand-border);
+  background: rgba(255,255,255,0.45);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 32px 24px;
+}
+
+.db-empty-card.compact {
+  min-height: 210px;
+  padding: 24px 18px;
+}
+
+.db-empty-card-icon {
+  width: 56px;
+  height: 56px;
+  border-radius: 20px;
+  display: grid;
+  place-items: center;
+  background: var(--brand-hover-bg);
+  font-size: 1.8rem;
+  margin-bottom: 14px;
+}
+
+.db-empty-card h3 {
+  margin: 0 0 8px;
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: var(--brand-text);
+}
+
+.db-empty-card p {
+  max-width: 460px;
+  margin: 0;
+  color: var(--brand-muted-text);
+  font-size: 0.9rem;
+  line-height: 1.7;
+}
+
+.db-empty-today-panel {
+  margin-top: 0 !important;
+  border-radius: 30px !important;
+  padding: 24px !important;
+  background: var(--surface) !important;
+  border: 1px solid var(--surface-border) !important;
+  box-shadow: var(--shadow) !important;
+  color: var(--brand-text);
+}
+
+.dark .db-empty-card {
+  background: rgba(31, 41, 55, 0.42);
+  border-color: var(--surface-border);
+}
+
+.dark .db-empty-card-icon {
+  background: rgba(249, 178, 215, 0.16);
+}
+/* HEATMAP COLOR LEVELS - DARK MODE HIGH CONTRAST */
+
+/* KEEP HEATMAP COLORS SAME IN LIGHT AND DARK MODE */
+
+.dark .db-calendar-day.level-0 {
+  background: #f1f5f9;
+  color: #94a3b8;
+}
+
+.dark .db-calendar-day.level-1 {
+  background: #dcfce7;
+  color: #15803d;
+}
+
+.dark .db-calendar-day.level-2 {
+  background: #fef3c7;
+  color: #b45309;
+}
+
+.dark .db-calendar-day.level-3 {
+  background: #fed7aa;
+  color: #c2410c;
+}
+
+.dark .db-calendar-day.level-4 {
+  background: #f9a8d4;
+  color: #831843;
+  font-weight: 800;
+}
+
+
+.db-heatmap-legend {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 6px;
+  margin-top: 14px;
+  color: var(--brand-muted-text);
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.db-heatmap-legend i {
+  width: 16px;
+  height: 16px;
+  border-radius: 6px;
+  display: inline-block;
+}
+
+.db-heatmap-legend .level-0 {
+  background: #f1f5f9;
+}
+
+.db-heatmap-legend .level-1 {
+  background: #dcfce7;
+}
+
+.db-heatmap-legend .level-2 {
+  background: #fef3c7;
+}
+
+.db-heatmap-legend .level-3 {
+  background: #fed7aa;
+}
+
+.db-heatmap-legend .level-4 {
+  background: #f9a8d4;
 }
