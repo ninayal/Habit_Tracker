@@ -163,7 +163,7 @@ export function CalendarCustom({ habitDataMap, onCellAction, isHabitDisabled, cl
                                                 <HabitCellDropdown
                                                     dateString={dateString}
                                                     onAction={onCellAction}
-                                                    status={status}
+                                                    status={displayStatus}
                                                     progress={record?.completedCount}
                                                     mode='popover'
                                                     record={record}

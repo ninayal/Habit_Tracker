@@ -1,4 +1,7 @@
 import { authService } from "@/services/auth";
+import { checkinService } from "@/services/checkin";
+import { goalService } from "@/services/goals";
+import { calculateGoalProgress } from "@/utils/statsHelper";
 import { storage, STORAGE_KEYS } from "@/utils/storage";
 
 export const habitService = {
@@ -312,6 +315,10 @@ function updateHabit(id, updates) {
             }
         }
 
+        const allCheckins = storage.get(STORAGE_KEYS.CHECKINS, []);
+        const allHabitCheckins = allCheckins.filter(c => c.habitId === id && c.userId === updatedHabit.userId);
+        checkAndUpdateGoals(updatedHabit, updatedHabit.userId, allHabitCheckins);
+
         return resultHabit;
     } catch (error) {
         if (!error.status) error.status = 500;
@@ -352,4 +359,46 @@ function deleteHabit(id) {
         if (!error.status) error.status = 500;
         throw error;
     }
+}
+
+
+function checkAndUpdateGoals(habit, userId, allHabitCheckins) {
+    const goals = goalService.getGoalsByHabit(habit.id, userId);
+    if (goals.length === 0) return null;
+
+    const currentGoal = goals[goals.length - 1];
+    const progress = calculateGoalProgress(habit, currentGoal, allHabitCheckins);
+
+    if (!progress) return null;
+
+    if (progress.percentage < 100 && currentGoal.isDone) {
+        goalService.revokeGoalDone(currentGoal.id);
+    }
+
+    if (progress.percentage < 80 && currentGoal.is80PercentNotified) {
+        goalService.revokeGoal80Notified(currentGoal.id);
+    }
+
+    if (progress.is80Percent && !currentGoal.is80PercentNotified) {
+        goalService.markGoal80Notified(currentGoal.id);
+        return {
+            type: "ENCOURAGEMENT",
+            habitName: habit.name,
+            goal: currentGoal,
+            percentage: progress.percentage
+        };
+    }
+
+    if (!currentGoal.isDone && progress.is100Percent) {
+        goalService.markGoalDone(currentGoal.id);
+        return {
+            type: "ACHIEVED",
+            habitName: habit.name,
+            goal: currentGoal
+        };
+    }
+
+
+
+    return null;
 }

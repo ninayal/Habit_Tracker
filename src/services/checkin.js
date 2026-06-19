@@ -11,7 +11,8 @@ export const checkinService = {
     getCheckinsByHabit,
     updateCheckin,
     deleteCheckin,
-    getHabitStatusByDate
+    getHabitStatusByDate,
+    checkAndUpdateGoals
 };
 
 function getAll() {
@@ -147,7 +148,7 @@ function deleteCheckin(habitId, userId, date = null) {
     );
     if (newCheckins.length === allCheckins.length) return false;
     storage.set(STORAGE_KEYS.CHECKINS, newCheckins);
-    checkAndUpdateGoals(habit, userId);
+    checkAndUpdateGoals(habit, userId, newCheckins);
     return true;
 }
 
@@ -170,17 +171,7 @@ function checkAndUpdateGoals(habit, userId, allHabitCheckins) {
         goalService.revokeGoal80Notified(currentGoal.id);
     }
 
-    if (progress.is100Percent && !currentGoal.isDone) {
-        goalService.markGoalDone(currentGoal.id);
-        return {
-            type: "ACHIEVED",
-            habitName: habit.name,
-            goal: currentGoal
-        };
-    }
-
-    if (progress.is80Percent && !progress.is100Percent && !currentGoal.is80PercentNotified) {
-        goalService.markGoal80Notified(currentGoal.id);
+    if (progress.is80Percent && !currentGoal.is80PercentNotified) {
         return {
             type: "ENCOURAGEMENT",
             habitName: habit.name,
@@ -188,6 +179,17 @@ function checkAndUpdateGoals(habit, userId, allHabitCheckins) {
             percentage: progress.percentage
         };
     }
+
+    if (!currentGoal.isDone && progress.is100Percent) {
+
+        return {
+            type: "ACHIEVED",
+            habitName: habit.name,
+            goal: currentGoal
+        };
+    }
+
+
 
     return null;
 }

@@ -254,7 +254,7 @@ function Calendar({ habit, habitCheckins }) {
                     resetCheckin(habit.id, dateString);
                 } else {
                     if (value === target) {
-                        celebrate();
+                        // celebrate();
                         if (habit.autoOpenNote) {
                             setTimeout(() => {
                                 setSelectedDate(dateString);

@@ -2,6 +2,7 @@ import GoalAlertDialog from "@/components/GoalAlertDialog";
 import { useHabitContext } from "@/hooks/useHabits";
 import { authService } from "@/services/auth";
 import { checkinService } from "@/services/checkin";
+import { goalService } from "@/services/goals";
 import { formatDate } from "@/utils/helper";
 import { createContext, useContext, useState, useCallback, useEffect, useRef } from "react";
 
@@ -17,7 +18,6 @@ export function CheckinProvider({ children }) {
     const [error, setError] = useState(null);
 
     const [alertData, setAlertData] = useState(null);
-    const alertedHabits = useRef({});
 
     const loadCheckins = useCallback(() => {
         if (!currentUser?.id) return;
@@ -55,11 +55,18 @@ export function CheckinProvider({ children }) {
 
         if (goalEvent) {
             const currentPercentage = goalEvent.type === "ACHIEVED" ? 100 : (goalEvent.percentage || 0);
-            const prevAlertedPercentage = alertedHabits.current[habitId] || 0;
-            
-            if (currentPercentage > prevAlertedPercentage) {
-                setAlertData(goalEvent);
-                alertedHabits.current[habitId] = currentPercentage;
+            const goals = goalService.getGoalsByHabit(habitId, currentUser.id);
+            const activeGoal = goals[0];
+            console.log(activeGoal, currentPercentage)
+            if (activeGoal) {
+                if (currentPercentage >= 100 && !activeGoal.isDone) {
+                    goalService.markGoalDone(activeGoal.id);
+                    setAlertData(goalEvent);
+                }
+                else if (currentPercentage >= 80 && currentPercentage < 100 && !activeGoal.is80PercentNotified) {
+                    goalService.markGoal80Notified(activeGoal.id);
+                    setAlertData(goalEvent);
+                }
             }
         }
 
@@ -81,11 +88,8 @@ export function CheckinProvider({ children }) {
                 c.userId === userId &&
                 c.date === (date || formatDate())
             )
-        )
-        );
+        ));
 
-        delete alertedHabits.current[habitId];
-        
         return true;
     };
 
