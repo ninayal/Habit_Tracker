@@ -14,9 +14,14 @@ export function HabitNoteDialog({ open, onOpenChange, habitName, initialNote = "
     }, [open, initialNote]);
 
     const handleSave = () => {
-        onSave(note);
+        const finalNote = note.trim();
+        if (!finalNote) return;
+
+        onSave(finalNote);
         onOpenChange(false);
     };
+
+    const isNoteEmpty = note.trim().length === 0;
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
@@ -39,10 +44,14 @@ export function HabitNoteDialog({ open, onOpenChange, habitName, initialNote = "
                     />
                 </div>
                 <DialogFooter className={`brand-card`}>
-                    <Button className={`hover:bg-pink-50`} variant="outline" onClick={() => onOpenChange(false)}>
+                    <Button className={`hover:bg-pink-50 cursor-pointer`} variant="outline" onClick={() => onOpenChange(false)}>
                         Skip
                     </Button>
-                    <Button onClick={handleSave} className="bg-pink-400 hover:bg-pink-500 text-white">
+                    <Button
+                        onClick={handleSave}
+                        disabled={isNoteEmpty}
+                        className="bg-pink-400 hover:bg-pink-500 text-white disabled:opacity-50 disabled:pointer-events-auto disabled:cursor-not-allowed"
+                    >
                         Save Note
                     </Button>
                 </DialogFooter>

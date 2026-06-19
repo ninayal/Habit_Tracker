@@ -75,7 +75,7 @@ export default function Statistics() {
                 </div>
             </div>
 
-            <div className="animate-fade-in animate-delay-100 overflow-x-auto max-w-280 mb-6">
+            <div className="animate-fade-in animate-delay-100 overflow-x-auto grid grid-cols-1 mb-6">
                 <HeatmapChart habits={allHabits} checkins={checkins} />
             </div>
 

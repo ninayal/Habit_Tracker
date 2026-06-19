@@ -63,7 +63,7 @@ const checkinStyles = {
         title: "text-yellow-900 font-semibold",
         badge: (
             <Badge className="bg-yellow-100 text-yellow-800 border-yellow-200">
-                Not yet checked <AlertTriangle className="h-4 w-4 text-yellow-600" />
+                Not yet completed<AlertTriangle className="h-4 w-4 text-yellow-600" />
             </Badge>
         ),
     },

@@ -134,7 +134,7 @@ export default function HeatmapChart({ habits, checkins }) {
                                 ))}
                             </div>
 
-                            <div className="grid grid-rows-7 grid-flow-col gap-1.5">
+                            <div className="grid grid-rows-7 grid-flow-col gap-1.5 px-2">
                                 {heatmapData.map((day) => (
                                     <Tooltip key={day.date}>
                                         <TooltipTrigger asChild>

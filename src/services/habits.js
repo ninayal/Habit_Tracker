@@ -74,7 +74,7 @@ function queryHabits(userId, query = {}) {
             h.name
                 .toLowerCase()
                 .includes(
-                    search.toLowerCase()
+                    search.trim().toLowerCase()
                 )
         );
     }

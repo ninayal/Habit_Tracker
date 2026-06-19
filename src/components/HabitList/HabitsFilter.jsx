@@ -47,7 +47,7 @@ export default function HabitsFilter({ query, setQuery }) {
     return (
         <div className={`flex flex-col sm:flex-row sm:items-center gap-3`}>
             <div className='flex items-center gap-3 flex-1 min-w-0'>
-                <span className='text-base font-medium text-[var(--brand-muted-text)] shrink-0'>Tìm kiếm</span>
+                <span className='text-base font-medium text-[var(--brand-muted-text)] shrink-0'>Search habit</span>
                 <div className='
                     flex flex-1 min-w-0 items-center
                     border border-[var(--brand-border)]
@@ -60,12 +60,16 @@ export default function HabitsFilter({ query, setQuery }) {
                         placeholder='Enter name...'
                         className='flex-1 min-w-0 text-[14px] outline-none bg-transparent text-[var(--brand-text)]'
                         value={query.search}
-                        onChange={(e) =>
+                        onChange={(e) => {
+                            const cleanedValue = e.target.value
+                                .replace(/^\s+/, '')
+                                .replace(/\s{2,}/g, ' ');
+
                             setQuery(prev => ({
                                 ...prev,
-                                search: e.target.value
-                            }))
-                        }
+                                search: cleanedValue
+                            }));
+                        }}
                     />
                     <button className='p-1 hover:bg-gray-100 rounded-full'>
                         <Search className='text-gray-500 text-[20px]' />

@@ -172,7 +172,7 @@ export default function HabitsList() {
 
     return (
         <div className='brand-page min-h-screen p-4 md:p-8'>
-            <div className='mx-auto'>
+            <div className='mx-auto w-full min-w-0'>
                 <div className='flex items-center'>
                     <div className="flex items-center flex-1 gap-4">
                         <p className="font-instrument font-semibold text-4xl" >
@@ -253,13 +253,13 @@ export default function HabitsList() {
 
                 </div>
 
-                <div className='brand-card rounded-lg shadow-md mt-4 p-4 md:p-6 min-h-10/12'>
+                <div className='brand-card rounded-lg shadow-md mt-4 p-4 md:p-6 min-h-10/12 w-full min-w-0'>
                     <div id="tour-filters">
                         <HabitsFilter query={query} setQuery={setQuery} />
                     </div>
 
 
-                    <div className="mt-4 max-w-267.5" id="tour-habit-list">
+                    <div className="mt-4 w-full min-w-0 grid grid-cols-1" id="tour-habit-list">
                         {habits.length === 0 ? (
                             <div className="flex flex-col items-center justify-center py-20 text-center">
                                 <div className="rounded-full bg-gray-100 p-4 mb-4">
@@ -298,7 +298,7 @@ export default function HabitsList() {
                                 date={selectedDate}
                             />
                         ) : (
-                            <div className="overflow-x-auto w-full">
+                            <div className="overflow-x-auto min-w-0 w-full">
                                 <Kanban
                                     groupBy={query.groupBy}
                                     groupedHabits={groupedHabits}
@@ -362,7 +362,6 @@ export default function HabitsList() {
     )
 }
 
-
 const Kanban = ({
     groupedHabits, groupBy, statusMap, onHabitClick, date,
     onEditHabit, onChangeStatus, onDeleteHabit
@@ -392,16 +391,16 @@ const Kanban = ({
             {groupedHabits.map(([key, items], idx) => {
                 const { icon, color } = getColumnStyle(key, idx);
                 return (
-                    <div className="flex flex-col w-md shrink-0 bg-gray-50 rounded-xl border border-gray-200 h-[35vw]">
+                    <div key={key} className="flex flex-col w-120 shrink-0 brand-card rounded-xl border border-gray-200 max-h-[calc(100vh-250px)]">
                         <div className={`flex items-center gap-2 px-4 py-3 rounded-t-xl ${color || 'bg-gray-100'} border-b border-gray-200`}>
                             {icon && <span className="text-white">{icon}</span>}
-                            <h3 className="font-semibold text-gray-800 truncate">{key}</h3>
-                            <span className="ml-auto text-xs bg-white/70 px-2 py-0.5 rounded-full text-gray-600">
+                            <h3 className="font-semibold text-white truncate">{key}</h3>
+                            <span className="ml-auto text-xs bg-white/30 px-2 py-0.5 rounded-full text-white">
                                 {items.length}
                             </span>
                         </div>
 
-                        <div className="flex-1 p-2 space-y-2 max-h-[calc(100vh-200px)] overflow-y-auto">
+                        <div className="flex-1 p-2 space-y-2 overflow-y-auto">
                             {items.length === 0 ? (
                                 <div className="text-center text-gray-400 text-sm py-8">No habits</div>
                             ) : (
@@ -412,7 +411,6 @@ const Kanban = ({
                                         checkin={statusMap[habit.id].checkin}
                                         groupBy={groupBy}
                                         onClick={() => onHabitClick(habit)}
-
                                         onEdit={onEditHabit}
                                         onChangeStatus={onChangeStatus}
                                         onDelete={onDeleteHabit}
@@ -426,4 +424,3 @@ const Kanban = ({
         </div>
     );
 };
-
