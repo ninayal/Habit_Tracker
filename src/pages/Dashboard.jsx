@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef } from "react";
-import { mockGoals } from "@/mockData";
+import { mockHabits, mockGoals } from "@/mockData";
 import TodayHabitSection from "@/components/Dashboard/TodayHabitSection";
+import { useHabitContext } from "@/hooks/useHabits";
 import { useCheckinContext } from "@/hooks/useCheckins";
 import { useHabitsQuery } from "@/hooks/useHabitsQuery";
 import { Spinner } from "@/components/ui/spinner";
@@ -9,17 +10,35 @@ import "./styles/Dashboard.css";
 const DEMO_USER_ID = 1;
 
 function getTodayKey() {
-  return new Date().toISOString().slice(0, 10);
+  const date = new Date();
+
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+
+  return `${year}-${month}-${day}`;
 }
 
 function addDays(dateKey, amount) {
-  const date = new Date(dateKey);
+  const [year, month, day] = dateKey.split("-").map(Number);
+
+  const date = new Date(year, month - 1, day);
   date.setDate(date.getDate() + amount);
-  return date.toISOString().slice(0, 10);
+
+  const nextYear = date.getFullYear();
+  const nextMonth = String(date.getMonth() + 1).padStart(2, "0");
+  const nextDay = String(date.getDate()).padStart(2, "0");
+
+  return `${nextYear}-${nextMonth}-${nextDay}`;
+}
+
+function parseLocalDate(dateKey) {
+  const [year, month, day] = dateKey.split("-").map(Number);
+  return new Date(year, month - 1, day);
 }
 
 function formatDateLabel(dateKey) {
-  return new Date(dateKey).toLocaleDateString("en-US", {
+  return parseLocalDate(dateKey).toLocaleDateString("en-US", {
     weekday: "long",
     month: "long",
     day: "numeric",
@@ -27,7 +46,7 @@ function formatDateLabel(dateKey) {
 }
 
 function formatMonthLabel(dateKey) {
-  return new Date(dateKey).toLocaleDateString("en-US", {
+  return parseLocalDate(dateKey).toLocaleDateString("en-US", {
     month: "long",
   });
 }
@@ -321,8 +340,36 @@ function getHeatmapLevel(completedCount, totalHabits) {
   return "level-4";
 }
 
+function getCheckinProgressForDate(habits, checkins, dateKey) {
+  return habits.reduce(
+    (result, habit) => {
+      const checkin = getCheckinForDate(habit.id, dateKey, checkins);
+
+      const current = Number(checkin?.completedCount || 0);
+      const target = getTargetPerDay(habit);
+
+      return {
+        current: result.current + Math.min(current, target),
+        target: result.target + target,
+      };
+    },
+    { current: 0, target: 0 }
+  );
+}
+
+function getHeatmapLevelByProgress(current, target) {
+  if (target === 0 || current === 0) return "level-0";
+
+  const rate = current / target;
+
+  if (rate <= 0.25) return "level-1";
+  if (rate <= 0.5) return "level-2";
+  if (rate <= 0.75) return "level-3";
+  return "level-4";
+}
+
 function MiniCalendar({ checkins, habits, todayKey }) {
-  const date = new Date(todayKey);
+  const date = parseLocalDate(todayKey);
   const year = date.getFullYear();
   const month = date.getMonth();
   const totalDays = new Date(year, month + 1, 0).getDate();
@@ -336,18 +383,15 @@ function MiniCalendar({ checkins, habits, todayKey }) {
         day
       ).padStart(2, "0")}`;
 
-      const completedCount = habits.filter((habit) => {
-        const checkin = getCheckinForDate(habit.id, dateKey, checkins);
-        return isCompletedCheckin(checkin, habit);
-      }).length;
-
-      const level = getHeatmapLevel(completedCount, habits.length);
+      const progress = getCheckinProgressForDate(habits, checkins, dateKey);
+      const level = getHeatmapLevelByProgress(progress.current, progress.target);
+      const isToday = dateKey === todayKey;
 
       return (
         <div
           key={day}
-          className={`db-calendar-day ${level}`}
-          title={`${completedCount}/${habits.length} habits completed`}
+          className={`db-calendar-day ${level} ${isToday ? "today" : ""}`}
+          title={`${progress.current}/${progress.target} check-ins completed`}
         >
           {day}
         </div>
@@ -375,94 +419,162 @@ export default function Dashboard() {
     checkinContext?.checkinList ||
     checkinContext?.data ||
     [];
+  
+  const habitContext = useHabitContext();
+  const contextHabits =
+    habitContext?.habits ||
+    habitContext?.habitList ||
+    habitContext?.data ||
+    [];
 
   useEffect(() => {
     loadCheckins?.();
   }, [loadCheckins]);
 
   const dashboardData = useMemo(() => {
-    const userCheckins = contextCheckins.filter(
-      (checkin) =>
-        checkin.userId == null || Number(checkin.userId) === DEMO_USER_ID
+  const userCheckins = contextCheckins.filter(
+    (checkin) =>
+      checkin.userId == null || Number(checkin.userId) === DEMO_USER_ID
+  );
+
+  // Dùng cho Today focus, Total habits, Completed, At risk
+  // Phần này vẫn chỉ tính theo Today's habits
+  const activeHabits = todaysHabits
+    .filter((habit) => habit.status !== "Archived")
+    .filter((habit) => habit.status !== "Paused")
+    .sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+
+  // Dùng riêng cho Best streak
+  // Lấy toàn bộ habits, kể cả habit không có trong Today's habits
+  const allHabitsSource = contextHabits.length > 0 ? contextHabits : mockHabits;
+
+  const allActiveHabits = allHabitsSource
+    .filter(
+      (habit) =>
+        habit.userId == null || Number(habit.userId) === DEMO_USER_ID
+    )
+    .filter((habit) => habit.status !== "Archived")
+    .filter((habit) => habit.status !== "Paused")
+    .sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+
+  const enrichedHabits = activeHabits.map((habit) => {
+    const todayCheckin = getCheckinForDate(habit.id, todayKey, userCheckins);
+
+    const isDone = isDoneFromTodayHabit(habit, statusMap, todayCheckin);
+
+    const currentStreak = getCurrentStreak(habit, userCheckins, todayKey);
+    const previousStreak = getPreviousStreak(habit, userCheckins, todayKey);
+    const oldLongestStreak = getLongestStreak(habit, userCheckins);
+    const totalCompletions = getTotalCompletions(habit, userCheckins);
+    const last7Rate = getLast7Rate(habit, userCheckins, todayKey);
+
+    const displayCurrentStreak = isDone ? currentStreak : previousStreak;
+
+    const updatedLongestStreak = Math.max(
+      Number(oldLongestStreak || 0),
+      Number(displayCurrentStreak || 0)
     );
 
-    const activeHabits = todaysHabits
-      .filter((habit) => habit.status !== "Archived")
-      .filter((habit) => habit.status !== "Paused")
-      .sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
-
-    const enrichedHabits = activeHabits.map((habit) => {
-      const todayCheckin = getCheckinForDate(habit.id, todayKey, userCheckins);
-
-      const isDone = isDoneFromTodayHabit(habit, statusMap, todayCheckin);
-
-      const currentStreak = getCurrentStreak(habit, userCheckins, todayKey);
-      const previousStreak = getPreviousStreak(habit, userCheckins, todayKey);
-      const longestStreak = getLongestStreak(habit, userCheckins);
-      const totalCompletions = getTotalCompletions(habit, userCheckins);
-      const last7Rate = getLast7Rate(habit, userCheckins, todayKey);
-
-      const isAtRisk = !isDone && previousStreak > 0;
-
-      return {
-        ...habit,
-        isDone,
-        isAtRisk,
-        currentStreak: isDone ? currentStreak : previousStreak,
-        longestStreak,
-        totalCompletions,
-        last7Rate,
-        color: getColorByCategory(habit.category),
-      };
-    });
-
-    const completed = enrichedHabits.filter((habit) => habit.isDone).length;
-    const atRisk = enrichedHabits.filter((habit) => habit.isAtRisk).length;
-
-    const completionRate =
-      typeof todayProgress === "number"
-        ? todayProgress
-        : enrichedHabits.length === 0
-        ? 0
-        : Math.round((completed / enrichedHabits.length) * 100);
-
-    const bestStreakHabit = enrichedHabits.reduce((best, habit) => {
-      if (!best) return habit;
-      return habit.longestStreak > best.longestStreak ? habit : best;
-    }, null);
-
-    const weekly = getWeeklyData(enrichedHabits, userCheckins, todayKey);
-    const categories = getCategoryData(enrichedHabits, userCheckins, todayKey);
-
-    const highlightedGoal = enrichedHabits
-      .map((habit) =>
-        getGoalProgress(
-          habit,
-          userCheckins,
-          mockGoals.filter((goal) => goal.userId === DEMO_USER_ID),
-          todayKey
-        )
-      )
-      .filter(Boolean)
-      .sort((a, b) => b.progress - a.progress)[0];
+    const isAtRisk = !isDone && previousStreak > 0;
 
     return {
-      habits: enrichedHabits,
-      activeHabits: enrichedHabits,
-      weekly,
-      categories,
-      checkins: userCheckins,
-      highlightedGoal,
-      stats: {
-        total: enrichedHabits.length,
-        completed,
-        atRisk,
-        completionRate,
-        bestStreak: bestStreakHabit?.longestStreak || 0,
-        bestStreakHabit: bestStreakHabit?.name || "No habit",
-      },
+      ...habit,
+      isDone,
+      isAtRisk,
+      currentStreak: displayCurrentStreak,
+      longestStreak: updatedLongestStreak,
+      totalCompletions,
+      last7Rate,
+      color: getColorByCategory(habit.category),
     };
-  }, [contextCheckins, statusMap, todayProgress, todaysHabits, todayKey]);
+  });
+
+  // Tính Best Streak từ toàn bộ habits
+  const allStreakHabits = allActiveHabits.map((habit) => {
+    const todayCheckin = getCheckinForDate(habit.id, todayKey, userCheckins);
+
+    const isDone = isCompletedCheckin(todayCheckin, habit);
+
+    const currentStreak = getCurrentStreak(habit, userCheckins, todayKey);
+    const previousStreak = getPreviousStreak(habit, userCheckins, todayKey);
+    const oldLongestStreak = getLongestStreak(habit, userCheckins);
+
+    const displayCurrentStreak = isDone ? currentStreak : previousStreak;
+
+    const updatedLongestStreak = Math.max(
+      Number(oldLongestStreak || 0),
+      Number(displayCurrentStreak || 0)
+    );
+
+    return {
+      ...habit,
+      currentStreak: displayCurrentStreak,
+      longestStreak: updatedLongestStreak,
+    };
+  });
+
+  const completed = enrichedHabits.filter((habit) => habit.isDone).length;
+  const atRisk = enrichedHabits.filter((habit) => habit.isAtRisk).length;
+
+  const completionRate =
+    typeof todayProgress === "number"
+      ? todayProgress
+      : enrichedHabits.length === 0
+      ? 0
+      : Math.round((completed / enrichedHabits.length) * 100);
+
+  const bestStreakHabit = allStreakHabits.reduce((best, habit) => {
+    if (!best) return habit;
+
+    const habitLongestStreak = Number(habit.longestStreak || 0);
+    const bestLongestStreak = Number(best.longestStreak || 0);
+
+    return habitLongestStreak > bestLongestStreak ? habit : best;
+  }, null);
+
+  const weekly = getWeeklyData(enrichedHabits, userCheckins, todayKey);
+  const categories = getCategoryData(enrichedHabits, userCheckins, todayKey);
+
+  const highlightedGoal = enrichedHabits
+    .map((habit) =>
+      getGoalProgress(
+        habit,
+        userCheckins,
+        mockGoals.filter((goal) => goal.userId === DEMO_USER_ID),
+        todayKey
+      )
+    )
+    .filter(Boolean)
+    .sort((a, b) => b.progress - a.progress)[0];
+
+  return {
+    habits: enrichedHabits,
+    allHabits: allStreakHabits,
+    activeHabits: enrichedHabits,
+    weekly,
+    categories,
+    checkins: userCheckins,
+    highlightedGoal,
+    stats: {
+      // Các số này vẫn lấy theo Today's habits
+      total: enrichedHabits.length,
+      completed,
+      atRisk,
+      completionRate,
+
+      // Riêng Best streak lấy theo toàn bộ habits
+      bestStreak: bestStreakHabit?.longestStreak || 0,
+      bestStreakHabit: bestStreakHabit?.name || "No habit",
+    },
+  };
+}, [
+  contextCheckins,
+  contextHabits,
+  statusMap,
+  todayProgress,
+  todaysHabits,
+  todayKey,
+]);
 
 const stats = dashboardData.stats;
 const weekly = dashboardData.weekly;
