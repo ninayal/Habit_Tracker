@@ -1,8 +1,7 @@
 import { useCheckinContext } from '@/hooks/useCheckins';
 import { authService } from '@/services/auth';
-import { checkinService } from '@/services/checkin';
-import { habitService } from '@/services/habits';
 import { formatDate } from '@/utils/helper';
+import { calculateCurrentStreak, calculateGoalProgress, calculateLongestStreak, isScheduledDay } from '@/utils/statsHelper';
 import React, { useMemo } from 'react'
 
 export default function useHabitStats(habit) {
@@ -21,7 +20,8 @@ export default function useHabitStats(habit) {
                     totalCompletions: 0,
                     completionRate: 0,
                     previousCompletionRate: 0,
-                    rateTrend: 0 
+                    rateTrend: 0,
+                    goalProgress: null
                 },
                 habitCheckins: []
             };
@@ -30,13 +30,15 @@ export default function useHabitStats(habit) {
         const habitCheckins = checkins.filter(c => c.habitId === habit.id);
         const completedCheckins = habitCheckins.filter(c => c.completionStatus === "completed");
 
-        const currentStreak = checkinService.calculateCurrentStreak(habit.id, userId);
-        const longestStreak = checkinService.calculateLongestStreakByIteratingDays(habit.id, userId);
+        const currentStreak = calculateCurrentStreak(habit, habitCheckins);
+        const longestStreak = calculateLongestStreak(habit, habitCheckins);
         const totalCompletions = completedCheckins.length;
+
+        const goalProgress = habit.goal ? calculateGoalProgress(habit, habit.goal, habitCheckins) : null;
 
         let completionsLast7Days = 0;
         let requiredLast7Days = 0;
-        
+
         let completionsPrevious7Days = 0;
         let requiredPrevious7Days = 0;
 
@@ -49,7 +51,7 @@ export default function useHabitStats(habit) {
             const d = new Date(today);
             d.setDate(today.getDate() - i);
 
-            if (habitService.isScheduledDay(habit, d)) {
+            if (isScheduledDay(habit, d)) {
                 const dateStr = formatDate(d);
                 const checkin = checkinMap.get(dateStr);
                 const isCompleted = checkin && checkin.completionStatus === "completed";
@@ -65,10 +67,10 @@ export default function useHabitStats(habit) {
             }
         }
 
-        const completionRate = requiredLast7Days === 0 ? 0 
+        const completionRate = requiredLast7Days === 0 ? 0
             : Math.round((completionsLast7Days / requiredLast7Days) * 100);
 
-        const previousCompletionRate = requiredPrevious7Days === 0  ? 0 
+        const previousCompletionRate = requiredPrevious7Days === 0 ? 0
             : Math.round((completionsPrevious7Days / requiredPrevious7Days) * 100);
         const rateTrend = completionRate - previousCompletionRate;
 
@@ -80,9 +82,10 @@ export default function useHabitStats(habit) {
                 totalCompletions,
                 completionRate,
                 previousCompletionRate,
-                rateTrend
+                rateTrend,
+                goalProgress
             },
-            habitCheckins: habitCheckins.sort((a, b) => b.date.localeCompare(a.date))
+            habitCheckins: [...habitCheckins].sort((a, b) => b.date.localeCompare(a.date))
         };
 
     }, [habit, userId, checkins]);

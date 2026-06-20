@@ -17,26 +17,42 @@ export default function AuthCard({ title, subtitle, children, className }) {
   return (
     <div
       className={cn(
-        "min-h-screen bg-[#121212]",
-        // desktop: căn giữa màn hình
+        // "min-h-screen bg-[#121212]",
+        // // desktop: căn giữa màn hình
+        // "flex items-center justify-center",
+        // // mobile: căn trên để form dài có thể scroll, padding đủ thoáng
+        // "max-sm:items-start max-sm:pt-10 max-sm:pb-10",
+        // "px-4",
+
+        // Thay đổi nền theo theme: light là slate-50, dark là slate-900 (hoặc #121212)
+        "w-full h-auto bg-slate-50 dark:bg-[#121212] text-slate-900 dark:text-white",
         "flex items-center justify-center",
-        // mobile: căn trên để form dài có thể scroll, padding đủ thoáng
         "max-sm:items-start max-sm:pt-10 max-sm:pb-10",
-        "px-4",
+        "px-4 position-relative",
       )}
       style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}
     >
       <div
         className={cn(
+          // "w-full max-w-md",
+          // "rounded-2xl border border-white/5",
+          // "bg-white/[0.06] backdrop-blur-xl",
+          // "shadow-[0_12px_40px_rgba(0,0,0,0.5)]",
+          // // desktop padding
+          // "px-10 py-10",
+          // // tablet (sm)
+          // "max-sm:px-6 max-sm:py-8 max-sm:rounded-xl",
+          // // phone nhỏ < 380px
+          // "max-[380px]:px-4 max-[380px]:py-7",
+          // className,
           "w-full max-w-md",
-          "rounded-2xl border border-white/5",
-          "bg-white/[0.06] backdrop-blur-xl",
-          "shadow-[0_12px_40px_rgba(0,0,0,0.5)]",
-          // desktop padding
+          // Viền nhạt ở bản light, viền tinh tế ở bản dark
+          "rounded-2xl border border-slate-200/60 dark:border-white/5",
+          // Nền trắng mờ ở bản light, nền tối mờ ở bản dark
+          "bg-white/80 dark:bg-white/[0.06] backdrop-blur-xl",
+          "shadow-[0_12px_40px_rgba(0,0,0,0.04)] dark:shadow-[0_12px_40px_rgba(0,0,0,0.5)]",
           "px-10 py-10",
-          // tablet (sm)
           "max-sm:px-6 max-sm:py-8 max-sm:rounded-xl",
-          // phone nhỏ < 380px
           "max-[380px]:px-4 max-[380px]:py-7",
           className,
         )}

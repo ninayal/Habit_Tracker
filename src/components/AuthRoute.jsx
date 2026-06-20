@@ -24,4 +24,4 @@ export default function AuthRoute({ requireAuth = true }) {
     }
 
     return <Outlet />;
-}
+}

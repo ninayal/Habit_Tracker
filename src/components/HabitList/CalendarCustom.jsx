@@ -15,16 +15,20 @@ import { Button } from 'react-aria-components'
 import { composeTailwindRenderProps } from '@/utils/helper';
 import { CompletedCell, DefaultCell, FailedCell, InProgressCell, SkippedCell } from '@/components/HabitList/HabitCell';
 import { HabitCellDropdown } from '@/components/HabitList/HabitCellDropdown';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { getWeekStartsOn } from '@/services/profile';
 
 
-export function CalendarCustom({ habitDataMap, onCellAction, className, ...props }) {
+export function CalendarCustom({ habitDataMap, onCellAction, isHabitDisabled, className, ...props }) {
     let { direction } = useLocale();
     let months = props.visibleDuration?.months || 1;
+    const weekStartsOn = getWeekStartsOn();
 
 
     return (
         <AriaCalendar
             {...props}
+            firstDayOfWeek={weekStartsOn === "sunday" ? "sun" : "mon"}
             className={composeTailwindRenderProps(
                 props.className,
                 'flex font-sans w-full max-w-fit overflow-auto gap-3'
@@ -35,7 +39,12 @@ export function CalendarCustom({ habitDataMap, onCellAction, className, ...props
                     <header className="flex items-center mb-2">
                         {/* Logic chỉ hiển thị nút quay lại ở tháng đầu tiên kèm kiểm tra */}
                         {i === 0 && (
-                            <Button variant="quiet" slot="previous">
+                            <Button variant="quiet" slot="previous"
+                                className="
+                                    data-[disabled]:opacity-30
+                                    data-[disabled]:cursor-not-allowed
+                                "
+                            >
                                 {direction === 'rtl' ? (
                                     <ChevronRight aria-hidden size={18} />
                                 ) : (
@@ -72,8 +81,7 @@ export function CalendarCustom({ habitDataMap, onCellAction, className, ...props
                             {(date) => {
                                 const dateString = date.toString();
                                 const record = habitDataMap[dateString];
-                                const status = record?.status || 'none';
-
+                                
                                 return (
                                     <CalendarCell
                                         date={date}
@@ -83,9 +91,21 @@ export function CalendarCustom({ habitDataMap, onCellAction, className, ...props
                                             if (isOutsideMonth) {
                                                 return <div className="w-7 h-7" />;
                                             }
+                                            let displayStatus = record?.status || 'none';
+                                            if (isToday) {
+                                                const currentCount = record?.completedCount || 0;
+                                                const target = record?.target || 1;
+                                                if (displayStatus === "completed" && currentCount < target) {
+                                                    displayStatus = currentCount === 0 ? "not_checked" : "in_progress";
+                                                } else if ( (displayStatus === "in_progress" || displayStatus === "not_checked" || displayStatus === "none") &&
+                                                    currentCount >= target
+                                                ) {
+                                                    displayStatus = "completed";
+                                                }
+                                            }
 
                                             let cellUI;
-                                            switch (status) {
+                                            switch (displayStatus) {
                                                 case 'completed':
                                                     cellUI = <CompletedCell day={formattedDate} isToday={isToday} />;
                                                     break;
@@ -117,7 +137,7 @@ export function CalendarCustom({ habitDataMap, onCellAction, className, ...props
                                                         <span
                                                             className={`flex items-center justify-center pt-1 text-xs  
                                                                 ${isToday ? "text-blue-500" : "text-slate-500"
-                                                            }`}
+                                                                }`}
                                                         >
                                                             {formattedDate}
                                                         </span>
@@ -129,17 +149,42 @@ export function CalendarCustom({ habitDataMap, onCellAction, className, ...props
                                             if (isDisabled) {
                                                 return cellContent;
                                             }
+                                            
+                                            //archived / paused
+                                            if (isHabitDisabled) {
+                                                return (
+                                                    <div className="cursor-default">
+                                                        {cellContent}
+                                                    </div>
+                                                );
+                                            }
 
                                             return (
                                                 <HabitCellDropdown
                                                     dateString={dateString}
                                                     onAction={onCellAction}
-                                                    status={status}
+                                                    status={displayStatus}
                                                     progress={record?.completedCount}
                                                     mode='popover'
                                                     record={record}
+                                                    canUndo={record?.canUndo}
                                                 >
-                                                    {cellContent}
+                                                    
+                                                    <TooltipProvider delayDuration={100}>
+                                                        <Tooltip>
+                                                            <TooltipTrigger asChild>
+                                                                <div className="inline-block">
+                                                                    {cellContent}
+                                                                </div>
+                                                            </TooltipTrigger>
+                                                            <TooltipContent
+                                                                side="bottom"
+                                                                className="text-xs w-40 text-center text-[var(--brand-muted-text)] bg-accent border-none shadow-sm z-60"
+                                                            >
+                                                                <p>Click to edit or Right click for more actions.</p>
+                                                            </TooltipContent>
+                                                        </Tooltip>
+                                                    </TooltipProvider>
                                                 </HabitCellDropdown>
                                             );
                                         }}

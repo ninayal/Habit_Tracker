@@ -63,7 +63,7 @@ const checkinStyles = {
         title: "text-yellow-900 font-semibold",
         badge: (
             <Badge className="bg-yellow-100 text-yellow-800 border-yellow-200">
-                Not yet checked <AlertTriangle className="h-4 w-4 text-yellow-600" />
+                Not yet completed<AlertTriangle className="h-4 w-4 text-yellow-600" />
             </Badge>
         ),
     },
@@ -74,7 +74,18 @@ export default function HabitCard({
     onEdit, onChangeStatus, onDelete
 }) {
     const [openDropdown, setOpenDropdown] = useState(false);
-    const completionStatus = checkin?.completionStatus || "not_checked";
+    let completionStatus = checkin?.completionStatus || "not_checked";
+    const currentCount = checkin?.completedCount || 0;
+    const target = habit.targetPerDay;
+
+    if (completionStatus === "completed" && currentCount < target) {
+        completionStatus = currentCount === 0 ? "not_checked" : "in_progress";
+    } 
+    else if ((completionStatus === "in_progress" || completionStatus === "not_checked") &&
+        currentCount >= target
+    ) {
+        completionStatus = "completed";
+    }
 
     let style = checkinStyles[completionStatus] || checkinStyles.in_progress;
     const isMissedToday = habit.isScheduledDay && habit.status === "Active" &&
@@ -88,8 +99,9 @@ export default function HabitCard({
         <Card
             onClick={onClick}
             className={` w-full transition-all duration-200 hover:shadow-lg
-                ${style.card} cursor-pointer
+                ${style.card} cursor-pointer tour-habit-card-step
             `}
+
         >
             <CardContent className="px-3">
                 <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
@@ -174,6 +186,7 @@ export default function HabitCard({
                                 habit={habit}
                                 target={habit.targetPerDay}
                                 dateString={formatDate(date)}
+                                date={date}
                             />
                         </div>
 
@@ -189,7 +202,7 @@ export default function HabitCard({
                             onDelete={() => onDelete?.(habit)}
                         >
                             <button
-                                className=" p-1 rounded-md hover:bg-blue/40 transition-colors focus:outline-none focus:ring-0 focus-visible:ring-0"
+                                className="tour-habit-dropdown-btn p-1 rounded-md hover:bg-blue/40 transition-colors focus:outline-none focus:ring-0 focus-visible:ring-0"
                                 onClick={(e) => {
                                     e.stopPropagation();
                                     setOpenDropdown(true);
@@ -209,8 +222,9 @@ export default function HabitCard({
 }
 
 
-function HabitStatusCell({ checkin, target, habit, dateString }) {
+function HabitStatusCell({ checkin, target, habit, dateString, date }) {
     const [isNoteDialogOpen, setIsNoteDialogOpen] = useState(false);
+    const [history, setHistory] = useState([]);
     const { todayProgress, loading } = useHabitsQuery();
 
     const current = checkin ?? {
@@ -219,10 +233,36 @@ function HabitStatusCell({ checkin, target, habit, dateString }) {
         note: ""
     };
 
+    let displayStatus = current.completionStatus;
+    const currentCount = current.completedCount || 0;
+    if (displayStatus === "completed" && currentCount < target) {
+        displayStatus = currentCount === 0 ? "not_checked" : "in_progress";
+    } else if (
+        (displayStatus === "in_progress" || displayStatus === "not_checked") &&
+        currentCount >= target
+    ) {
+        displayStatus = "completed";
+    }
+
     const selectedDate = checkin?.date || dateString;
     const { updateCheckin, resetCheckin } = useCheckinContext();
 
+    const todayObj = new Date();
+    todayObj.setHours(0, 0, 0, 0);
+    const selectedDateObj = new Date(date);
+    selectedDateObj.setHours(0, 0, 0, 0);
+    const isFutureDate = selectedDateObj.getTime() > todayObj.getTime();
+
+    const trackHistory = () => {
+        setHistory(prev => {
+            const newHistory = [...prev, { ...current }];
+            return newHistory.slice(-10);
+        });
+    };
+
     const handleAction = (action, dateString, value) => {
+        if (isFutureDate) return;
+
         switch (action) {
             case "update_progress": {
                 const target = habit.targetPerDay;
@@ -234,48 +274,50 @@ function HabitStatusCell({ checkin, target, habit, dateString }) {
                     toast.error(`Progress cannot exceed target (${target})`);
                     return;
                 }
+                trackHistory();
                 if (value === 0) {
                     resetCheckin(habit.id, dateString);
-                }
-                if (value === target) {
-                    celebrate();
-                    if (habit.autoOpenNote) {
-                        setTimeout(() => setIsNoteDialogOpen(true), 400);
+                } else {
+                    if (value === target) {
+                        celebrate();
+                        if (habit.autoOpenNote) {
+                            setTimeout(() => setIsNoteDialogOpen(true), 600);
+                        }
                     }
+                    updateCheckin(habit.id, dateString, {
+                        completedCount: value,
+                    });
                 }
-                updateCheckin(habit.id, dateString, {
-                    completedCount: value,
-                });
-                // console.log("update_progress" ,habit.id, dateString, value)
                 return;
             }
 
             case "skipped":
+                trackHistory();
                 if (habit.autoOpenNote) {
                     setIsNoteDialogOpen(true)
                 }
                 updateCheckin(habit.id, dateString, {
                     completionStatus: "skipped",
                 });
-                // console.log("skipped" ,habit.id, dateString)
                 return;
 
             case "failed":
+                trackHistory();
                 if (habit.autoOpenNote) {
                     setIsNoteDialogOpen(true)
                 }
                 updateCheckin(habit.id, dateString, {
                     completionStatus: "failed",
                 });
-                // console.log("failed" ,habit.id, dateString)
                 return;
 
             case "reset":
+                trackHistory();
                 resetCheckin(habit.id, dateString);
-                // console.log("reset" ,habit.id, dateString)
                 return;
 
             case "decrease_progress": {
+                trackHistory();
                 const currentCount = current.completedCount ?? 0;
                 if (currentCount <= 1) {
                     resetCheckin(habit.id, dateString);
@@ -283,6 +325,25 @@ function HabitStatusCell({ checkin, target, habit, dateString }) {
                     updateCheckin(habit.id, dateString, {
                         completedCount: currentCount - 1,
                     });
+                }
+                return;
+            }
+
+            case "undo": {
+                if (history.length > 0) {
+                    const newHistory = [...history];
+                    const prevState = newHistory.pop();
+                    setHistory(newHistory);
+
+                    if (!prevState.completionStatus || prevState.completionStatus === "not_checked") {
+                        resetCheckin(habit.id, dateString);
+                    } else {
+                        updateCheckin(habit.id, dateString, {
+                            completionStatus: prevState.completionStatus,
+                            completedCount: prevState.completedCount,
+                            note: prevState.note || ""
+                        });
+                    }
                 }
                 return;
             }
@@ -295,7 +356,10 @@ function HabitStatusCell({ checkin, target, habit, dateString }) {
 
     const handleClick = (e) => {
         e.stopPropagation();
-        if (current.completionStatus === "completed" || current.completionStatus === "failed" || current.completionStatus === "skipped") {
+        if (isFutureDate) return;
+
+        trackHistory();
+        if (displayStatus === "completed" || displayStatus === "failed" || displayStatus === "skipped") {
             resetCheckin(habit.id, selectedDate);
             return;
         }
@@ -304,7 +368,7 @@ function HabitStatusCell({ checkin, target, habit, dateString }) {
         if (nextCount === habit?.targetPerDay) {
             celebrate();
             if (habit.autoOpenNote) {
-                setTimeout(() => setIsNoteDialogOpen(true), 400);
+                setTimeout(() => setIsNoteDialogOpen(true), 600);
             }
         }
         updateCheckin(habit.id, selectedDate, {
@@ -320,7 +384,6 @@ function HabitStatusCell({ checkin, target, habit, dateString }) {
         }, 500);
         return () => clearTimeout(timer);
     }, []);
-
     useEffect(() => {
         if (isReadyToCelebrate.current && todayProgress === 100 && prevProgressRef.current < 100) {
             celebrateBig();
@@ -335,13 +398,15 @@ function HabitStatusCell({ checkin, target, habit, dateString }) {
         toast.success("Saved note successfully!")
     };
 
+    const disableStyles = isFutureDate ? "opacity-50 cursor-not-allowed" : "cursor-pointer hover:opacity-90";
     const buttonElement = (() => {
-        switch (current.completionStatus) {
+        switch (displayStatus) {
             case "completed":
                 return (
                     <button
+                        disabled={isFutureDate}
                         onClick={handleClick}
-                        className="w-8 h-8 rounded-full bg-green-500 text-white flex items-center justify-center cursor-pointer"
+                        className={`w-8 h-8 rounded-full bg-green-500 text-white flex items-center justify-center transition-opacity ${disableStyles}`}
                     >
                         <Check size={18} />
                     </button>
@@ -350,7 +415,8 @@ function HabitStatusCell({ checkin, target, habit, dateString }) {
             case "failed":
                 return (
                     <button
-                        className="w-8 h-8 rounded-full text-white bg-red-600 flex items-center justify-center cursor-pointer"
+                        disabled={isFutureDate}
+                        className={`w-8 h-8 rounded-full text-white bg-red-600 flex items-center justify-center transition-opacity ${disableStyles}`}
                         onClick={handleClick}
                     >
                         <X size={18} />
@@ -360,7 +426,8 @@ function HabitStatusCell({ checkin, target, habit, dateString }) {
             case "skipped":
                 return (
                     <button
-                        className="w-8 h-8 rounded-full bg-accent flex items-center justify-center cursor-pointer"
+                        disabled={isFutureDate}
+                        className={`w-8 h-8 rounded-full bg-accent flex items-center justify-center transition-opacity ${disableStyles}`}
                         onClick={handleClick}
                     >
                         <ArrowRight size={18} />
@@ -374,7 +441,8 @@ function HabitStatusCell({ checkin, target, habit, dateString }) {
 
                 return (
                     <button
-                        className="relative w-8 h-8 rounded-full flex items-center justify-center cursor-pointer hover:opacity-90 transition-opacity"
+                        disabled={isFutureDate}
+                        className={`relative w-8 h-8 rounded-full flex items-center justify-center transition-opacity ${disableStyles}`}
                         style={{
                             background: `conic-gradient(
                                 #3b82f6 ${percentage}%,
@@ -393,7 +461,9 @@ function HabitStatusCell({ checkin, target, habit, dateString }) {
             default:
                 return (
                     <button
-                        className="w-8 h-8 flex bg-accent items-center justify-center rounded-full cursor-pointer hover:bg-blue-100 transition-colors"
+                        disabled={isFutureDate}
+                        className={`w-8 h-8 flex bg-accent items-center justify-center rounded-full transition-colors ${isFutureDate ? "opacity-50 cursor-not-allowed" : "cursor-pointer hover:bg-blue-100"
+                            }`}
                         onClick={handleClick}
                     >
                         <PlusIcon size={18} />
@@ -402,10 +472,10 @@ function HabitStatusCell({ checkin, target, habit, dateString }) {
         }
     })();
 
-    let tooltipText = "+1 time";
-    if (current.completionStatus === "completed") {
+    let tooltipText = "Click to +1 time";
+    if (displayStatus === "completed") {
         tooltipText = "Click to reset";
-    } else if (current.completionStatus === "skipped" || current.completionStatus === "failed") {
+    } else if (displayStatus === "skipped" || displayStatus === "failed") {
         tooltipText = "Click to reset";
     }
 
@@ -413,26 +483,37 @@ function HabitStatusCell({ checkin, target, habit, dateString }) {
         return;
     }
 
+    if (habit.status === "Archived" || habit.status === "Paused") {
+        return <div className="w-8 h-8"></div>;
+    }
+
     return (
         <>
             <HabitCellDropdown
                 dateString={selectedDate}
-                status={current.completionStatus}
+                status={displayStatus}
                 progress={current.completedCount}
                 onAction={handleAction}
                 mode="quick"
                 target={target}
+                canUndo={history.length > 0}
             >
                 <TooltipProvider delayDuration={100}>
                     <Tooltip>
                         <TooltipTrigger asChild>
-                            {buttonElement}
+                            <div className="tour-habit-checkin-btn inline-block">
+                                {buttonElement}
+                            </div>
                         </TooltipTrigger>
                         <TooltipContent
                             side="top"
-                            className="text-xs text-[var(--brand-muted-text)] bg-accent border-none shadow-sm z-60"
+                            className="text-xs w-35 text-[var(--brand-muted-text)] bg-accent border-none shadow-sm z-60"
                         >
-                            <p>{tooltipText}</p>
+                            {isFutureDate === true ? (
+                                <p>Can not checkin on future date.</p>
+                            ) : (
+                                <p>{tooltipText} or Right click for more.</p>
+                            )}
                         </TooltipContent>
                     </Tooltip>
                 </TooltipProvider>

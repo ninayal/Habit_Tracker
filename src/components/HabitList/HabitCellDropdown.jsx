@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { ChevronLast, RotateCcw, X, Minus, StickyNote } from "lucide-react";
+import { ChevronLast, Undo2, RotateCcw, X, Minus, StickyNote, Plus } from "lucide-react";
 import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuTrigger, } from "@/components/ui/context-menu";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Input } from "@/components/ui/input";
@@ -14,6 +14,7 @@ export function HabitCellDropdown({
     progress = 0,
     record = null,
     mode = "popover",
+    canUndo = false,
 }) {
     const [value, setValue] = useState(progress);
     const [open, setOpen] = useState(false);
@@ -21,6 +22,21 @@ export function HabitCellDropdown({
     useEffect(() => {
         setValue(progress);
     }, [progress]);
+
+    const handleIncrement = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        setValue((prev) => (prev === "" ? 1 : Number(prev) + 1));
+    };
+
+    const handleDecrement = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        setValue((prev) => {
+            if (prev === "" || Number(prev) <= 0) return 0;
+            return Number(prev) - 1;
+        });
+    };
 
     return (
         <div className="">
@@ -61,23 +77,47 @@ export function HabitCellDropdown({
                                 </p>
                             </div>
 
-                            <Input
-                                autoFocus
-                                type="number"
-                                value={value}
-                                onChange={(e) => {
-                                    const val = e.target.value;
-                                    if (val === "") {
-                                        setValue("");
-                                        return;
-                                    }
-                                    const num = Number(val);
-                                    setValue(num);
-                                }}
-                                className="
-                                    focus-visible:border-blue focus-visible:ring-0 focus-visible:ring-transparent outline-none
-                                "
-                            />
+                            <div className="flex items-center gap-2">
+                                <Button
+                                    variant="outline"
+                                    size="icon"
+                                    className="h-9 w-9 shrink-0 text-gray-500 hover:text-blue-600 hover:bg-blue-50"
+                                    onClick={handleDecrement}
+                                    disabled={value === 0 || value === ""}
+                                >
+                                    <Minus size={16} />
+                                </Button>
+
+                                <Input
+                                    autoFocus
+                                    type="number"
+                                    value={value}
+                                    onChange={(e) => {
+                                        const val = e.target.value;
+                                        if (val === "") {
+                                            setValue("");
+                                            return;
+                                        }
+                                        const num = Number(val);
+                                        if (num < 0) return;
+                                        setValue(num);
+                                    }}
+                                    className="
+                                        focus-visible:border-blue focus-visible:ring-0 focus-visible:ring-transparent outline-none
+                                        text-center font-medium
+                                        [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none
+                                    "
+                                />
+
+                                <Button
+                                    variant="outline"
+                                    size="icon"
+                                    className="h-9 w-9 shrink-0 text-gray-500 hover:text-blue-600 hover:bg-blue-50"
+                                    onClick={handleIncrement}
+                                >
+                                    <Plus size={16} />
+                                </Button>
+                            </div>
 
                             <Button
                                 className="w-full bg-blue hover:bg-blue/80 text-slate-600"
@@ -97,14 +137,23 @@ export function HabitCellDropdown({
                             e.preventDefault();
                         }}
                     >
-                        {progress > 0 && status === "in_progress" && mode !== "popover" && (
+                        {progress > 0 && (status === "in_progress" || status === "completed") && mode !== "popover" && (
                             <ContextMenuItem
                                 onSelect={() => { onAction("decrease_progress", dateString) }}
                             >
                                 <Minus size={16} className="mr-2" />
-                                Undo progress
+                                Decrease progress
                             </ContextMenuItem>
                         )}
+                        {canUndo && (
+                            <ContextMenuItem
+                                onSelect={() => { onAction("undo", dateString) }}
+                            >
+                                <Undo2 size={16} className="mr-2" />
+                                Undo previous action
+                            </ContextMenuItem>
+                        )}
+
                         {status !== "skipped" && (
                             <ContextMenuItem onSelect={() => onAction("skipped", dateString)}>
                                 <ChevronLast size={16} className="mr-2" />

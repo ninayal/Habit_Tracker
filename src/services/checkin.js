@@ -1,6 +1,7 @@
 import { goalService } from "@/services/goals";
 import { habitService } from "@/services/habits";
 import { formatDate } from "@/utils/helper";
+import { calculateGoalProgress, isScheduledDay } from "@/utils/statsHelper";
 import { storage, STORAGE_KEYS } from "@/utils/storage";
 
 
@@ -8,23 +9,22 @@ export const checkinService = {
     getAll,
     getCheckinsByUser,
     getCheckinsByHabit,
-    calculateCurrentStreak,
-    calculateLongestStreakByIteratingDays,
     updateCheckin,
     deleteCheckin,
-    getHabitStatusByDate
+    getHabitStatusByDate,
+    checkAndUpdateGoals
 };
 
 function getAll() {
     return storage.get(STORAGE_KEYS.CHECKINS, []);
 }
 
- function getCheckinsByUser(userId) {
+function getCheckinsByUser(userId) {
     const allCheckins = storage.get(STORAGE_KEYS.CHECKINS, []);
     return allCheckins.filter(c => c.userId === userId);
 }
 
- function getHabitStatusByDate(habitId, userId, date = formatDate()) {
+function getHabitStatusByDate(habitId, userId, date = formatDate()) {
     const habit = habitService.getById(habitId);
     if (!habit) {
         throw new Error("Habit not found");
@@ -52,7 +52,7 @@ function getAll() {
     };
 }
 
- function getCheckinsByHabit(habitId, userId) {
+function getCheckinsByHabit(habitId, userId) {
     const allCheckins = storage.get(STORAGE_KEYS.CHECKINS, []);
     return allCheckins.filter(c => c.habitId === habitId && c.userId === userId).sort((a, b) => new Date(a.date) - new Date(b.date));
 }
@@ -62,15 +62,6 @@ function getNextId(items) {
     return Math.max(...items.map(i => i.id)) + 1;
 }
 
-function isScheduledDay(habit, date) {
-    if (!habit.frequency) return true;
-    if (habit.frequency.repeatType === 'daily') return true;
-    if (habit.frequency.repeatType === 'specific_days') {
-        const dayOfWeek = date.getDay(); // 0 (Chủ nhật) -> 6 (Thứ 7) theo JS
-        return habit.frequency.daysOfWeek.includes(dayOfWeek);
-    }
-    return true;
-}
 
 function calculateCompletionStatus(completedCount, targetPerDay, manualStatus) {
     if (manualStatus) {
@@ -89,7 +80,7 @@ function calculateCompletionStatus(completedCount, targetPerDay, manualStatus) {
 }
 
 //completedCount, completionStatus, note
- function updateCheckin(habitId, userId, date = null, updates = {}) {
+function updateCheckin(habitId, userId, date = null, updates = {}) {
     const targetDate = date || formatDate();
     const habit = habitService.getById(habitId);
     if (!habit) throw new Error("Habit not found");
@@ -139,11 +130,14 @@ function calculateCompletionStatus(completedCount, targetPerDay, manualStatus) {
     );
 
     storage.set(STORAGE_KEYS.CHECKINS, allCheckins);
-    checkAndUpdateGoals(habit, userId);
-    return checkin;
+
+    const allHabitCheckins = allCheckins.filter(c => c.habitId === habitId && c.userId === userId);
+    const goalEvent = checkAndUpdateGoals(habit, userId, allHabitCheckins);
+
+    return { checkin, goalEvent };
 }
 
- function deleteCheckin(habitId, userId, date = null) {
+function deleteCheckin(habitId, userId, date = null) {
     const habit = habitService.getById(habitId);
     if (!habit) throw new Error("Habit not found");
 
@@ -154,145 +148,48 @@ function calculateCompletionStatus(completedCount, targetPerDay, manualStatus) {
     );
     if (newCheckins.length === allCheckins.length) return false;
     storage.set(STORAGE_KEYS.CHECKINS, newCheckins);
-    checkAndUpdateGoals(habit, userId);
+    checkAndUpdateGoals(habit, userId, newCheckins);
     return true;
 }
 
 
- function calculateCurrentStreak(habitId, userId) {
-    const checkins = getCheckinsByHabit(habitId, userId);
-    const habit = habitService.getById(habitId);
-    if (!habit) return 0;
 
-    const checkinMap = new Map();
-    checkins.forEach(c => { checkinMap.set(c.date, c); });
-
-    let streak = 0;
-    let currentDate = new Date();
-    currentDate.setHours(0, 0, 0, 0);
-
-    const todayStr = formatDate(currentDate);
-    if (!checkinMap.has(todayStr)) {
-        currentDate.setDate(currentDate.getDate() - 1);
-    }
-
-    while (true) {
-        const dateStr = formatDate(currentDate);
-        const checkin = checkinMap.get(dateStr);
-        const isRequired = isScheduledDay(habit, currentDate);
-
-        if (!isRequired) {
-            currentDate.setDate(currentDate.getDate() - 1);
-            continue;
-        }
-
-        if (!checkin) {
-            break;
-        }
-
-        if (checkin.completionStatus === "completed") {
-            streak++;
-        } else if (checkin.completionStatus === "skipped") {
-            // skipped không làm tăng streak nhưng cũng không break
-            // giữ nguyên streak, tiếp tục lùi
-        } else {
-            break;
-        }
-        currentDate.setDate(currentDate.getDate() - 1);
-    }
-    return streak;
-}
-
-//tạo một mảng các ngày từ ngày checkin đầu tiên đến hôm nay, xét từng ngày
- function calculateLongestStreakByIteratingDays(habitId, userId) {
-    const habit = habitService.getById(habitId);
-    if (!habit) return 0;
-
-    const checkins = getCheckinsByHabit(habitId, userId);
-    const checkinMap = new Map();
-    checkins.forEach(c => { checkinMap.set(c.date, c); });
-    if (checkins.length === 0) return 0;
-
-    const dates = checkins.map(c => new Date(c.date));
-    const minDate = new Date(Math.min(...dates));
-    const maxDate = new Date();
-
-    let currentStreak = 0;
-    let maxStreak = 0;
-    let currentDate = new Date(minDate);
-
-    while (currentDate <= maxDate) {
-        const dateStr = formatDate(currentDate);
-        const checkin = checkinMap.get(dateStr);
-        const isRequired = isScheduledDay(habit, currentDate);
-
-        if (!isRequired) {
-            currentDate.setDate(currentDate.getDate() + 1);
-            continue;
-        }
-
-        if (checkin && checkin.completionStatus === "completed") {
-            currentStreak++;
-            if (currentStreak > maxStreak) maxStreak = currentStreak;
-        } else if (checkin && checkin.completionStatus === "skipped") {
-            // skipped: không reset, không tăng
-            // giữ nguyên currentStreak
-        } else {
-            currentStreak = 0;
-        }
-        currentDate.setDate(currentDate.getDate() + 1);
-    }
-    return maxStreak;
-}
-
-// nếu thói quen đạt goal
- function checkAndUpdateGoals(habit, userId) {
+function checkAndUpdateGoals(habit, userId, allHabitCheckins) {
     const goals = goalService.getGoalsByHabit(habit.id, userId);
-    const goal = goals[0];
-    if (!goal || goal.isDone) {
-        return;
+    if (goals.length === 0) return null;
+
+    const currentGoal = goals[goals.length - 1];
+    const progress = calculateGoalProgress(habit, currentGoal, allHabitCheckins);
+
+    if (!progress) return null;
+
+    if (progress.percentage < 100 && currentGoal.isDone) {
+        goalService.revokeGoalDone(currentGoal.id);
     }
 
-    const checkins = getCheckinsByHabit(habit.id, userId);
-
-    if (goal.targetType === "streak") {
-        const longestStreak = calculateLongestStreakByIteratingDays(
-            habit.id,
-            userId
-        );
-
-        if (longestStreak >= goal.targetValue) {
-            goalService.markGoalDone(goal.id);
-            // await habitService.updateHabit(
-            //     habit.id,
-            //     { status: "Archived" }
-            // );
-        }
-        return;
+    if (progress.percentage < 80 && currentGoal.is80PercentNotified) {
+        goalService.revokeGoal80Notified(currentGoal.id);
     }
 
-    if (goal.targetType === "completions_target") {
-        let completedDays = 0;
-        for (const checkin of checkins) {
-            const dateObj = new Date(checkin.date);
-            if (
-                isScheduledDay(habit, dateObj) &&
-                checkin.completionStatus === "completed"
-            ) {
-                completedDays++;
-            }
-
-        }
-
-        if (completedDays >= goal.targetValue) {
-            goalService.markGoalDone(goal.id);
-            // await habitService.updateHabit(
-            //     habit.id,
-            //     { status: "Archived" }
-            // );
-        }
-        return;
+    if (progress.is80Percent && !currentGoal.is80PercentNotified) {
+        return {
+            type: "ENCOURAGEMENT",
+            habitName: habit.name,
+            goal: currentGoal,
+            percentage: progress.percentage
+        };
     }
-    return;
+
+    if (!currentGoal.isDone && progress.is100Percent) {
+
+        return {
+            type: "ACHIEVED",
+            habitName: habit.name,
+            goal: currentGoal
+        };
+    }
+
+
+
+    return null;
 }
-

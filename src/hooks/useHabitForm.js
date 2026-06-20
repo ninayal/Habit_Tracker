@@ -1,36 +1,49 @@
 import { useEffect, useState } from "react";
 import { useHabitContext } from "@/hooks/useHabits";
 import { formatDate, normalizeFrequency } from "@/utils/helper";
+import { getCreateHabitInitialValues, getCurrentUserProfile } from "@/services/profile";
 
-export function useHabitForm({ habit, onSuccess }) {
+function buildInitialValues(habit) {
+    if (habit) {
+        return {
+            icon: habit?.icon || "💧",
+            name: habit?.name || "",
+            category: habit?.category || "Health",
+            startDate: habit?.startDate || formatDate(),
+            frequency: habit?.frequency || {
+                repeatType: "specific_days",
+                daysOfWeek: [],
+            },
+            targetPerDay: habit?.targetPerDay || 1,
+            priority: habit?.priority || "Medium",
+            autoOpenNote: habit?.autoOpenNote || false,
+            goal: habit?.goal || {
+                targetType: "streak",
+                targetValue: 3,
+            },
+        };
+    }
+
+    return getCreateHabitInitialValues(getCurrentUserProfile());
+}
+
+export function useHabitForm({ habit, open, onSuccess }) {
     const isEdit = !!habit;
-
-    const today = formatDate();
-
-    const getInitialValues = () => ({
-        icon: habit?.icon || "💧",
-        name: habit?.name || "",
-        category: habit?.category || "Health",
-        startDate: habit?.startDate || today,
-        frequency: habit?.frequency || {
-            repeatType: "specific_days",
-            daysOfWeek: [],
-        },
-        targetPerDay: habit?.targetPerDay || 1,
-        priority: habit?.priority || "Medium",
-        autoOpenNote: habit?.autoOpenNote || false,
-    });
 
     const { createHabit, updateHabit } = useHabitContext();
 
-    const [form, setForm] = useState(() => getInitialValues());
+    const [form, setForm] = useState(() => buildInitialValues(habit));
     const [loading, setLoading] = useState(false);
     const [errors, setErrors] = useState({});
 
     useEffect(() => {
-        setForm(getInitialValues());
+        if (!open) {
+            return;
+        }
+
+        setForm(buildInitialValues(habit));
         setErrors({});
-    }, [habit]);
+    }, [habit, open]);
 
     const updateField = (path, value) => {
         const keys = path.split(".");
@@ -69,6 +82,13 @@ export function useHabitForm({ habit, onSuccess }) {
             newErrors.daysOfWeek = "Please select at least one day"
         }
 
+        if (!form.goal.targetType) {
+            newErrors["goal.targetType"] = "Goal type is required";
+        }
+        if (!form.goal.targetValue || form.goal.targetValue < 1) {
+            newErrors["goal.targetValue"] = "Goal target value must be greater than 0";
+        }
+
         setErrors(newErrors)
         return Object.keys(newErrors).length === 0
     }
@@ -95,6 +115,14 @@ export function useHabitForm({ habit, onSuccess }) {
 
             onSuccess?.(result);
             return result;
+            
+        } catch (err) {
+            setErrors(prev => ({
+                ...prev,
+                submit: err.message || "An unexpected error occurred. Please try again."
+            }));
+            return false;
+
         } finally {
             setLoading(false);
         }

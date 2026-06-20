@@ -1,6 +1,7 @@
 import { authService } from "@/services/auth";
 import { habitService } from "@/services/habits";
 import { createContext, useCallback, useEffect, useState } from "react";
+import { toast } from "react-toastify";
 
 const HabitContext = createContext(null);
 
@@ -27,43 +28,57 @@ export function HabitProvider({ children }) {
     }, [currentUser?.id]);
 
     const createHabit = (data) => {
-        const created = habitService.createHabit(data);
-        setAllHabits(prev => [...prev, created]);
-        return created;
+        try {
+            const created = habitService.createHabit(data);
+            setAllHabits(prev => [...prev, created]);
+            return created;
+        } catch (error) {
+            console.error("Create habit error:", error);
+            toast.error(error.message);
+            throw error;
+        }
     };
 
     const updateHabit = (id, updates) => {
-        const updated = habitService.updateHabit(id, updates);
-        setAllHabits(prev => prev.map(h =>
-            h.id === id ? updated : h
-        ));
-        return updated;
+        try {
+            const updated = habitService.updateHabit(id, updates);
+            setAllHabits(prev => prev.map(h =>
+                h.id === id ? updated : h
+            ));
+            return updated;
+        } catch (error) {
+            console.error("Update habit error:", error);
+            toast.error(error.message);
+            throw error;
+        }
     };
 
     const archiveHabit = (id) => {
-        const updated = habitService.updateHabit(id, {
-            status: "Archived",
-        });
-        setAllHabits(prev => prev.map(h =>
-            h.id === id ? updated : h
-        )
-        );
+        try {
+            const updated = habitService.updateHabit(id, { status: "Archived" });
+            setAllHabits(prev => prev.map(h => h.id === id ? updated : h));
+        } catch (error) {
+            console.error("Archive habit error:", error);
+        }
     };
 
     const pauseHabit = (id) => {
-        const updated = habitService.updateHabit(id, {
-            status: "Paused",
-        });
-        setAllHabits(prev => prev.map(h =>
-            h.id === id ? updated : h
-        )
-        );
+        try {
+            const updated = habitService.updateHabit(id, { status: "Paused" });
+            setAllHabits(prev => prev.map(h => h.id === id ? updated : h));
+        } catch (error) {
+            console.error("Pause habit error:", error);
+        }
     };
 
     const deleteHabit = (id) => {
-        habitService.deleteHabit(id);
-
-        setAllHabits(prev => prev.filter(h => h.id !== id));
+        try {
+            habitService.deleteHabit(id);
+            setAllHabits(prev => prev.filter(h => h.id !== id));
+        } catch (error) {
+            console.error("Delete habit error:", error);
+            toast.error(error.message);
+        }
     };
 
     useEffect(() => {

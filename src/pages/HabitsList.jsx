@@ -2,12 +2,11 @@ import { useCheckinContext } from '@/hooks/useCheckins';
 import { useDebounce } from '@/hooks/useDebounce';
 import { useHabitsQuery } from '@/hooks/useHabitsQuery';
 import { useQueryParams } from '@/hooks/useQueryParams';
-import React, { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { format } from "date-fns";
 import { habitService } from '@/services/habits';
 import { Spinner } from '@/components/ui/spinner';
-import { AlertCircle, CalendarIcon, ChevronDown, FolderOpen, LayoutGrid, MoreHorizontal, Plus } from 'lucide-react';
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { AlertCircle, CalendarIcon, FolderOpen, LayoutGrid, MoreHorizontal, Plus, HelpCircle } from 'lucide-react';
 import HabitCard from '@/components/HabitList/HabitCard';
 import HabitDetail from '@/components/HabitList/HabitDetail';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -19,18 +18,23 @@ import { useHabitContext } from '@/hooks/useHabits';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { toast } from 'react-toastify';
 import List from '@/components/HabitList/List';
+import { isScheduledDay, isValidDate } from '@/utils/statsHelper';
+import { useHabitWalkthrough } from '@/hooks/useWalkthrough';
+import { getWeekStartsOn } from '@/services/profile';
+
+const DEFAULT_QUERY = {
+    view: "list",
+    search: "",
+    status: "",
+    category: "All",
+    priority: "All",
+    frequency: "all",
+    groupBy: "priority",
+    sortBy: "order",
+};
 
 export default function HabitsList() {
-    const [query, setQuery] = useQueryParams({
-        view: "list",
-        search: "",
-        status: "",
-        category: "All",
-        priority: "All",
-        frequency: "all",
-        groupBy: "priority",
-        sortBy: "order",
-    });
+    const [query, setQuery] = useQueryParams(DEFAULT_QUERY);
     const [selectedDate, setSelectedDate] = useState(new Date());
     const [selectedHabit, setSelectedHabit] = useState(null);
     const [openDrawer, setOpenDrawer] = useState(false);
@@ -45,9 +49,10 @@ export default function HabitsList() {
         ...query,
         search: debouncedSearch
     };
-    const { habits: allHabits, loading, error } = useHabitsQuery(finalQuery);
+    const { habits: allHabits, loading } = useHabitsQuery(finalQuery);
     const { checkins, loadCheckins } = useCheckinContext();
     const { updateHabit, deleteHabit } = useHabitContext();
+    const { startTour } = useHabitWalkthrough();
 
     useEffect(() => {
         loadCheckins();
@@ -76,11 +81,14 @@ export default function HabitsList() {
     }, [allHabits, selectedDate, checkinMap]);
 
     const habits = useMemo(() => {
-        if (query.status === "Archived") return allHabits;
-        const habits = allHabits?.filter(h => h.status !== "Archived") ?? [];
-        return habits.map(habit => ({
+        let filteredHabits = allHabits ?? [];
+        if (query.status !== "Archived") {
+            filteredHabits = filteredHabits.filter(h => h.status !== "Archived");
+        }
+        filteredHabits = filteredHabits.filter(habit => isValidDate(habit, selectedDate));
+        return filteredHabits.map(habit => ({
             ...habit,
-            isScheduledDay: habitService.isScheduledDay(habit, selectedDate)
+            isScheduledDay: isScheduledDay(habit, selectedDate)
         }));
     }, [allHabits, query.status, selectedDate]);
 
@@ -164,16 +172,17 @@ export default function HabitsList() {
 
     return (
         <div className='brand-page min-h-screen p-4 md:p-8'>
-            <div className='mx-auto'>
+            <div className='mx-auto w-full min-w-0'>
                 <div className='flex items-center'>
                     <div className="flex items-center flex-1 gap-4">
-                        <p className="font-jakarta font-semibold text-3xl" >
+                        <p className="font-instrument font-semibold text-4xl" >
                             All Habits
                         </p>
 
                         <Popover>
                             <PopoverTrigger asChild>
                                 <Button
+                                    id="tour-date-picker"
                                     variant="ghost"
                                     className="
                                         justify-start
@@ -191,7 +200,7 @@ export default function HabitsList() {
                                 >
                                     <CalendarIcon className="mr-2 h-4 w-4" />
 
-                                    {format(selectedDate, "dd/MM/yyyy")}
+                                    {format(selectedDate, "yyyy-MM-dd")}
                                 </Button>
                             </PopoverTrigger>
 
@@ -206,21 +215,34 @@ export default function HabitsList() {
                                         date &&
                                         setSelectedDate(date)
                                     }
-                                    disabled={(date) => date > today}
+                                    // disabled={(date) => date > today}
+                                    weekStartsOn={getWeekStartsOn() === "sunday" ? 0 : 1}
                                 />
                             </PopoverContent>
                         </Popover>
                     </div>
-                    <button
-                        className='py-2 px-4 rounded-lg bg-pink-400 hover:bg-pink-500 text-white font-semibold text-[14px] flex items-center gap-3'
-                        onClick={() => {
-                            setEditingHabit(null);
-                            setOpenForm(true);
-                        }}
-                    >
-                        <Plus size={20} />
-                        Create Habit
-                    </button>
+
+                    <div className="flex items-center gap-2">
+                        <button
+                            id="tour-create-habit"
+                            className='py-2 px-4 rounded-lg bg-pink-400 hover:bg-pink-500 text-white font-semibold text-[14px] flex items-center gap-3'
+                            onClick={() => {
+                                setEditingHabit(null);
+                                setOpenForm(true);
+                            }}
+                        >
+                            <Plus size={20} />
+                            Create Habit
+                        </button>
+                        <button
+                            onClick={startTour}
+                            className="p-2 text-gray-400 hover:text-pink-500 rounded-full transition-colors focus:outline-none"
+                            title="Replay Tutorial"
+                        >
+                            <HelpCircle size={22} />
+                        </button>
+                    </div>
+
 
                     <HabitForm
                         key={editingHabit?.id ?? "create"}
@@ -231,32 +253,58 @@ export default function HabitsList() {
 
                 </div>
 
-                <div className='brand-card rounded-lg shadow-md mt-4 p-4 md:p-6 min-h-10/12'>
-                    <HabitsFilter query={query} setQuery={setQuery} />
+                <div className='brand-card rounded-lg shadow-md mt-4 p-4 md:p-6 min-h-10/12 w-full min-w-0'>
+                    <div id="tour-filters">
+                        <HabitsFilter query={query} setQuery={setQuery} />
+                    </div>
 
-                    <div className="mt-4 max-w-267.5">
-                        {query.view === "list" ? (
+
+                    <div className="mt-4 w-full min-w-0 grid grid-cols-1" id="tour-habit-list">
+                        {habits.length === 0 ? (
+                            <div className="flex flex-col items-center justify-center py-20 text-center">
+                                <div className="rounded-full bg-gray-100 p-4 mb-4">
+                                    <FolderOpen className="h-10 w-10 text-gray-400" />
+                                </div>
+                                <h3 className="text-lg font-semibold">
+                                    No habits found
+                                </h3>
+                                <p className="text-sm text-muted-foreground m-2 max-w-md">
+                                    {query.search || query.status || query.category !== "All" || query.priority !== "All"
+                                        ? "No habits match your current filters." : "Create your first habit to start building better routines."}
+                                </p>
+                                {!query.search && query.category === "All" && query.priority === "All" && !query.status && (
+                                    <button
+                                        className='py-2 px-4 rounded-lg bg-pink-400 hover:bg-pink-500 text-white font-semibold text-[14px] flex items-center gap-3'
+                                        onClick={() => {
+                                            setEditingHabit(null);
+                                            setOpenForm(true);
+                                        }}
+                                    >
+                                        <Plus size={20} />
+                                        Create Habit
+                                    </button>
+                                )}
+                            </div>
+                        ) : query.view === "list" ? (
                             <List
                                 groupedHabits={groupedHabits}
                                 habits={habits}
                                 statusMap={statusMap}
                                 groupBy={query.groupBy}
                                 onHabitClick={handleOpenHabitDetail}
-
                                 onEditHabit={handleEditHabit}
                                 onChangeStatus={handleChangeStatus}
                                 onDeleteHabit={handleDeleteHabit}
                                 date={selectedDate}
                             />
                         ) : (
-                            <div className="overflow-x-auto w-full">
+                            <div className="overflow-x-auto min-w-0 w-full">
                                 <Kanban
                                     groupBy={query.groupBy}
                                     groupedHabits={groupedHabits}
                                     habits={habits}
                                     statusMap={statusMap}
                                     onHabitClick={handleOpenHabitDetail}
-
                                     onEditHabit={handleEditHabit}
                                     onChangeStatus={handleChangeStatus}
                                     onDeleteHabit={handleDeleteHabit}
@@ -264,11 +312,12 @@ export default function HabitsList() {
                                 />
                             </div>
                         )}
+
                         <HabitDetail
+                            key={selectedHabit?.id}
                             open={openDrawer}
                             onOpenChange={setOpenDrawer}
                             habit={selectedHabit}
-
                             onEdit={handleEditHabit}
                             onChangeStatus={handleChangeStatus}
                             onDelete={handleDeleteHabit}
@@ -314,7 +363,6 @@ export default function HabitsList() {
     )
 }
 
-
 const Kanban = ({
     groupedHabits, groupBy, statusMap, onHabitClick, date,
     onEditHabit, onChangeStatus, onDeleteHabit
@@ -344,16 +392,16 @@ const Kanban = ({
             {groupedHabits.map(([key, items], idx) => {
                 const { icon, color } = getColumnStyle(key, idx);
                 return (
-                    <div className="flex flex-col w-md shrink-0 bg-gray-50 rounded-xl border border-gray-200 h-[35vw]">
+                    <div key={key} className="flex flex-col w-120 shrink-0 brand-card rounded-xl border border-gray-200 max-h-[calc(100vh-250px)]">
                         <div className={`flex items-center gap-2 px-4 py-3 rounded-t-xl ${color || 'bg-gray-100'} border-b border-gray-200`}>
                             {icon && <span className="text-white">{icon}</span>}
-                            <h3 className="font-semibold text-gray-800 truncate">{key}</h3>
-                            <span className="ml-auto text-xs bg-white/70 px-2 py-0.5 rounded-full text-gray-600">
+                            <h3 className="font-semibold text-white truncate">{key}</h3>
+                            <span className="ml-auto text-xs bg-white/30 px-2 py-0.5 rounded-full text-white">
                                 {items.length}
                             </span>
                         </div>
 
-                        <div className="flex-1 p-2 space-y-2 max-h-[calc(100vh-200px)] overflow-y-auto">
+                        <div className="flex-1 p-2 space-y-2 overflow-y-auto">
                             {items.length === 0 ? (
                                 <div className="text-center text-gray-400 text-sm py-8">No habits</div>
                             ) : (
@@ -364,7 +412,6 @@ const Kanban = ({
                                         checkin={statusMap[habit.id].checkin}
                                         groupBy={groupBy}
                                         onClick={() => onHabitClick(habit)}
-
                                         onEdit={onEditHabit}
                                         onChangeStatus={onChangeStatus}
                                         onDelete={onDeleteHabit}
@@ -378,4 +425,3 @@ const Kanban = ({
         </div>
     );
 };
-

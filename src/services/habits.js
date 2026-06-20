@@ -1,4 +1,7 @@
 import { authService } from "@/services/auth";
+import { checkinService } from "@/services/checkin";
+import { goalService } from "@/services/goals";
+import { calculateGoalProgress } from "@/utils/statsHelper";
 import { storage, STORAGE_KEYS } from "@/utils/storage";
 
 export const habitService = {
@@ -9,9 +12,16 @@ export const habitService = {
     getById,
     createHabit,
     updateHabit,
-    isScheduledDay,
     deleteHabit
 };
+
+class ServiceError extends Error {
+    constructor(status, message) {
+        super(message);
+        this.status = status;
+        this.name = "ServiceError";
+    }
+}
 
 function getAll() {
     return storage.get(STORAGE_KEYS.HABITS, []);
@@ -23,20 +33,36 @@ function getById(id) {
 }
 
 function getByUserId() {
-    const habits = getAll();
+    try {
+        const user = authService.getCurrentUser();
+        if (!user || !user.id) {
+            throw new ServiceError(401, "Unauthorized: User not found.");
+        }
 
-    const user = authService.getCurrentUser();
+        const habits = getAll();
+        const goals = storage.get(STORAGE_KEYS.GOALS, []);
+        const userHabits = habits.filter(h => h.userId === user.id);
 
-    return habits.filter(
-        h => h.userId === user.id
-    );
+        const habitsWithGoals = userHabits.map(habit => {
+            const habitGoal = goals.find(g => g.habitId === habit.id);
+            return {
+                ...habit,
+                goal: habitGoal || null
+            };
+        });
+
+        return habitsWithGoals;
+    } catch (error) {
+        if (!error.status) error.status = 500;
+        throw error;
+    }
 }
-
 //có search có sort
 function queryHabits(userId, query = {}) {
 
     const habits = getAll();
     let data = habits.filter(h => h.userId === userId);
+    const goals = storage.get(STORAGE_KEYS.GOALS, []);
 
     const {
         search,
@@ -51,7 +77,7 @@ function queryHabits(userId, query = {}) {
             h.name
                 .toLowerCase()
                 .includes(
-                    search.toLowerCase()
+                    search.trim().toLowerCase()
                 )
         );
     }
@@ -85,7 +111,12 @@ function queryHabits(userId, query = {}) {
     //     data = sortHabits(data, sortBy);
     // }
 
-    return data;
+    return data.map(habit => ({
+        ...habit,
+        goal: goals.find(
+            g => g.habitId === habit.id
+        ) || null
+    }));
 }
 
 function sortHabits(data, sortBy) {
@@ -113,110 +144,261 @@ function sortHabits(data, sortBy) {
 }
 
 function createHabit(data) {
-    const habits = getAll();
-    const user = authService.getCurrentUser();
+    try {
+        if (!data.name || !data.name.trim()) {
+            throw new ServiceError(400, "Habit name is required.");
+        }
+        if (!data.category) {
+            throw new ServiceError(400, "Category is required.");
+        }
+        if (!data.startDate) {
+            throw new ServiceError(400, "Start date is required.");
+        }
+        if (data.targetPerDay === undefined || isNaN(Number(data.targetPerDay)) || Number(data.targetPerDay) <= 0) {
+            throw new ServiceError(400, "Target per day must be a positive number.");
+        }
 
-    const nextId = habits.length > 0
-        ? Math.max(...habits.map(h => h.id)) + 1 : 1;
+        const user = authService.getCurrentUser();
+        if (!user || !user.id) {
+            throw new ServiceError(401, "Unauthorized: User not found.");
+        }
 
-    const now = new Date().toISOString();
-    const newHabit = {
-        id: nextId,
-        userId: user.id,
+        const habits = getAll();
 
-        icon: data.icon,
-        name: data.name,
-        category: data.category,
+        const normalizedName = data.name.trim();
+        const existedHabit = habits.find(
+            h =>
+                h.userId === user.id &&
+                h.name.trim() === normalizedName
+        );
+        if (existedHabit) {
+            throw new ServiceError(409, `Habit "${normalizedName}" already exists.`);
+        }
 
-        startDate: data.startDate,
+        const nextHabitId = habits.length > 0 ? Math.max(...habits.map(h => h.id)) + 1 : 1;
+        const now = new Date().toISOString();
 
-        frequency: data.frequency,
+        const newHabit = {
+            id: nextHabitId,
+            userId: user.id,
+            icon: data.icon || "",
+            name: data.name,
+            category: data.category,
+            startDate: data.startDate,
+            frequency: data.frequency || { repeatType: "daily", daysOfWeek: [] },
+            targetPerDay: Number(data.targetPerDay),
+            priority: data.priority || "Medium",
+            autoOpenNote: data.autoOpenNote ?? false,
+            status: "Active",
+            order: habits.length + 1,
+            createdAt: now,
+            updatedAt: now,
+        };
 
-        targetPerDay: Number(data.targetPerDay),
+        habits.push(newHabit);
+        storage.set(STORAGE_KEYS.HABITS, habits);
 
-        priority: data.priority,
+        const resultHabit = { ...newHabit, goal: null };
 
-        autoOpenNote: data.autoOpenNote ?? false,
+        if (data.goal) {
+            if (!["streak", "completions_target"].includes(data.goal.targetType)) {
+                throw new ServiceError(400, "Invalid goal targetType. Must be 'streak' or 'completions_target'.");
+            }
+            if (!data.goal.targetValue || isNaN(Number(data.goal.targetValue))) {
+                throw new ServiceError(400, "Goal target value must be a valid number.");
+            }
 
-        status: "Active",
+            const goals = storage.get(STORAGE_KEYS.GOALS, []);
+            const nextGoalId = goals.length > 0 ? Math.max(...goals.map(g => g.id)) + 1 : 1;
 
-        order: habits.length + 1,
+            const newGoal = {
+                id: nextGoalId,
+                habitId: nextHabitId,
+                userId: user.id,
+                targetType: data.goal.targetType,
+                targetValue: Number(data.goal.targetValue),
+                isDone: false,
+                doneAt: null
+            };
 
-        createdAt: now,
-        updatedAt: now,
-    };
+            goals.push(newGoal);
+            storage.set(STORAGE_KEYS.GOALS, goals);
 
-    habits.push(newHabit);
+            resultHabit.goal = newGoal;
+        }
 
-    storage.set(STORAGE_KEYS.HABITS, habits);
-    return newHabit;
+        return resultHabit;
+
+    } catch (error) {
+        if (!error.status) error.status = 500;
+        throw error;
+    }
 }
 
 function updateHabit(id, updates) {
-    const habits = getAll();
-    const index = habits.findIndex(
-        h => h.id === id
-    );
-    if (index === -1) {
-        throw new Error("Habit not found");
+    try {
+        if (!id) {
+            throw new ServiceError(400, "Habit ID is required for updating.");
+        }
+
+        const habits = getAll();
+        const index = habits.findIndex(h => h.id === id);
+
+        if (index === -1) {
+            throw new ServiceError(404, `Habit with ID ${id} not found.`);
+        }
+
+        if (updates.targetPerDay !== undefined && (isNaN(Number(updates.targetPerDay)) || Number(updates.targetPerDay) <= 0)) {
+            throw new ServiceError(400, "Target per day must be a positive number.");
+        }
+        if (updates.status && !["Active", "Archived", "Paused"].includes(updates.status)) {
+            throw new ServiceError(400, "Invalid status. Must be 'Active', 'Archived', or 'Paused'.");
+        }
+
+        const current = habits[index];
+
+        if (updates.name) {
+            const normalizedName = updates.name.trim();
+            const duplicatedHabit = habits.find(
+                h =>
+                    h.id !== id &&
+                    h.userId === current.userId &&
+                    h.name.trim() === normalizedName
+            );
+
+            if (duplicatedHabit) {
+                throw new ServiceError(409, `Habit "${normalizedName}" already exists.`);
+            }
+        }
+
+        const updatedHabit = {
+            ...current,
+            icon: updates.icon ?? current.icon,
+            name: updates.name ?? current.name,
+            category: updates.category ?? current.category,
+            startDate: updates.startDate ?? current.startDate,
+            frequency: updates.frequency ?? current.frequency,
+            targetPerDay: updates.targetPerDay ?? current.targetPerDay,
+            priority: updates.priority ?? current.priority,
+            autoOpenNote: updates.autoOpenNote ?? current.autoOpenNote,
+            status: updates.status ?? current.status,
+            updatedAt: new Date().toISOString(),
+        };
+        delete updatedHabit.goal;
+
+        habits[index] = updatedHabit;
+        storage.set(STORAGE_KEYS.HABITS, habits);
+
+        const resultHabit = { ...updatedHabit, goal: null };
+        const goals = storage.get(STORAGE_KEYS.GOALS, []);
+        const goalIndex = goals.findIndex(g => g.habitId === id);
+
+        if (updates.goal) {
+            if (goalIndex !== -1) {
+                goals[goalIndex] = {
+                    ...goals[goalIndex],
+                    targetType: updates.goal.targetType ?? goals[goalIndex].targetType,
+                    targetValue: updates.goal.targetValue ?? goals[goalIndex].targetValue,
+                    isDone: updates.goal.isDone ?? goals[goalIndex].isDone,
+                    doneAt: updates.goal.isDone && !goals[goalIndex].isDone ? new Date().toISOString() : goals[goalIndex].doneAt
+                };
+                storage.set(STORAGE_KEYS.GOALS, goals);
+                updatedHabit.goal = goals[goalIndex];
+
+                resultHabit.goal = updatedHabit.goal;
+            } else {
+                throw new ServiceError(404, `Goal for Habit ID ${id} not found to update.`);
+            }
+        } else {
+            if (goalIndex !== -1) {
+                resultHabit.goal = goals[goalIndex];
+            }
+        }
+
+        const allCheckins = storage.get(STORAGE_KEYS.CHECKINS, []);
+        const allHabitCheckins = allCheckins.filter(c => c.habitId === id && c.userId === updatedHabit.userId);
+        checkAndUpdateGoals(updatedHabit, updatedHabit.userId, allHabitCheckins);
+
+        return resultHabit;
+    } catch (error) {
+        if (!error.status) error.status = 500;
+        throw error;
     }
-
-    const current = habits[index];
-    const updatedHabit = {
-        ...current,
-        icon: updates.icon ?? current.icon,
-        name: updates.name ?? current.name,
-        category: updates.category ?? current.category,
-        startDate: updates.startDate ?? current.startDate,
-        frequency: updates.frequency ?? current.frequency,
-        targetPerDay: updates.targetPerDay ?? current.targetPerDay,
-        priority: updates.priority ?? current.priority,
-        autoOpenNote: updates.autoOpenNote ?? current.autoOpenNote,
-        status: updates.status ?? current.status,
-        updatedAt: new Date().toISOString(),
-    };
-
-    habits[index] = updatedHabit;
-
-    storage.set(STORAGE_KEYS.HABITS, habits);
-    return updatedHabit;
-}
-
-//kiểm trả habit này có frequency không, ngày bắt buộc
-function isScheduledDay(habit, date) {
-    if (!habit.frequency) return true;
-    if (habit.frequency.repeatType === 'daily') return true;
-    if (habit.frequency.repeatType === 'specific_days') {
-        const dayOfWeek = date.getDay(); // 0 (Chủ nhật) -> 6 (Thứ 7) theo JS
-        return habit.frequency.daysOfWeek.includes(dayOfWeek);
-    }
-    return true;
 }
 
 function deleteHabit(id) {
-    const habits = storage.get(STORAGE_KEYS.HABITS, []);
-    const checkins = storage.get(STORAGE_KEYS.CHECKINS, []);
-    const goals = storage.get(STORAGE_KEYS.GOALS, []);
+    try {
+        if (!id) {
+            throw new ServiceError(400, "Habit ID is required for deletion.");
+        }
 
-    const habit = habits.find(h => h.id === id);
-    if (!habit) {
-        throw new Error("Habit not found");
+        const habits = storage.get(STORAGE_KEYS.HABITS, []);
+        const habitExists = habits.some(h => h.id === id);
+
+        if (!habitExists) {
+            throw new ServiceError(404, `Habit with ID ${id} not found.`);
+        }
+
+        const newHabits = habits.filter(h => h.id !== id);
+        const checkins = storage.get(STORAGE_KEYS.CHECKINS, []);
+        const newCheckins = checkins.filter(c => c.habitId !== id);
+
+        const goals = storage.get(STORAGE_KEYS.GOALS, []);
+        const newGoals = goals.filter(g => g.habitId !== id);
+
+        storage.set(STORAGE_KEYS.HABITS, newHabits);
+        storage.set(STORAGE_KEYS.CHECKINS, newCheckins);
+        storage.set(STORAGE_KEYS.GOALS, newGoals);
+
+        return {
+            message: "Habit and all associated goals and check-ins successfully deleted.",
+            deletedHabitId: id
+        };
+
+    } catch (error) {
+        if (!error.status) error.status = 500;
+        throw error;
+    }
+}
+
+
+function checkAndUpdateGoals(habit, userId, allHabitCheckins) {
+    const goals = goalService.getGoalsByHabit(habit.id, userId);
+    if (goals.length === 0) return null;
+
+    const currentGoal = goals[goals.length - 1];
+    const progress = calculateGoalProgress(habit, currentGoal, allHabitCheckins);
+
+    if (!progress) return null;
+
+    if (progress.percentage < 100 && currentGoal.isDone) {
+        goalService.revokeGoalDone(currentGoal.id);
     }
 
-    const newHabits = habits.filter(
-        h => h.id !== id
-    );
+    if (progress.percentage < 80 && currentGoal.is80PercentNotified) {
+        goalService.revokeGoal80Notified(currentGoal.id);
+    }
 
-    const newCheckins = checkins.filter(
-        c => c.habitId !== id
-    );
+    if (progress.is80Percent && !currentGoal.is80PercentNotified) {
+        goalService.markGoal80Notified(currentGoal.id);
+        return {
+            type: "ENCOURAGEMENT",
+            habitName: habit.name,
+            goal: currentGoal,
+            percentage: progress.percentage
+        };
+    }
 
-    const newGoals = goals.filter(
-        g => g.habitId !== id
-    );
+    if (!currentGoal.isDone && progress.is100Percent) {
+        goalService.markGoalDone(currentGoal.id);
+        return {
+            type: "ACHIEVED",
+            habitName: habit.name,
+            goal: currentGoal
+        };
+    }
 
-    storage.set(STORAGE_KEYS.HABITS, newHabits);
-    storage.set(STORAGE_KEYS.CHECKINS, newCheckins);
-    storage.set(STORAGE_KEYS.GOALS, newGoals);
-    return habit;
+
+
+    return null;
 }
