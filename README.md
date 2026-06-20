@@ -12,6 +12,16 @@ A habit tracking app built with **React** and **Vite**. Uses mock data to seed i
 
 ---
 
+## 📖 About the Project
+
+**1Percent** is a habit tracking web application designed to help users build positive daily routines through consistent check-ins, measurable goals, and progress tracking.
+
+The application enables users to create and manage habits, track daily progress, monitor streaks, and visualize performance through an interactive dashboard. It emphasizes clear business logic, efficient state management, and a user-friendly experience.
+
+All data is stored locally using **localStorage**, allowing users to continue tracking their habits even after refreshing the browser without requiring a backend service.
+
+---
+
 ## 🚀 Getting started
 
 1. Install dependencies:
