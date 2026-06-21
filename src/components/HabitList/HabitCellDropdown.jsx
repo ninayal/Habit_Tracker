@@ -20,8 +20,10 @@ export function HabitCellDropdown({
     const [open, setOpen] = useState(false);
 
     useEffect(() => {
-        setValue(progress);
-    }, [progress]);
+        if (open) {
+            setValue(progress);
+        }
+    }, [open, progress]);
 
     const handleIncrement = (e) => {
         e.preventDefault();
