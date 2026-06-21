@@ -6,13 +6,23 @@
 /** Tính độ mạnh mật khẩu: 0–4 */
 export function getPasswordStrength(pw) {
   if (!pw) return 0;
-  let score = 0;
-  if (pw.length >= 8) score++;
-  if (/[A-Z]/.test(pw)) score++;
-  if (/[0-9]/.test(pw)) score++;
-  if (/[^A-Za-z0-9]/.test(pw)) score++;
-  return score === 0 ? 1 : score;
+  
+  let mixCount = 0;
+  if (/[A-Z]/.test(pw)) mixCount++;
+  if (/[0-9]/.test(pw)) mixCount++;
+  if (/[^A-Za-z0-9]/.test(pw)) mixCount++;
+
+  if (pw.length < 8) {
+    // Under 8 characters: max score is 2 (Fair)
+    return mixCount >= 1 ? 2 : 1;
+  }
+
+  // Length is at least 8 characters
+  if (mixCount === 3) return 4; // Strong
+  if (mixCount >= 1) return 3;  // Good (mix 1-2)
+  return 2;                    // Fair (mix 0)
 }
+
 
 export const PASSWORD_STRENGTH_META = [
   { label: "", color: "text-zinc-500", bar: "bg-zinc-700" }, // 0 empty
@@ -50,8 +60,10 @@ export function validateSignUp({
     errors.password = "Password is required.";
   } else {
     const strength = getPasswordStrength(password);
-    if (strength <= 2) {
-      errors.password = "Password must be stronger.";
+    if (password.length < 8) {
+      errors.password = "Password must be at least 8 characters.";
+    } else if (strength <= 2) {
+      errors.password = "Password must include at least one uppercase letter, number, or special character.";
     }
   }
 
