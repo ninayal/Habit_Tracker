@@ -217,6 +217,10 @@ export default function HabitsList() {
                                     }
                                     // disabled={(date) => date > today}
                                     weekStartsOn={getWeekStartsOn() === "sunday" ? 0 : 1}
+                                    modifiers={{ today: new Date() }}
+                                    modifiersClassNames={{
+                                        today: "bg-[var(--brand-card-bg)] text-pink-600 font-bold underline"
+                                    }}
                                 />
                             </PopoverContent>
                         </Popover>
