@@ -3,7 +3,7 @@ export const mockUsers = [
     id: 1,
     fullName: "Ngo Phuong Quyen",
     email: "quyen@gmail.com",
-    password: "dev_9f4x_k2m_2026",
+    password: "123456",
     image: "https://randomuser.me/api/portraits/men/1.jpg",
     dateOfBirth: "1998-04-18",
     reminderTime: "07:00",
