@@ -811,7 +811,6 @@
   width: 100%;
   border-radius: 999px;
   background: linear-gradient(180deg, var(--pink), var(--pink-dark));
-  min-height: 10px;
 }
 
 .db-week-item span {
