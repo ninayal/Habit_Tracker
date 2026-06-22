@@ -92,16 +92,15 @@ export function CalendarCustom({ habitDataMap, onCellAction, isHabitDisabled, cl
                                                 return <div className="w-7 h-7" />;
                                             }
                                             let displayStatus = record?.status || 'none';
-                                            if (isToday) {
-                                                const currentCount = record?.completedCount || 0;
-                                                const target = record?.target || 1;
-                                                if (displayStatus === "completed" && currentCount < target) {
-                                                    displayStatus = currentCount === 0 ? "not_checked" : "in_progress";
-                                                } else if ( (displayStatus === "in_progress" || displayStatus === "not_checked" || displayStatus === "none") &&
-                                                    currentCount >= target
-                                                ) {
-                                                    displayStatus = "completed";
-                                                }
+                                            const currentCount = record?.completedCount || 0;
+                                            const target = record?.targetPerDay;
+                                            if (displayStatus === "completed" && currentCount < target) {
+                                                displayStatus = currentCount === 0 ? "not_checked" : "in_progress";
+                                            } else if ( 
+                                                (displayStatus === "in_progress" || displayStatus === "not_checked" || displayStatus === "none") &&
+                                                currentCount >= target && target > 0
+                                            ) {
+                                                displayStatus = "completed";
                                             }
 
                                             let cellUI;
@@ -120,7 +119,7 @@ export function CalendarCustom({ habitDataMap, onCellAction, isHabitDisabled, cl
                                                         <InProgressCell
                                                             day={formattedDate}
                                                             progress={record?.completedCount}
-                                                            target={record?.target}
+                                                            target={record?.targetPerDay}
                                                             isToday={isToday}
                                                         />
                                                     );

@@ -96,6 +96,7 @@ function updateCheckin(habitId, userId, date = null, updates = {}) {
             habitId,
             userId,
             date: targetDate,
+            targetPerDay: habit.targetPerDay,
             completedCount: 0,
             completionStatus: "not_checked",
             note: "",

@@ -1,6 +1,7 @@
 import { authService } from "@/services/auth";
 import { checkinService } from "@/services/checkin";
 import { goalService } from "@/services/goals";
+import { formatDate } from "@/utils/helper";
 import { calculateGoalProgress } from "@/utils/statsHelper";
 import { storage, STORAGE_KEYS } from "@/utils/storage";
 
@@ -235,18 +236,32 @@ function createHabit(data) {
     }
 }
 
+function calculateCompletionStatus(completedCount, targetPerDay, manualStatus) {
+    if (manualStatus) {
+        return manualStatus;
+    }
+
+    if (completedCount >= targetPerDay) {
+        return "completed";
+    }
+
+    if (completedCount > 0) {
+        return "in_progress";
+    }
+
+    return "not_checked";
+}
+
+
 function updateHabit(id, updates) {
     try {
-        if (!id) {
-            throw new ServiceError(400, "Habit ID is required for updating.");
-        }
+        if (!id) throw new ServiceError(400, "Habit ID is required for updating.");
 
         const habits = getAll();
         const index = habits.findIndex(h => h.id === id);
+        if (index === -1) throw new ServiceError(404, `Habit with ID ${id} not found.`);
 
-        if (index === -1) {
-            throw new ServiceError(404, `Habit with ID ${id} not found.`);
-        }
+        const current = habits[index];
 
         if (updates.targetPerDay !== undefined && (isNaN(Number(updates.targetPerDay)) || Number(updates.targetPerDay) <= 0)) {
             throw new ServiceError(400, "Target per day must be a positive number.");
@@ -254,72 +269,69 @@ function updateHabit(id, updates) {
         if (updates.status && !["Active", "Archived", "Paused"].includes(updates.status)) {
             throw new ServiceError(400, "Invalid status. Must be 'Active', 'Archived', or 'Paused'.");
         }
-
-        const current = habits[index];
-
         if (updates.name) {
             const normalizedName = updates.name.trim();
-            const duplicatedHabit = habits.find(
-                h =>
-                    h.id !== id &&
-                    h.userId === current.userId &&
-                    h.name.trim() === normalizedName
-            );
-
-            if (duplicatedHabit) {
+            if (habits.some(h => h.id !== id && h.userId === current.userId && h.name.trim() === normalizedName)) {
                 throw new ServiceError(409, `Habit "${normalizedName}" already exists.`);
             }
         }
 
-        const updatedHabit = {
-            ...current,
-            icon: updates.icon ?? current.icon,
-            name: updates.name ?? current.name,
-            category: updates.category ?? current.category,
-            startDate: updates.startDate ?? current.startDate,
-            frequency: updates.frequency ?? current.frequency,
-            targetPerDay: updates.targetPerDay ?? current.targetPerDay,
-            priority: updates.priority ?? current.priority,
-            autoOpenNote: updates.autoOpenNote ?? current.autoOpenNote,
-            status: updates.status ?? current.status,
-            updatedAt: new Date().toISOString(),
-        };
+        const { goal: updateGoal, ...habitUpdates } = updates;
+        const updatedHabit = { ...current, updatedAt: new Date().toISOString() };
+        
+        for (const key in habitUpdates) {
+            if (habitUpdates[key] !== undefined) updatedHabit[key] = habitUpdates[key];
+        }
         delete updatedHabit.goal;
 
         habits[index] = updatedHabit;
         storage.set(STORAGE_KEYS.HABITS, habits);
 
+        const allCheckins = storage.get(STORAGE_KEYS.CHECKINS, []);
+        
+        if (updates.targetPerDay !== undefined && updates.targetPerDay !== current.targetPerDay) {
+            const today = typeof formatDate === 'function' ? formatDate() : new Date().toISOString().split('T')[0];
+            const todayCheckin = allCheckins.find(c => c.habitId === id && c.date === today);
+            
+            if (todayCheckin) {
+                todayCheckin.targetPerDay = updatedHabit.targetPerDay;
+                todayCheckin.completedCount = Math.max(0, Math.min(todayCheckin.completedCount, todayCheckin.targetPerDay));
+                todayCheckin.completionStatus = calculateCompletionStatus(
+                    todayCheckin.completedCount,
+                    todayCheckin.targetPerDay,
+                    todayCheckin.completionStatus
+                );
+                todayCheckin.updatedAt = new Date().toISOString();
+                storage.set(STORAGE_KEYS.CHECKINS, allCheckins);
+            }
+        }
+
         const resultHabit = { ...updatedHabit, goal: null };
         const goals = storage.get(STORAGE_KEYS.GOALS, []);
         const goalIndex = goals.findIndex(g => g.habitId === id);
 
-        if (updates.goal) {
-            if (goalIndex !== -1) {
-                goals[goalIndex] = {
-                    ...goals[goalIndex],
-                    targetType: updates.goal.targetType ?? goals[goalIndex].targetType,
-                    targetValue: updates.goal.targetValue ?? goals[goalIndex].targetValue,
-                    isDone: updates.goal.isDone ?? goals[goalIndex].isDone,
-                    doneAt: updates.goal.isDone && !goals[goalIndex].isDone ? new Date().toISOString() : goals[goalIndex].doneAt
-                };
-                storage.set(STORAGE_KEYS.GOALS, goals);
-                updatedHabit.goal = goals[goalIndex];
-
-                resultHabit.goal = updatedHabit.goal;
-            } else {
-                throw new ServiceError(404, `Goal for Habit ID ${id} not found to update.`);
-            }
-        } else {
-            if (goalIndex !== -1) {
-                resultHabit.goal = goals[goalIndex];
-            }
+        if (updateGoal) {
+            if (goalIndex === -1) throw new ServiceError(404, `Goal for Habit ID ${id} not found to update.`);
+            
+            const cg = goals[goalIndex];
+            goals[goalIndex] = {
+                ...cg,
+                targetType: updateGoal.targetType ?? cg.targetType,
+                targetValue: updateGoal.targetValue ?? cg.targetValue,
+                isDone: updateGoal.isDone ?? cg.isDone,
+                doneAt: (updateGoal.isDone && !cg.isDone) ? new Date().toISOString() : cg.doneAt
+            };
+            storage.set(STORAGE_KEYS.GOALS, goals);
+            resultHabit.goal = goals[goalIndex];
+        } else if (goalIndex !== -1) {
+            resultHabit.goal = goals[goalIndex];
         }
 
-        const allCheckins = storage.get(STORAGE_KEYS.CHECKINS, []);
         const allHabitCheckins = allCheckins.filter(c => c.habitId === id && c.userId === updatedHabit.userId);
         checkAndUpdateGoals(updatedHabit, updatedHabit.userId, allHabitCheckins);
 
         return resultHabit;
+
     } catch (error) {
         if (!error.status) error.status = 500;
         throw error;

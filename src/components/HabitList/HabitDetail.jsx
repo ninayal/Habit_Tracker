@@ -32,6 +32,13 @@ export default function HabitDetail({
 }) {
     const [openDropdown, setOpenDropdown] = useState(false);
     const { stats, habitCheckins } = useHabitStats(habit);
+    const { loadCheckins } = useCheckinContext();
+
+    useEffect(() => {
+        if (open) {
+            loadCheckins();
+        }
+    }, [open, loadCheckins]);
 
     let TrendIcon;
     let trendColorStyle;
@@ -315,7 +322,7 @@ function Calendar({ habit, habitCheckins }) {
                 setHistory(prev => {
                     const newHistory = { ...prev };
                     if (newDateStack.length === 0) {
-                        delete newHistory[dateString]; 
+                        delete newHistory[dateString];
                     } else {
                         newHistory[dateString] = newDateStack;
                     }
