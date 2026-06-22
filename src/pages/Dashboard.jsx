@@ -759,15 +759,16 @@ const activeHabitText = hasNoHabits
           ) : (
             <div className="db-week-chart">
               {weekly.map((item) => {
+                const rate =
+                  item.total === 0 ? 0 : (item.done / item.total) * 100;
+
                 const height =
-                  item.total === 0
-                    ? 8
-                    : Math.max((item.done / item.total) * 100, 8);
+                  rate === 0 ? 0 : Math.max(rate, 8);
 
                 return (
                   <div className="db-week-item" key={item.day}>
                     <div className="db-week-bar">
-                      <div style={{ height: `${height}%` }} />
+                      {rate > 0 && <div style={{ height: `${height}%` }} />}
                     </div>
                     <span>{item.day}</span>
                   </div>
